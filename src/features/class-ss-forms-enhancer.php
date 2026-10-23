@@ -29,16 +29,30 @@ class Forms_Enhancer {
 
 		$found   = 0;
 		$counter = 0;
+		$totals  = array(); // form-plugin marker => forms on the page.
+		$taken   = array(); // form-plugin marker => forms we rewrote.
+		$markers = self::script_patterns();
 		$html    = preg_replace_callback(
 			'/<form\b[^>]*>/i',
-			function ( $m ) use ( $rules, &$found, &$counter ) {
-				$attrs = Html_Enhancer::parse_attributes( $m[0] );
+			function ( $m ) use ( $rules, &$found, &$counter, &$totals, &$taken, $markers ) {
+				$attrs   = Html_Enhancer::parse_attributes( $m[0] );
+				$classes = preg_split( '/\s+/', trim( (string) ( $attrs['class'] ?? '' ) ) );
+				$marker  = null;
+				foreach ( array_keys( $markers ) as $candidate ) {
+					if ( in_array( $candidate, $classes, true ) ) {
+						$marker            = $candidate;
+						$totals[ $marker ] = ( $totals[ $marker ] ?? 0 ) + 1;
+					}
+				}
 				if ( self::should_skip( $attrs ) ) {
 					return $m[0];
 				}
 				$index = self::match_rule( $attrs, $rules );
 				if ( null === $index ) {
 					return $m[0];
+				}
+				if ( null !== $marker ) {
+					$taken[ $marker ] = ( $taken[ $marker ] ?? 0 ) + 1;
 				}
 				++$found;
 				++$counter;
@@ -66,6 +80,14 @@ class Forms_Enhancer {
 			return $html;
 		}
 
+		// A form plugin's own scripts call WordPress endpoints (REST/admin-ajax) that don't exist on a
+		// static host. Drop them once none of its forms on this page is left for them to handle.
+		foreach ( $markers as $marker => $patterns ) {
+			if ( ! empty( $taken[ $marker ] ) && ( $taken[ $marker ] === ( $totals[ $marker ] ?? 0 ) ) ) {
+				$html = self::strip_scripts( $html, $patterns );
+			}
+		}
+
 		$public = array_map(
 			static function ( $r ) {
 				return array(
@@ -82,6 +104,51 @@ class Forms_Enhancer {
 			. '<script src="' . esc_url( Html_Enhancer::asset_url( $page, Html_Enhancer::ASSET_DIR . '/forms.js' ) ) . '" defer></script>';
 
 		return Html_Enhancer::inject_before_body_end( $html, $markup );
+	}
+
+	/**
+	 * Form plugin class marker => substrings identifying its front-end scripts (by id or src).
+	 *
+	 * @return array<string,string[]>
+	 */
+	public static function script_patterns() {
+		$patterns = array(
+			'wpcf7-form' => array( 'contact-form-7', 'swv-js', 'wpcf7' ),
+		);
+
+		/**
+		 * Filter which front-end scripts are removed once a form plugin's forms are all rewritten.
+		 *
+		 * @param array<string,string[]> $patterns Class marker of the plugin's <form> => script id/src substrings.
+		 */
+		$filtered = apply_filters( 'ss_forms_script_patterns', $patterns );
+
+		return is_array( $filtered ) ? $filtered : $patterns;
+	}
+
+	/**
+	 * Remove <script> elements whose id or src contains one of the patterns.
+	 *
+	 * @param string   $html     HTML.
+	 * @param string[] $patterns Substrings.
+	 * @return string
+	 */
+	public static function strip_scripts( $html, array $patterns ) {
+		return preg_replace_callback(
+			'#<script\b([^>]*)>.*?</script\s*>#is',
+			static function ( $m ) use ( $patterns ) {
+				$attrs = Html_Enhancer::parse_attributes( '<script ' . $m[1] . '>' );
+				$hay   = strtolower( (string) ( $attrs['id'] ?? '' ) . ' ' . (string) ( $attrs['src'] ?? '' ) );
+				foreach ( $patterns as $pattern ) {
+					if ( '' !== $pattern && false !== strpos( $hay, strtolower( $pattern ) ) ) {
+						return '';
+					}
+				}
+
+				return $m[0];
+			},
+			$html
+		);
 	}
 
 	/**

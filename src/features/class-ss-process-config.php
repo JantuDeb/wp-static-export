@@ -87,6 +87,7 @@ class Process_Config {
 			$search = array(
 				'engine'  => $engine,
 				'exclude' => self::lines( $o->get( 'static_search_exclude' ) ),
+				'includeArchives' => (bool) $o->get( 'static_search_include_archives' ),
 			);
 			if ( 'algolia' === $engine ) {
 				$search['algolia'] = array(

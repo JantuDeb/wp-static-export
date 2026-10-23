@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { matchesAny } from '../src/process/glob.js';
 import { runProcess } from '../src/process/index.js';
 import { addPictureSources, minifyCssString, minifyHtmlString, minifyJsString } from '../src/process/optimize.js';
-import { extractRecord, filePathToUrl, objectId } from '../src/process/search-index.js';
+import { extractRecord, filePathToUrl, isArchiveUrl, objectId } from '../src/process/search-index.js';
 import type { Logger } from '../src/types.js';
 
 const log: Logger = { info() {}, warn() {}, progress() {} };
@@ -82,6 +82,24 @@ describe('search records', () => {
   });
 });
 
+describe('archive detection', () => {
+  it('recognises WordPress listing pages but not real content', () => {
+    for (const u of [
+      '/category/news/',
+      '/blog/category/news/page/2/',
+      '/tag/x/',
+      '/author/admin/',
+      '/page/3/',
+      '/blog/page/2/',
+      '/2024/',
+      '/2024/05/',
+      '/2024/05/17/',
+    ])
+      expect(isArchiveUrl(u), u).toBe(true);
+    for (const u of ['/', '/about/', '/category-guide/', '/pages/', '/hiking-2024/', '/2024-plan/', '/blog/hello/']) expect(isArchiveUrl(u), u).toBe(false);
+  });
+});
+
 describe('runProcess', () => {
   it('minifies, builds the fuse index with exclusions, and skips unchanged files on rerun', async () => {
     const dir = await tmp();
@@ -105,6 +123,19 @@ describe('runProcess', () => {
     expect(index).toHaveLength(1);
     expect(index[0].title).toBe('Home');
     expect(index[0].text).toBe('Welcome home');
+  });
+
+  it('leaves archive pages out of the index unless asked', async () => {
+    const dir = await tmp();
+    await mkdir(path.join(dir, 'category/news'), { recursive: true });
+    await mkdir(path.join(dir, 'post'), { recursive: true });
+    const html = (t: string) => `<html><head><title>${t}</title></head><body><main>${t} words words</main></body></html>`;
+    await writeFile(path.join(dir, 'post/index.html'), html('Post'));
+    await writeFile(path.join(dir, 'category/news/index.html'), html('News archive'));
+    await runProcess({ action: 'process', dir, scope: 'full', config: {}, ops: { search: { engine: 'fuse' } } }, log);
+    expect(JSON.parse(await readFile(path.join(dir, 'ss-assets/search-index.json'), 'utf8')).map((r: any) => r.url)).toEqual(['/post/']);
+    await runProcess({ action: 'process', dir, scope: 'full', config: {}, ops: { search: { engine: 'fuse', includeArchives: true } } }, log);
+    expect(JSON.parse(await readFile(path.join(dir, 'ss-assets/search-index.json'), 'utf8')).map((r: any) => r.url)).toEqual(['/category/news/', '/post/']);
   });
 
   it('does not rebuild the index for partial exports', async () => {

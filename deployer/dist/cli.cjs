@@ -77817,6 +77817,9 @@ function filePathToUrl(p) {
   if (p.endsWith("/index.html")) return "/" + p.slice(0, -"index.html".length);
   return "/" + p;
 }
+function isArchiveUrl(url) {
+  return /\/(category|tag|author)\/[^/]+\/(page\/\d+\/)?$/.test(url) || /(^|\/)page\/\d+\/$/.test(url) || /^\/\d{4}\/(\d{2}\/)?(\d{2}\/)?$/.test(url);
+}
 function extractRecord(html, filePath) {
   const root = parse(html, { blockTextElements: { script: false, style: false, noscript: false } });
   const robots = root.querySelector('meta[name="robots"]')?.getAttribute("content") ?? "";
@@ -77830,10 +77833,11 @@ function extractRecord(html, filePath) {
   const lang = root.querySelector("html")?.getAttribute("lang") || void 0;
   return { url: filePathToUrl(filePath), title, text, ...lang ? { lang } : {} };
 }
-async function buildSearchRecords(files, exclude) {
+async function buildSearchRecords(files, exclude, includeArchives = false) {
   const records = [];
   for (const f of files) {
     if (!/\.html?$/i.test(f.path) || /(^|\/)404\.html$/.test(f.path) || matchesAny(f.path, exclude) || matchesAny(filePathToUrl(f.path), exclude)) continue;
+    if (!includeArchives && isArchiveUrl(filePathToUrl(f.path))) continue;
     const rec = extractRecord(await (0, import_promises10.readFile)(f.abs, "utf8"), f.path);
     if (rec) records.push(rec);
   }
@@ -77906,7 +77910,7 @@ async function runProcess(job, log2) {
     if (job.scope === "partial") {
       log2.warn("Search index not rebuilt: this export contains only some pages. Run a full export to refresh it.");
     } else {
-      const records = await buildSearchRecords(files, s.exclude);
+      const records = await buildSearchRecords(files, s.exclude, s.includeArchives);
       if (s.engine === "fuse") {
         created.push(await writeSearchIndex(dir, records, indexPath));
         parts.push(`search index with ${records.length} page(s)`);

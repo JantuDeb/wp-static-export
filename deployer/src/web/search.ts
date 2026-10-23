@@ -56,8 +56,36 @@ export function fuseEngine(records: Record_[], limit = 8) {
     ignoreLocation: true,
     minMatchCharLength: 2,
   });
-  return async (query: string): Promise<Hit[]> =>
-    fuse.search(query, { limit }).map((r) => ({ url: r.item.url, title: r.item.title || r.item.url, snippet: makeSnippet(r.item.text, query) }));
+
+  // Fuzzy matching alone ranks "take"/"make" alongside "lake", so exact matches always come first:
+  // pages where every word appears (title matches before body-only matches). Fuzzy matching is only used
+  // when nothing matches exactly, so typos still find something.
+  return async (query: string): Promise<Hit[]> => {
+    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+    const exact = records
+      .map((r) => {
+        const title = r.title.toLowerCase();
+        const text = r.text.toLowerCase();
+        if (!words.every((w) => title.includes(w) || text.includes(w))) return null;
+        const inTitle = words.every((w) => title.includes(w));
+        const occurrences = words.reduce((n, w) => n + Math.min(10, text.split(w).length - 1), 0);
+        return { r, rank: (inTitle ? 0 : 1000) - occurrences };
+      })
+      .filter((x): x is { r: Record_; rank: number } => x !== null)
+      .sort((a, b) => a.rank - b.rank)
+      .map((x) => x.r);
+
+    const picked = exact.slice(0, limit);
+    // Fuzzy results only rescue typos: when something matches exactly, unrelated near-matches are just noise.
+    if (picked.length === 0) {
+      const seen = new Set(picked.map((r) => r.url));
+      for (const f of fuse.search(query, { limit })) {
+        if (picked.length >= limit) break;
+        if (!seen.has(f.item.url)) picked.push(f.item);
+      }
+    }
+    return picked.map((r) => ({ url: r.url, title: r.title || r.url, snippet: makeSnippet(r.text, query) }));
+  };
 }
 
 export function algoliaEngine(cfg: NonNullable<Config['algolia']>, limit = 8, doFetch: typeof fetch = (...a) => fetch(...a)) {

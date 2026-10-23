@@ -15,6 +15,8 @@ export interface SearchRecord {
 
 export interface SearchOptions {
   engine: 'fuse' | 'algolia';
+  /** Index category/tag/author/date/paginated archives too (default: no; they only repeat other pages' excerpts). */
+  includeArchives?: boolean;
   exclude?: string[];
   /** Index location inside the export. */
   indexPath?: string;
@@ -28,6 +30,11 @@ export function filePathToUrl(p: string): string {
   if (p === 'index.html') return '/';
   if (p.endsWith('/index.html')) return '/' + p.slice(0, -'index.html'.length);
   return '/' + p;
+}
+
+/** WordPress listing pages: taxonomy, author and date archives and /page/N/ pagination. */
+export function isArchiveUrl(url: string): boolean {
+  return /\/(category|tag|author)\/[^/]+\/(page\/\d+\/)?$/.test(url) || /(^|\/)page\/\d+\/$/.test(url) || /^\/\d{4}\/(\d{2}\/)?(\d{2}\/)?$/.test(url);
 }
 
 export function extractRecord(html: string, filePath: string): SearchRecord | null {
@@ -53,10 +60,11 @@ export function extractRecord(html: string, filePath: string): SearchRecord | nu
   return { url: filePathToUrl(filePath), title, text, ...(lang ? { lang } : {}) };
 }
 
-export async function buildSearchRecords(files: FileEntry[], exclude: string[] | undefined): Promise<SearchRecord[]> {
+export async function buildSearchRecords(files: FileEntry[], exclude: string[] | undefined, includeArchives = false): Promise<SearchRecord[]> {
   const records: SearchRecord[] = [];
   for (const f of files) {
     if (!/\.html?$/i.test(f.path) || /(^|\/)404\.html$/.test(f.path) || matchesAny(f.path, exclude) || matchesAny(filePathToUrl(f.path), exclude)) continue;
+    if (!includeArchives && isArchiveUrl(filePathToUrl(f.path))) continue;
     const rec = extractRecord(await readFile(f.abs, 'utf8'), f.path);
     if (rec) records.push(rec);
   }

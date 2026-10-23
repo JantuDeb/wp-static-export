@@ -74,6 +74,34 @@ final class FeaturesTest extends UnitTestCase {
 		$this->assertLessThan( strpos( $out, '</body>' ), strpos( $out, 'ss-forms-config' ) );
 	}
 
+	public function test_cf7_scripts_are_dropped_only_when_every_cf7_form_was_taken_over(): void {
+		$scripts = '<script id="swv-js" src="/wp-content/plugins/contact-form-7/includes/swv/js/index.js?ver=6"></script>'
+			. '<script id="contact-form-7-js-before">var wpcf7 = {"api":{"root":"\/wp-json\/"}};</script>'
+			. '<script id="contact-form-7-js" src="/wp-content/plugins/contact-form-7/includes/js/index.js?ver=6"></script>'
+			. '<script id="theme-js" src="/wp-content/themes/t/app.js"></script>';
+
+		$this->configure( array( 'forms_enabled' => true, 'forms_rules' => array( array( 'match' => '*', 'provider' => 'webhook', 'endpoint' => 'https://h/x' ) ) ) );
+		$out = Html_Enhancer::enhance( $this->doc( '<form class="wpcf7-form" action="/x"></form>' . $scripts ), $this->page() );
+		$this->assertStringNotContainsString( 'contact-form-7', $out );
+		$this->assertStringNotContainsString( 'wpcf7 =', $out );
+		$this->assertStringContainsString( 'id="theme-js"', $out, 'unrelated scripts stay' );
+		$this->assertStringContainsString( 'ss-assets/forms.js', $out );
+
+		// A second CF7 form that no rule matches still needs CF7's scripts.
+		$this->configure( array( 'forms_enabled' => true, 'forms_rules' => array( array( 'match' => '#mine', 'provider' => 'webhook', 'endpoint' => 'https://h/x' ) ) ) );
+		$out = Html_Enhancer::enhance( $this->doc( '<form id="mine" class="wpcf7-form"></form><form id="other" class="wpcf7-form"></form>' . $scripts ), $this->page() );
+		$this->assertStringContainsString( 'contact-form-7-js', $out );
+
+		// The plugin list is extensible.
+		add_filter( 'ss_forms_script_patterns', static function ( $p ) {
+			$p['frm-fluent-form'] = array( 'fluentform' );
+			return $p;
+		} );
+		$this->configure( array( 'forms_enabled' => true, 'forms_rules' => array( array( 'match' => '*', 'provider' => 'webhook', 'endpoint' => 'https://h/x' ) ) ) );
+		$out = Html_Enhancer::enhance( $this->doc( '<form class="frm-fluent-form"></form><script id="fluentform-js" src="/x/fluentform/app.js"></script>' ), $this->page() );
+		$this->assertStringNotContainsString( 'fluentform', $out );
+	}
+
 	public function test_search_comment_and_login_forms_are_left_alone(): void {
 		$this->configure( array( 'forms_enabled' => true, 'forms_rules' => array( array( 'match' => '*', 'provider' => 'webhook', 'endpoint' => 'https://h/x' ) ) ) );
 		$html = $this->doc(

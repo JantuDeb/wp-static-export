@@ -137,6 +137,7 @@ class Features_Schema {
 					self::f( 'static_search_enabled', __( 'Enable static search', 'simply-static' ), 'checkbox' ),
 					self::f( 'static_search_engine', __( 'Engine', 'simply-static' ), 'select', array( 'options' => array( 'fuse' => 'Fuse.js (built-in index)', 'algolia' => 'Algolia' ), 'show_if' => array( 'static_search_enabled' => true ) ) ),
 					self::f( 'static_search_replace_forms', __( 'Replace WordPress search forms', 'simply-static' ), 'checkbox', array( 'show_if' => array( 'static_search_enabled' => true ) ) ),
+					self::f( 'static_search_include_archives', __( 'Also index category, tag, author and date archives', 'simply-static' ), 'checkbox', array( 'help' => __( 'Off by default: archives repeat other pages\' excerpts and push real content down the results.', 'simply-static' ), 'show_if' => array( 'static_search_enabled' => true ) ) ),
 					self::f( 'static_search_exclude', __( 'Exclude URLs (one per line, * wildcard)', 'simply-static' ), 'textarea', array( 'show_if' => array( 'static_search_enabled' => true ) ) ),
 					self::f( 'static_search_algolia_app_id', __( 'Algolia application ID', 'simply-static' ), 'text', array( 'show_if' => array( 'static_search_engine' => 'algolia' ) ) ),
 					self::f( 'static_search_algolia_search_key', __( 'Algolia search-only API key', 'simply-static' ), 'text', array( 'help' => __( 'Public: it ships in the page. Never use the admin key here.', 'simply-static' ), 'show_if' => array( 'static_search_engine' => 'algolia' ) ) ),

@@ -143,6 +143,19 @@ describe('search', () => {
     expect(hits[0]?.snippet).toContain('\u0001static\u0002');
   });
 
+  it('prefers exact matches and only falls back to fuzzy ones for typos', async () => {
+    const recs = [
+      { url: '/take/', title: 'Packing list', text: 'Take a make-up bag and take a map. Make sure you take enough water to make it.' },
+      { url: '/lake/', title: 'A quiet morning at the lake', text: 'The water is still.' },
+      { url: '/body/', title: 'Gear', text: 'We camped near the lake overnight.' },
+    ];
+    const hits = await fuseEngine(recs)('lake');
+    expect(hits.map((h) => h.url).slice(0, 2)).toEqual(['/lake/', '/body/']); // title match, then body match
+    expect(hits.map((h) => h.url)).not.toContain('/take/'); // near-matches are noise when exact hits exist
+    expect((await fuseEngine(recs)('lkae')).map((h) => h.url)).toContain('/lake/'); // but typos still find pages
+    expect((await fuseEngine(recs)('quiet morning')).at(0)?.url).toBe('/lake/');
+  });
+
   it('snippet marks all query words and adds ellipses', () => {
     const s = makeSnippet('x'.repeat(100) + ' needle in a haystack ' + 'y'.repeat(200), 'needle haystack');
     expect(s.startsWith('…')).toBe(true);

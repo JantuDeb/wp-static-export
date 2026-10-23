@@ -63,7 +63,7 @@ export async function runProcess(job: ProcessJob, log: Logger): Promise<DeployRe
       // A partial export only holds some pages, so rebuilding would drop everything else from search.
       log.warn('Search index not rebuilt: this export contains only some pages. Run a full export to refresh it.');
     } else {
-      const records = await buildSearchRecords(files, s.exclude);
+      const records = await buildSearchRecords(files, s.exclude, s.includeArchives);
       if (s.engine === 'fuse') {
         created.push(await writeSearchIndex(dir, records, indexPath));
         parts.push(`search index with ${records.length} page(s)`);
