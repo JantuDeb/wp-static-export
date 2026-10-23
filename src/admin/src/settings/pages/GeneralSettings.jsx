@@ -13,7 +13,6 @@ import {
 import apiFetch from "@wordpress/api-fetch";
 import {useContext, useEffect, useState} from '@wordpress/element';
 import {SettingsContext} from "../context/SettingsContext";
-import StudioNotice from "../components/StudioNotice";
 
 const {__} = wp.i18n;
 
@@ -299,14 +298,6 @@ function GeneralSettings() {
                 <b>{__('Replacing URLs', 'simply-static')}</b>
             </CardHeader>
             <CardBody>
-                {isStudio() &&
-                    <StudioNotice
-                        heading={__('URL replacement is handled by Studio', 'simply-static')}
-                        cta={null}
-                    >
-                        <p>{__('Studio manages the public URL for this environment automatically, so you do not need to configure replacement URLs manually.', 'simply-static')}</p>
-                    </StudioNotice>
-                }
                 <p>{__('When exporting your static site, any links to your WordPress site will be replaced by one of the following: absolute URLs, relative URLs, or URLs constructed for offline use.', 'simply-static')}</p>
                 <SelectControl
                     label={__('Replacing URLs', 'simply-static')}
@@ -595,12 +586,6 @@ function GeneralSettings() {
                                                     maxSuggestions={100}
                                                     className="horizontal-token-field"
                                                 />
-                                                {!isPro() && (
-                                                    <ExternalLink
-                                                        style={{marginTop: "5px"}}
-                                                        href="https://simplystatic.com"> {__('Requires Simply Static Pro', 'simply-static')}
-                                                    </ExternalLink>
-                                                )}
                                             </>
                                         ) : (
                                             <p>{__('Loading plugins...', 'simply-static')}</p>
@@ -647,11 +632,6 @@ function GeneralSettings() {
                                                     maxSuggestions={100}
                                                     className="horizontal-token-field"
                                                 />
-                                                {!isPro() && (
-                                                    <ExternalLink
-                                                        style={{marginTop: "5px"}}
-                                                        href="https://simplystatic.com"> {__('Requires Simply Static Pro', 'simply-static')}</ExternalLink>
-                                                )}
                                                 <Spacer margin={2}/>
                                             </>
                                         ) : (
@@ -716,9 +696,6 @@ function GeneralSettings() {
                                                 <span style={{position: "relative", bottom: "-15px"}}>
                                                 {__('Custom 404 page (optional)', 'simply-static')}
                                                 </span>
-                                                <ExternalLink href="https://simplystatic.com">
-                                                    {__('Requires Simply Static Pro', 'simply-static')}
-                                                </ExternalLink>
                                             </>
                                         ) :
                                         <>

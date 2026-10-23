@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Admin Dashboard Widget for WP Static Export.
  *
- * Shows latest export stats and promotes Simply Static Pro / Studio
+ * Shows latest export stats
  * on the free version.
  */
 class Admin_Dashboard_Widget {
@@ -78,10 +78,6 @@ class Admin_Dashboard_Widget {
 		} else {
 			$this->render_export_stats( $options, $start_time, $end_time );
 		}
-
-		if ( ! defined( 'SIMPLY_STATIC_PRO_VERSION' ) ) {
-			$this->render_upsell();
-		}
 	}
 
 	/**
@@ -147,40 +143,6 @@ class Admin_Dashboard_Widget {
 			#simply_static_dashboard_widget .ss-widget-actions {
 				margin-top: 12px;
 				text-align: right;
-			}
-			#simply_static_dashboard_widget .ss-widget-upsell {
-				border-top: 1px solid #c3c4c7;
-				margin-top: 16px;
-				padding-top: 16px;
-			}
-			#simply_static_dashboard_widget .ss-widget-upsell-cards {
-				display: grid;
-				grid-template-columns: 1fr 1fr;
-				gap: 12px;
-			}
-			#simply_static_dashboard_widget .ss-widget-upsell-card {
-				border: 1px solid #c3c4c7;
-				border-radius: 4px;
-				padding: 12px;
-				text-decoration: none;
-				color: #1d2327;
-				display: block;
-				transition: border-color 0.2s, box-shadow 0.2s;
-			}
-			#simply_static_dashboard_widget .ss-widget-upsell-card:hover {
-				border-color: #2271b1;
-				box-shadow: 0 0 0 1px #2271b1;
-			}
-			#simply_static_dashboard_widget .ss-widget-upsell-card .ss-upsell-title {
-				font-weight: 600;
-				font-size: 13px;
-				margin: 0 0 4px;
-				color: #2271b1;
-			}
-			#simply_static_dashboard_widget .ss-widget-upsell-card .ss-upsell-desc {
-				font-size: 12px;
-				color: #646970;
-				margin: 0;
 			}
 		</style>
 		<?php
@@ -263,28 +225,6 @@ class Admin_Dashboard_Widget {
 			<a href="<?php echo esc_url( admin_url( 'admin.php?page=simply-static-generate' ) ); ?>" class="button button-primary">
 				<?php esc_html_e( 'View Export', 'simply-static' ); ?>
 			</a>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Render upsell cards for Pro and Studio (free version only).
-	 *
-	 * @return void
-	 */
-	private function render_upsell() {
-		?>
-		<div class="ss-widget-upsell">
-			<div class="ss-widget-upsell-cards">
- 			<a href="<?php echo esc_url( 'https://simplystatic.com/pricing/?utm_source=wordpress&utm_medium=dashboard-widget&utm_campaign=upsell&utm_content=pro' ); ?>" target="_blank" rel="noopener noreferrer" class="ss-widget-upsell-card">
-					<p class="ss-upsell-title"><?php esc_html_e( 'Simply Static Pro', 'simply-static' ); ?> →</p>
-					<p class="ss-upsell-desc"><?php esc_html_e( 'GitHub & CDN deployment, forms, search, and more.', 'simply-static' ); ?></p>
-				</a>
- 			<a href="<?php echo esc_url( 'https://simplystatic.com/simply-static-studio/?utm_source=wordpress&utm_medium=dashboard-widget&utm_campaign=upsell&utm_content=studio' ); ?>" target="_blank" rel="noopener noreferrer" class="ss-widget-upsell-card">
- 				<p class="ss-upsell-title"><?php esc_html_e( 'Static Studio', 'simply-static' ); ?> →</p>
-					<p class="ss-upsell-desc"><?php esc_html_e( 'WordPress operations with Site Health, reports, uptime, performance checks, and hosting.', 'simply-static' ); ?></p>
-				</a>
-			</div>
 		</div>
 		<?php
 	}

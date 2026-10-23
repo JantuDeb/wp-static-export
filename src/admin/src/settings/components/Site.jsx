@@ -114,31 +114,6 @@ function Site(props) {
                     pauseExport={canRunFromNetwork() ? pauseExport : null}
                     resumeExport={canRunFromNetwork() ? resumeExport : null}
                 >
-                    {!canRunFromNetwork() &&
-                        <Button
-                            label={'Generate'}
-                            aria-label={__('Generate', 'simply-static')}
-                            className={'generate'}
-                            disabled
-                        >
-                            <Dashicon icon="update"/>
-                            {__('Generate', 'simply-static')}
-                        </Button>
-                    }
-                    <Button
-                        className={"sub-site-settings"}
-                        onClick={() => window.location = site.settings_url}>
-                        <Dashicon icon="admin-generic"/>
-                    </Button>
-                    {!canRunFromNetwork() &&
-                        <Button
-                            target={'_blank'}
-                            variant={'link'}
-                            href={"https://simplystatic.com/pricing/"}
-                        >
-                            {__('Upgrade to manage from network.', 'simply-static')}
-                        </Button>
-                    }
                 </Buttons>
 
             </td>

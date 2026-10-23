@@ -20,12 +20,6 @@ function SidebarMultisite( props = null ) {
         <Button href="https://docs.simplystatic.com" target="_blank">
             <Dashicon icon="admin-links"/> {__('Documentation', 'simply-static')}
         </Button>
-        {'free' === options.plan &&
-            <Button href="https://simplystatic.com" target="_blank">
-                <Dashicon
-                    icon="admin-site-alt3"/>Simply Static Pro
-            </Button>
-        }
         <VersionInfo/>
     </Card>);
 }

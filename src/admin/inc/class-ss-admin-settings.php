@@ -192,55 +192,6 @@ class Admin_Settings {
             add_action( "admin_print_scripts-{$diagnostics_suffix}", array( $this, 'add_settings_scripts' ) );
         }
 
-        if ( ! defined( 'SIMPLY_STATIC_PRO_VERSION' ) ) {
-            // Add Simply Static Pro submenu that links to external URL
-            add_submenu_page(
-                    'simply-static-generate',
-                    __( 'Simply Static Pro', 'simply-static' ),
-                    __( 'Simply Static Pro<i class="dashicons dashicons-external" style="font-size:12px;vertical-align:-2px;height:10px;"></i>', 'simply-static' ),
-                    apply_filters( 'ss_user_capability', 'publish_pages', 'generate' ),
-                    'simply-static-pro-link',
-                    function () {
-                        exit;
-                    },
-                    99
-            );
-
-            // Add Static Studio submenu that links to external URL
-            add_submenu_page(
-                    'simply-static-generate',
-                    __( 'Static Studio', 'simply-static' ),
-                    __( 'Static Studio<i class="dashicons dashicons-external" style="font-size:12px;vertical-align:-2px;height:10px;"></i>', 'simply-static' ),
-                    apply_filters( 'ss_user_capability', 'publish_pages', 'generate' ),
-                    'simply-static-studio',
-                    function () {
-                        exit;
-                    },
-                    100
-            );
-
-            // Add JavaScript to open the Pro and Studio links in new tabs + purple highlight
-            add_action( 'admin_footer', function () {
-                ?>
-                <script type="text/javascript">
-                    jQuery(document).ready(function ($) {
-                        var accentColor = getComputedStyle(document.documentElement).getPropertyValue('--wp-admin-theme-color').trim() || '#3858e9';
-                        // Find the Simply Static Pro menu item and modify its behavior
-                        $('a[href="admin.php?page=simply-static-pro-link"]').attr('href', 'https://simplystatic.com/simply-static-pro/?utm_source=wordpress&utm_medium=submenu&utm_campaign=upsell').attr('target', '_blank');
-                        // Find the Static Studio menu item and modify its behavior
-                        $('a[href="admin.php?page=simply-static-studio"]').attr('href', 'https://simplystatic.com/simply-static-studio/?utm_source=wordpress&utm_medium=submenu&utm_campaign=upsell').attr('target', '_blank');
-                        // Apply persistent highlight color via JS to avoid CSS override
-                        var $promoLinks = $('a[href*="simplystatic.com/simply-static-pro"], a[href*="simplystatic.com/simply-static-studio"]');
-                        $promoLinks.css({ 'color': accentColor, 'font-weight': '600' });
-                        // Re-apply on hover/focus to prevent WP core styles from overriding
-                        $promoLinks.on('mouseenter focus', function() { $(this).css('color', accentColor); });
-                        $promoLinks.on('mouseleave blur', function() { $(this).css('color', accentColor); });
-                    });
-                </script>
-                <?php
-            } );
-        }
-
       		// Command Center: hide the top-level sidebar menu and add a link under Tools → WP Static Export.
         if ( $hide_menu ) {
             add_action( 'admin_head', function () {
@@ -651,11 +602,6 @@ class Admin_Settings {
         if ( ! empty( $options->get( 'use_forms' ) ) ) {
             $args['form_connection_url'] = esc_url( get_admin_url() . 'post-new.php?post_type=ssp-form' );
         }
-
-        // Studio migration plugin status.
-        $studio_migrate_slug          = 'simply-static-studio-backup-migrate/simply-static-studio-backup-migrate.php';
-        $args['studio_migrate_active'] = is_plugin_active( $studio_migrate_slug );
-        $args['studio_migrate_url']    = admin_url( 'tools.php?page=studio-backup' );
 
 		// Re-apply the generate-only boundary after all core and Pro extensions
 		// have contributed data to the bootstrap object.
@@ -1594,7 +1540,7 @@ class Admin_Settings {
         ?>
         <div class="notice notice-info">
             <p>
-                <?php echo esc_html__( 'A multisite export lock is currently set. Resetting the lock and using queued exports are available in Simply Static Pro.', 'simply-static' ); ?>
+                <?php echo esc_html__( 'A multisite export lock is currently set. Resetting the lock is not available for multisite exports.', 'simply-static' ); ?>
                 <a href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank"
                    rel="noopener noreferrer"><?php echo esc_html__( 'Learn more about Pro', 'simply-static' ); ?></a>
             </p>

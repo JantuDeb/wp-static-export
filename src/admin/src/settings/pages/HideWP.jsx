@@ -147,12 +147,6 @@ function HideWP() {
                     <FlexItem>
                         <b>{__('Replace', 'simply-static')}</b>
                     </FlexItem>
-                    {('free' === options.plan || !isPro()) &&
-                        <FlexItem>
-                            <ExternalLink
-                                href="https://simplystatic.com"> {__('Requires Simply Static Pro', 'simply-static')}</ExternalLink>
-                        </FlexItem>
-                    }
                 </Flex>
             </CardHeader>
             <CardBody>
@@ -318,12 +312,6 @@ function HideWP() {
                     <FlexItem>
                         <b>{__('Custom Replacements', 'simply-static')}</b>
                     </FlexItem>
-                    {('free' === options.plan || !isPro()) &&
-                        <FlexItem>
-                            <ExternalLink
-                                href="https://simplystatic.com"> {__('Requires Simply Static Pro', 'simply-static')}</ExternalLink>
-                        </FlexItem>
-                    }
                 </Flex>
             </CardHeader>
             <CardBody>
@@ -390,12 +378,6 @@ function HideWP() {
                     <FlexItem>
                         <b>{__('Hide', 'simply-static')}</b>
                     </FlexItem>
-                    {('free' === options.plan || !isPro()) &&
-                        <FlexItem>
-                            <ExternalLink
-                                href="https://simplystatic.com"> {__('Requires Simply Static Pro', 'simply-static')}</ExternalLink>
-                        </FlexItem>
-                    }
                 </Flex>
             </CardHeader>
             <CardBody>
@@ -448,12 +430,6 @@ function HideWP() {
                     <FlexItem>
                         <b>{__('Disable', 'simply-static')}</b>
                     </FlexItem>
-                    {('free' === options.plan || !isPro()) &&
-                        <FlexItem>
-                            <ExternalLink
-                                href="https://simplystatic.com"> {__('Requires Simply Static Pro', 'simply-static')}</ExternalLink>
-                        </FlexItem>
-                    }
                 </Flex>
             </CardHeader>
             <CardBody>

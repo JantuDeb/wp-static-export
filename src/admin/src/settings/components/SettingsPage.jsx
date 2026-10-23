@@ -31,7 +31,6 @@ import Workflow from "../pages/Workflow";
 import {SettingsContext} from "../context/SettingsContext";
 import SidebarMultisite from "./SidebarMultisite";
 import SidebarSite from "./SidebarSite";
-import PromoSidebar from "./PromoSidebar";
 
 const {__} = wp.i18n;
 
@@ -375,11 +374,6 @@ function SettingsPage() {
                             }
                         </div>
                     </FlexItem>
-                    {'pro' !== options.plan &&
-                        <FlexItem className={"promo-sidebar-container"}>
-                            <PromoSidebar/>
-                        </FlexItem>
-                    }
                 </Flex>
             </NavigatorProvider>
         </div>

@@ -41,73 +41,25 @@ No more WordPress updates. No plugin conflicts. No security patches. Focus on co
 
 Your WordPress site stays private and secure. Your static site is what visitors see.
 
-= What You Can Do with the Free Version =
-* One-click static site generation
-* Export as ZIP file
-* Deploy to local directory
+= What's Included =
+* One-click static site generation, ZIP export or deploy to a local directory
+* Deploy to GitHub, Netlify, Cloudflare Pages, Amazon S3 (and compatible stores), BunnyCDN or SFTP, uploading only changed files
+* Single-post export and optional automatic publishing when a post is saved
+* WP-CLI: `wp simply-static run`, `status`, `cancel`, `doctor`
+* Forms: send Contact Form 7, WPForms, Gravity Forms or Fluent Forms submissions to Google Forms, Google Sheets, Netlify Forms, Formspree, a webhook or email
+* Static search with Fuse.js or Algolia
+* Comments through Giscus, Utterances or Disqus
+* Multilingual exports with WPML, Polylang and TranslatePress
+* Minification and image optimization (WebP), plus automatic fixes for common Lighthouse findings
 * Replace URLs (absolute, relative, or offline use)
-* Works with any WordPress theme
-* Compatible with popular page builders (Elementor, Bricks, Gutenberg)
-* SEO plugin support (Yoast, Rank Math, AIOSEO)
+* Works with any WordPress theme and popular page builders (Elementor, Bricks, Gutenberg), with Yoast, Rank Math and AIOSEO
 
-= Ready for More? =
-The free version is perfect for simple static exports, but if you need advanced deployment, automation, and powerful features, check out our premium solutions.
+Deployment targets, optimization and the Lighthouse tool need Node.js 18 or newer on the server and PHP's exec() function. See the project README for setup.
 
-= Simply Static Pro - For Developers & Agencies =
-$99/year per site
-Deploy to any platform. Automate everything. Keep 100% of your profit margins.
+= Documentation =
+Setup guides for every feature, including how to connect Google Forms and Google Sheets, are in the README of the project repository: https://github.com/JantuDeb/wp-static-export
 
-* Deploy to GitHub, Netlify, Cloudflare Pages, AWS S3, BunnyCDN, SFTP
-* Incremental exports (update only changed pages)
-* Single-page exports (instant publishing)
-* WP-CLI support for complete automation
-* Forms integration (Contact Form 7, Gravity Forms, WPForms, Fluent Forms)
-* Static-friendly search (Fuse.js or Algolia)
-* Multilingual support (WPML, Polylang, TranslatePress)
-* Performance optimization (minification, image optimization)
-* Comments integration
-* Email support
-
-Perfect for developers self-hosting client sites, agencies managing infrastructure, and technical users who want complete control.
-
-[Get Simply Static Pro](https://simplystatic.com/simply-static-pro/)
-
-= Simply Static Studio - For Businesses & Content Creators =
-$12/month per site
-All-in-one managed WordPress hosting. Zero maintenance. Maximum security.
-
-* Fully managed WordPress hosting
-* Static site hosting on global CDN (120+ locations)
-* Automated backups & SSL certificates
-* One-click WordPress login
-* Free white-glove migration
-* Team management & access control
-* Everything from Pro, pre-configured
-* Priority support
-
-Perfect for businesses running 1-5 websites, content creators who want simplicity, and anyone who values convenience over control.
-
-[Try Studio Free for 14 Days](https://simplystatic.com/simply-static-studio/)
-
-= Trusted by 40,000+ Users Worldwide =
-* 1,400,000+ plugin downloads
-* 4.5/5 star rating
-* Active development & support
-* Used by Microsoft, HP, Postman, UNICEF
-
-= Learning Resources =
-
-[Documentation](https://docs.simplystatic.com)
-Comprehensive guides covering every aspect of WP Static Export.
-
-[Video Course](https://simplystatic.com/videos/)
-Watch our free YouTube course covering static WordPress from basics to advanced.
-
-[Weekly Tutorials](https://simplystatic.com/tutorials/)
-New tutorials published every other week on our blog.
-
-Community Support
-Get help from the community in the WordPress.org forums.
+Community support: the WordPress.org support forums.
 
 = Use Cases =
 **Perfect For:**
@@ -128,7 +80,7 @@ Get help from the community in the WordPress.org forums.
 * Real-time data updates
 * Heavy AJAX functionality
 
-Note: Forms, search, and comments ARE possible with Simply Static Pro or Studio.
+Note: forms, search, and comments are supported through the built-in integrations (see Deploy & Features).
 
 = Plugins & Features That Don't Work with Static Sites =
 Static sites are perfect for public content, but some WordPress plugins require server-side processing and won't work on static sites:
@@ -157,14 +109,14 @@ Static sites don't support user authentication or member-only areas.
 * Real-time data feeds
 * Heavy AJAX functionality
 
-**What DOES Work (with Pro/Studio):**
+**What works through the built-in integrations:**
 
-* Forms (Contact Form 7, Gravity Forms, WPForms, Fluent Forms)
+* Forms (Contact Form 7 is tested; WPForms, Gravity Forms and Fluent Forms use the same mechanism)
 * Search functionality (Fuse.js or Algolia)
-* Comments (special integration)
+* Comments (Giscus, Utterances, Disqus)
 * Newsletter signups (via external services)
 
-If your site relies heavily on the plugins listed above, WP Static Export may not be the right solution. For questions about specific plugin compatibility, check our compatibility database or ask in our support forum.
+If your site relies heavily on the plugins listed above, WP Static Export may not be the right solution. For questions about specific plugin compatibility, ask in the support forum.
 
 == Installation ==
 = Automatic Installation (Recommended) =
@@ -193,22 +145,13 @@ After activation:
 * Click "Generate Static Files"
 * Download your ZIP or access files in your local directory
 
-Watch our quick start tutorial
-
-Need help? Check our comprehensive documentation or support forums.
+Need help? Read the project README or ask in the support forums.
 
 == Frequently Asked Questions ==
 = Is WP Static Export really free? =
-Yes! The core plugin is 100% free and open source. It provides everything you need for basic static site generation and ZIP export.
-Simply Static Pro and Studio are optional premium products for advanced features like automated deployment, forms, search, and managed hosting.
-= What's the difference between the free plugin, Pro, and Studio? =
-Free: Generate static sites, export as ZIP or to local directory. Perfect for testing and simple exports.
-Pro ($99/year per site): Advanced deployment, automation, forms, search, WP-CLI. For developers and agencies self-hosting.
-Studio ($12/month per site): All-in-one managed hosting. We handle WordPress, static hosting, backups, SSL, everything. For businesses who want zero maintenance.
-See detailed comparison
-= Can I use the free version for production sites? =
-Yes, but you'll need to manually upload the ZIP file to your hosting provider each time you update your site.
-For production sites with frequent updates, we recommend Pro (automated deployments) or Studio (fully managed).
+Yes. It is free and open source (GPLv2 or later). Deployment targets, forms, search, comments, optimization and multilingual support are all included.
+= Can I use it for production sites? =
+Yes. Configure a deployment target under Deploy & Features and each export uploads only the files that changed. For a single changed post, use "Publish to static site" in the post list or turn on automatic publishing.
 = Will my site look different after going static? =
 No. WP Static Export creates an exact copy of your WordPress site. Same HTML, same CSS, same JavaScript. The only difference is it loads faster and is more secure.
 = Do I need to know how to code? =
@@ -217,8 +160,7 @@ Developers can extend WP Static Export with 100+ hooks and filters, but coding k
 = Can I still use WordPress after generating a static site? =
 Yes! Your WordPress site remains fully functional. You use WordPress to manage content, then generate a new static version when you're ready to publish updates.
 = What happens to forms, search, and comments on my static site? =
-With the free version, these features won't work on your static site (they require server-side processing).
-Simply Static Pro and Studio add working forms, search, and comments to your static site using smart integrations.
+They need a service because a static host runs no PHP. Under Deploy & Features you choose where form submissions go (for example Google Forms or Google Sheets), enable client-side search, and replace the comment form with Giscus, Utterances or Disqus.
 = Can I host my static site for free? =
 Yes! Deploy your static site to:
 
@@ -233,8 +175,7 @@ WP Static Export works with virtually all WordPress themes and most plugins.
 Confirmed compatible themes: Virtually all (including block themes)
 Page builders: Elementor, Bricks, Gutenberg, Beaver Builder, Divi
 SEO plugins: Yoast SEO, Rank Math, AIOSEO, SEOPress
-Form plugins: Contact Form 7, Gravity Forms, WPForms (forms work with Pro/Studio)
-See full compatibility list
+Form plugins: Contact Form 7, Gravity Forms, WPForms, Fluent Forms
 = How is this different from caching plugins? =
 Caching plugins make your WordPress site faster, but your WordPress installation remains accessible and vulnerable.
 WP Static Export creates a completely separate static copy that serves no PHP, has no database, and can't be hacked. Your WordPress installation stays private and secure.
@@ -244,8 +185,7 @@ Yes! WP Static Export works with all major page builders including Elementor, El
 Static sites are excellent for SEO. Faster load times = better rankings.
 WP Static Export maintains all your SEO metadata, sitemaps, and schema markup. It works seamlessly with Yoast SEO, Rank Math, AIOSEO, and SEOPress.
 = Can I run a multilingual site? =
-Yes, with Simply Static Pro or Studio. Full support for WPML, Polylang, and TranslatePress.
-The free version can generate static sites in multiple languages, but managing separate exports per language is easier with Pro.
+Yes. WPML, Polylang and TranslatePress with directory-based language URLs (such as /fr/) are supported: every language is exported, including content that nothing links to.
 = Will this work on WordPress.com? =
 WP Static Export requires the ability to install plugins. It works on:
 
@@ -255,19 +195,9 @@ Most shared hosting providers
 VPS and dedicated servers
 
 = How big of a site can WP Static Export handle? =
-WP Static Export has successfully generated static sites with 100,000+ pages. Site size is generally limited by your server's resources (memory, execution time).
+Site size is limited by your server's resources (memory, execution time).
 = Where can I get help? =
-Free Version:
-
-WordPress.org support forums
-Documentation
-Video course
-
-Pro & Studio:
-
-Priority email support
-Direct access to development team
-Faster response times
+Use the WordPress.org support forums or open an issue in the project repository.
 
 == Screenshots ==
 
@@ -276,6 +206,16 @@ Settings - Configure your static site export options
 Diagnostics - Check your WordPress environment for compatibility
 
 == Changelog ==
+
+= WP Static Export fork =
+* Renamed from Simply Static; removed Pro and Studio promotions
+* Added deployment to GitHub, Netlify, Cloudflare Pages, S3, BunnyCDN and SFTP with incremental uploads
+* Added forms (Google Forms, Google Sheets, Netlify, Formspree, webhook), static search, comments, optimization, multilingual support and Lighthouse fixes
+* Added single-post export, automatic publishing and WP-CLI commands
+* Added the Deploy & Features settings page
+
+The entries below are the history of the upstream Simply Static project.
+
 
 = 3.8.18 =
 

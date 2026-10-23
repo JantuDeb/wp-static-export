@@ -11,7 +11,6 @@ import {
 import {useContext, useEffect, useState} from '@wordpress/element';
 import {SettingsContext} from "../context/SettingsContext";
 import apiFetch from "@wordpress/api-fetch";
-import StudioNotice from "../components/StudioNotice";
 
 const {__} = wp.i18n;
 
@@ -144,8 +143,7 @@ function Optimize() {
                     </FlexItem>
                     {('free' === options.plan || !isPro()) &&
                         <FlexItem>
-                            <ExternalLink
-                                href="https://simplystatic.com"> {__('Requires Simply Static Pro', 'simply-static')}</ExternalLink>
+                            <a href="admin.php?page=simply-static-features">{__('Configure in Deploy & Features', 'simply-static')}</a>
                         </FlexItem>
                     }
                 </Flex>
@@ -170,14 +168,6 @@ function Optimize() {
 
                 {minifyFiles &&
                     <>
-                        {isStudio() &&
-                            <StudioNotice
-                                heading={__('Minification is handled by Studio', 'simply-static')}
-                                cta={null}
-                            >
-                                <p>{__('Studio prepares optimized build assets automatically, so the low-level CSS and JavaScript minification options are not needed for Studio environments.', 'simply-static')}</p>
-                            </StudioNotice>
-                        }
                         <h4 style={{marginTop: '16px', marginBottom: '8px'}}>{__('Minify', 'simply-static')}</h4>
 
                         <ToggleControl
@@ -299,8 +289,7 @@ function Optimize() {
                     </FlexItem>
                     {('free' === options.plan || !isPro()) &&
                         <FlexItem>
-                            <ExternalLink
-                                href="https://simplystatic.com"> {__('Requires Simply Static Pro', 'simply-static')}</ExternalLink>
+                            <a href="admin.php?page=simply-static-features">{__('Configure in Deploy & Features', 'simply-static')}</a>
                         </FlexItem>
                     }
                 </Flex>
@@ -464,21 +453,12 @@ function Optimize() {
                     </FlexItem>
                     {('free' === options.plan || !isPro()) &&
                         <FlexItem>
-                            <ExternalLink
-                                href="https://simplystatic.com"> {__('Requires Simply Static Pro', 'simply-static')}</ExternalLink>
+                            <a href="admin.php?page=simply-static-features">{__('Configure in Deploy & Features', 'simply-static')}</a>
                         </FlexItem>
                     }
                 </Flex>
             </CardHeader>
             <CardBody>
-                {isStudio() &&
-                    <StudioNotice
-                        heading={__('Image optimization is handled by Studio', 'simply-static')}
-                        cta={null}
-                    >
-                        <p>{__('Studio optimizes the static build pipeline for its hosting environment, so you do not need to connect ShortPixel for Studio deployments.', 'simply-static')}</p>
-                    </StudioNotice>
-                }
                 <ToggleControl
                     label={__('Optimize Images with ShortPixel?', 'simply-static')}
                     __nextHasNoMarginBottom
@@ -558,12 +538,6 @@ function Optimize() {
                         <FlexItem>
                             <b>{__('Critical CSS', 'simply-static')}</b>
                         </FlexItem>
-                        {!isStudio() &&
-                            <FlexItem>
-                                <ExternalLink
-                                    href="https://simplystatic.com/simply-static-studio/"> {__('Requires Static Studio', 'simply-static')}</ExternalLink>
-                            </FlexItem>
-                        }
                     </Flex>
                 </CardHeader>
                 <CardBody>
@@ -619,8 +593,7 @@ function Optimize() {
                     </FlexItem>
                     {('free' === options.plan || !isPro()) &&
                         <FlexItem>
-                            <ExternalLink
-                                href="https://simplystatic.com"> {__('Requires Simply Static Pro', 'simply-static')}</ExternalLink>
+                            <a href="admin.php?page=simply-static-features">{__('Configure in Deploy & Features', 'simply-static')}</a>
                         </FlexItem>
                     }
                 </Flex>

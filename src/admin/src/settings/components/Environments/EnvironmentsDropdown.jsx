@@ -3,7 +3,7 @@ const {__} = wp.i18n;
 
 export default function EnvironmentDropdown({ onChange, current, environments, disabled, onDelete, isStudio }) {
     const helpText = isStudio
-        ? __('Choose an environment. If you like to create new ones, please set them up in your Static Studio dashboard.', 'simply-static')
+        ? __('Choose an environment.', 'simply-static')
         : __('Choose an environment or create a new one to configure settings.', 'simply-static');
 
     return (

@@ -227,13 +227,6 @@ function Workflow() {
                         <FlexItem>
                             <strong>{__('Single Push', 'simply-static')}</strong>
                         </FlexItem>
-                        {('free' === options.plan || !proEnabled) && (
-                            <FlexItem>
-                                <ExternalLink href="https://simplystatic.com">
-                                    {__('Requires Simply Static Pro', 'simply-static')}
-                                </ExternalLink>
-                            </FlexItem>
-                        )}
                     </Flex>
                 </CardHeader>
                 <CardBody>
@@ -391,13 +384,6 @@ function Workflow() {
                         <FlexItem>
                             <strong>{__('Builds', 'simply-static')}</strong>
                         </FlexItem>
-                        {('free' === options.plan || !proEnabled) && (
-                            <FlexItem>
-                                <ExternalLink href="https://simplystatic.com">
-                                    {__('Requires Simply Static Pro', 'simply-static')}
-                                </ExternalLink>
-                            </FlexItem>
-                        )}
                     </Flex>
                 </CardHeader>
                 <CardBody>
@@ -423,13 +409,6 @@ function Workflow() {
                         <FlexItem>
                             <strong>{__('Tools Submenu', 'simply-static')}</strong>
                         </FlexItem>
-                        {('free' === options.plan || !proEnabled) && (
-                            <FlexItem>
-                                <ExternalLink href="https://simplystatic.com">
-                                    {__('Requires Simply Static Pro', 'simply-static')}
-                                </ExternalLink>
-                            </FlexItem>
-                        )}
                     </Flex>
                 </CardHeader>
                 <CardBody>
@@ -455,13 +434,6 @@ function Workflow() {
                         <FlexItem>
                             <strong>{__('Webhook', 'simply-static')}</strong>
                         </FlexItem>
-                        {('free' === options.plan || !proEnabled) && (
-                            <FlexItem>
-                                <ExternalLink href="https://simplystatic.com">
-                                    {__('Requires Simply Static Pro', 'simply-static')}
-                                </ExternalLink>
-                            </FlexItem>
-                        )}
                     </Flex>
                 </CardHeader>
                 <CardBody>

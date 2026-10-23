@@ -173,8 +173,7 @@ function FormSettings() {
                     </FlexItem>
                     {('free' === options.plan || !isPro()) &&
                         <FlexItem>
-                            <ExternalLink
-                                href="https://simplystatic.com"> {__('Requires Simply Static Pro', 'simply-static')}</ExternalLink>
+                            <a href="admin.php?page=simply-static-features">{__('Configure in Deploy & Features', 'simply-static')}</a>
                         </FlexItem>
                     }
                 </Flex>
@@ -244,8 +243,7 @@ function FormSettings() {
                     </FlexItem>
                     {('free' === options.plan || !isPro()) &&
                         <FlexItem>
-                            <ExternalLink
-                                href="https://simplystatic.com"> {__('Requires Simply Static Pro', 'simply-static')}</ExternalLink>
+                            <a href="admin.php?page=simply-static-features">{__('Configure in Deploy & Features', 'simply-static')}</a>
                         </FlexItem>
                     }
                 </Flex>
@@ -296,8 +294,7 @@ function FormSettings() {
                             </FlexItem>
                             {('free' === options.plan || !isPro()) && (
                                 <FlexItem>
-                                    <ExternalLink
-                                        href="https://simplystatic.com"> {__('Requires Simply Static Pro', 'simply-static')}</ExternalLink>
+                                    <a href="admin.php?page=simply-static-features">{__('Configure in Deploy & Features', 'simply-static')}</a>
                                 </FlexItem>
                             )}
                         </Flex>

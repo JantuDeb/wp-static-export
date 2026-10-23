@@ -11,7 +11,6 @@ import {
 import {useContext, useEffect, useState} from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import {SettingsContext} from "../context/SettingsContext";
-import StudioNotice from "../components/StudioNotice";
 
 const {__} = wp.i18n;
 
@@ -113,7 +112,7 @@ function DebugSettings() {
                         <>
                             {'free' === options.plan ?
                                 <>
-                                    {__('Automatically setting up Basic Auth requires Simply Static Pro.', 'simply-static')}
+                                    {__('Automatic Basic Auth setup is not available in this version.', 'simply-static')}
                                 </>
                                 :
                                 <>
@@ -143,14 +142,6 @@ function DebugSettings() {
                 <b>{__('Temporary Files', 'simply-static')}</b>
             </CardHeader>
             <CardBody>
-                {isStudio() &&
-                    <StudioNotice
-                        heading={__('Temporary files are managed by Studio', 'simply-static')}
-                        cta={null}
-                    >
-                        <p>{__('Studio provisions and cleans up build storage automatically for each environment, so there is no temporary directory to configure.', 'simply-static')}</p>
-                    </StudioNotice>
-                }
                 <TextControl
                     label={__('Temporary Files Directory', 'simply-static')}
                     type={"text"}
@@ -209,14 +200,6 @@ function DebugSettings() {
                 <b>{__('Proxy Setup', 'simply-static')}</b>
             </CardHeader>
             <CardBody>
-                {isStudio() &&
-                    <StudioNotice
-                        heading={__('Proxy setup is handled by Studio', 'simply-static')}
-                        cta={null}
-                    >
-                        <p>{__('Studio already knows the WordPress origin and public Studio URL for this environment, so you do not need to configure a proxy URL manually.', 'simply-static')}</p>
-                    </StudioNotice>
-                }
                 <TextControl
                     label={__('Origin URL', 'simply-static')}
                     type={"url"}
@@ -257,14 +240,6 @@ function DebugSettings() {
                 <b>{__('Cron', 'simply-static')}</b>
             </CardHeader>
             <CardBody>
-                {isStudio() &&
-                    <StudioNotice
-                        heading={__('Cron is automatic on Studio', 'simply-static')}
-                        cta={null}
-                    >
-                        <p>{__('Studio starts builds automatically when your site changes, so you do not need a server-side cron job to trigger exports.', 'simply-static')}</p>
-                    </StudioNotice>
-                }
                 <ToggleControl
                     label={__('Use server-side cron job', 'simply-static')}
                     help={__('Enable this if you use a server-side cron job instead of the default WP-Cron.', 'simply-static')}

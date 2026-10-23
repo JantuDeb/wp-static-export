@@ -132,7 +132,7 @@ final class AdminControllerCoverageTest extends UnitTestCase {
 
 	public function test_rest_routes_register_expected_callbacks_and_capability_contexts(): void {
 		$this->rest->rest_api_init();
-		self::assertCount( 37, WpEnv::$routes );
+		self::assertCount( 36, WpEnv::$routes );
 
 		$expected_callbacks = array(
 			array( '/settings', 'GET', 'get_settings' ),
@@ -191,17 +191,12 @@ final class AdminControllerCoverageTest extends UnitTestCase {
 		WpEnv::$capabilities['manage_network_options'] = true;
 		self::assertTrue( $this->routePermission( '/update-from-network', 'POST' ) );
 
-		self::assertFalse( $this->routePermission( '/install-studio-migrate', 'POST' ) );
-		WpEnv::$capabilities['install_plugins'] = true;
-		self::assertFalse( $this->routePermission( '/install-studio-migrate', 'POST' ) );
-		WpEnv::$capabilities['activate_plugins'] = true;
-		self::assertTrue( $this->routePermission( '/install-studio-migrate', 'POST' ) );
 	}
 
 	public function test_multisite_routes_require_network_capabilities(): void {
 		WpEnv::$multisite = true;
 		$this->rest->rest_api_init();
-		self::assertCount( 41, WpEnv::$routes );
+		self::assertCount( 40, WpEnv::$routes );
 
 		self::assertTrue( $this->hasRegisteredRoute( '/sites', 'GET' ) );
 		self::assertTrue( $this->hasRegisteredRoute( '/trigger-cron', 'POST' ) );
@@ -231,10 +226,10 @@ final class AdminControllerCoverageTest extends UnitTestCase {
 		try {
 			$settings = Admin_Settings::get_instance();
 			$settings->rest_api_init();
-			self::assertCount( 37, WpEnv::$routes );
+			self::assertCount( 36, WpEnv::$routes );
 
 			$settings->rest_api_init();
-			self::assertCount( 37, WpEnv::$routes );
+			self::assertCount( 36, WpEnv::$routes );
 		} finally {
 			$instance_property->setValue( null, $previous_instance );
 		}

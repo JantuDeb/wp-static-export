@@ -11,7 +11,6 @@ import ActivityLog from "../components/ActivityLog";
 import ExportLog from "../components/ExportLog";
 import LogButtons from "../components/LogButtons";
 import Sites from "../components/Sites";
-import BFBanner from "../components/Marketing/BFBanner";
 import OperationsMode from "../components/OperationsMode";
 
 const {__} = wp.i18n;
@@ -28,7 +27,6 @@ function Generate() {
 		}
 		{!options.is_network && options.can_view_activity_log &&
             <>
-                <BFBanner />
                 <ActivityLog/>
                 <Spacer margin={5}/>
             </>
