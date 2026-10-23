@@ -5,6 +5,7 @@ import sharp from 'sharp';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { matchesAny } from '../src/process/glob.js';
 import { runProcess } from '../src/process/index.js';
+import { photo } from '../tools/lighthouse/fixture.js';
 import { addPictureSources, looksMinified, minifyCssString, minifyHtmlString, minifyJsString } from '../src/process/optimize.js';
 import { extractRecord, filePathToUrl, isArchiveUrl, objectId } from '../src/process/search-index.js';
 import type { Logger } from '../src/types.js';
@@ -131,6 +132,38 @@ describe('idempotence (the state file may be lost; outputs must not change again
     await run(dir);
     const second = await Promise.all(['a/app.js', 'a/s.css', 'index.html'].map((f) => sha(path.join(dir, f))));
     expect(second).toEqual(first);
+  });
+
+  it('does not re-encode images it already optimized, even when the state file is gone (no JPEG generation loss)', async () => {
+    const dir = await tmp();
+    await mkdir(path.join(dir, 'u'));
+    await writeFile(path.join(dir, 'u/a.jpg'), await photo(600, 400, 5, 100));
+    await writeFile(
+      path.join(dir, 'u/b.png'),
+      await sharp({ create: { width: 200, height: 120, channels: 3, background: '#556' } })
+        .png({ compressionLevel: 0 })
+        .toBuffer(),
+    );
+    const img = { action: 'process' as const, dir, scope: 'full' as const, config: {}, ops: { optimize: { images: true, webp: true, quality: 60 } } };
+    await runProcess(img, log);
+    const names = ['u/a.jpg', 'u/b.png', 'u/a.jpg.webp'];
+    const first = await Promise.all(names.map((f) => sha(path.join(dir, f))));
+    for (let i = 0; i < 3; i++) {
+      await rm(path.join(path.dirname(dir), path.basename(dir) + '.process-state.json'), { force: true });
+      await runProcess(img, log);
+    }
+    expect(await Promise.all(names.map((f) => sha(path.join(dir, f))))).toEqual(first);
+  });
+
+  it('wraps pages with existing WebP twins on a later partial run', async () => {
+    const dir = await tmp();
+    await mkdir(path.join(dir, 'u'));
+    await writeFile(path.join(dir, 'u/a.jpg'), await photo(600, 400, 5, 100));
+    const img = { action: 'process' as const, dir, scope: 'full' as const, config: {}, ops: { optimize: { images: true, webp: true, quality: 60 } } };
+    await runProcess(img, log);
+    await writeFile(path.join(dir, 'p.html'), '<html><body><img src="/u/a.jpg" alt=""></body></html>'); // freshly fetched page
+    await runProcess({ ...img, scope: 'partial' }, log);
+    expect(await readFile(path.join(dir, 'p.html'), 'utf8')).toContain('<picture><source type="image/webp" srcset="/u/a.jpg.webp">');
   });
 
   it('never touches ss-assets (already minified, must stay stable)', async () => {

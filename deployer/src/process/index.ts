@@ -41,8 +41,11 @@ export async function runProcess(job: ProcessJob, log: Logger): Promise<DeployRe
     const o = job.ops.optimize;
     const res = await optimize(dir, files, o, state, log);
     created.push(...res.webpCreated);
-    if (o.webp && res.webpCreated.length) {
-      const webp = new Set(res.webpCreated);
+    files = await scanDir(dir);
+    // Wrap with every WebP twin that exists, not just those made in this run: a later partial export
+    // re-fetches pages but keeps the twins, and its pages must be wrapped the same way.
+    const webp = new Set([...res.webpCreated, ...files.filter((f) => /\.(jpe?g|png)\.webp$/i.test(f.path)).map((f) => f.path)]);
+    if (o.webp && webp.size) {
       for (const f of files.filter((x) => /\.html?$/i.test(x.path))) {
         const html = await readFile(f.abs, 'utf8');
         const next = addPictureSources(html, f.path, webp);

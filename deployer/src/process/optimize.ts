@@ -37,6 +37,18 @@ export function looksMinified(text: string): boolean {
   return text.length / lines > 250;
 }
 
+/** Written into every image we encode (EXIF Software), so re-encoding an already optimized image is skipped. */
+export const OPTIMIZED_MARKER = 'wp-static-export';
+
+async function isOptimized(sharp: any, input: Buffer): Promise<boolean> {
+  try {
+    const md = await sharp(input).metadata();
+    return Boolean(md.exif && md.exif.toString('latin1').includes(OPTIMIZED_MARKER));
+  } catch {
+    return false;
+  }
+}
+
 /** Files shipped by the exporter itself are already minified and must stay byte-identical between runs. */
 const isOwnAsset = (p: string) => p.startsWith('ss-assets/');
 
@@ -118,14 +130,17 @@ export async function optimize(dir: string, files: FileEntry[], opts: OptimizeOp
         }
       } else if (sharp && ['jpg', 'jpeg', 'png'].includes(e)) {
         const input = await readFile(abs);
-        const img = sharp(input);
+        // JPEG is lossy: every re-encode loses quality, so an image we already optimized is left alone.
+        if (await isOptimized(sharp, input)) return;
+        const mark = { IFD0: { Software: OPTIMIZED_MARKER } };
+        const img = sharp(input).withExif(mark);
         const encoded: Buffer = await (e === 'png' ? img.png({ compressionLevel: 9, effort: 8 }) : img.jpeg({ quality, mozjpeg: true })).toBuffer();
         if (encoded.length < input.length) {
           await writeFile(abs, encoded);
           after = encoded.length;
         }
         if (opts.webp) {
-          const webp: Buffer = await sharp(input).webp({ quality }).toBuffer();
+          const webp: Buffer = await sharp(input).withExif(mark).webp({ quality }).toBuffer();
           // A WebP that isn't smaller than the (optimized) original isn't worth serving.
           if (webp.length < (after ?? before)) {
             await writeFile(abs + '.webp', webp);

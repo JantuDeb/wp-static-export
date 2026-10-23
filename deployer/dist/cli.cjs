@@ -77686,6 +77686,15 @@ function looksMinified(text) {
   const lines = text.split("\n").length;
   return text.length / lines > 250;
 }
+var OPTIMIZED_MARKER = "wp-static-export";
+async function isOptimized(sharp, input) {
+  try {
+    const md = await sharp(input).metadata();
+    return Boolean(md.exif && md.exif.toString("latin1").includes(OPTIMIZED_MARKER));
+  } catch {
+    return false;
+  }
+}
 var isOwnAsset = (p) => p.startsWith("ss-assets/");
 async function minifyHtmlString(html) {
   return minify2(html, {
@@ -77754,14 +77763,16 @@ async function optimize(dir, files, opts, state, log2) {
         }
       } else if (sharp && ["jpg", "jpeg", "png"].includes(e)) {
         const input = await (0, import_promises9.readFile)(abs);
-        const img = sharp(input);
+        if (await isOptimized(sharp, input)) return;
+        const mark2 = { IFD0: { Software: OPTIMIZED_MARKER } };
+        const img = sharp(input).withExif(mark2);
         const encoded = await (e === "png" ? img.png({ compressionLevel: 9, effort: 8 }) : img.jpeg({ quality, mozjpeg: true })).toBuffer();
         if (encoded.length < input.length) {
           await (0, import_promises9.writeFile)(abs, encoded);
           after = encoded.length;
         }
         if (opts.webp) {
-          const webp = await sharp(input).webp({ quality }).toBuffer();
+          const webp = await sharp(input).withExif(mark2).webp({ quality }).toBuffer();
           if (webp.length < (after ?? before)) {
             await (0, import_promises9.writeFile)(abs + ".webp", webp);
             result.webpCreated.push(f.path + ".webp");
@@ -77893,8 +77904,9 @@ async function runProcess(job, log2) {
     const o = job.ops.optimize;
     const res = await optimize(dir, files, o, state, log2);
     created.push(...res.webpCreated);
-    if (o.webp && res.webpCreated.length) {
-      const webp = new Set(res.webpCreated);
+    files = await scanDir(dir);
+    const webp = /* @__PURE__ */ new Set([...res.webpCreated, ...files.filter((f) => /\.(jpe?g|png)\.webp$/i.test(f.path)).map((f) => f.path)]);
+    if (o.webp && webp.size) {
       for (const f of files.filter((x) => /\.html?$/i.test(x.path))) {
         const html = await (0, import_promises11.readFile)(f.abs, "utf8");
         const next = addPictureSources(html, f.path, webp);
