@@ -26,6 +26,20 @@ export interface OptimizeResult {
 
 const ext = (p: string) => path.extname(p).slice(1).toLowerCase();
 
+/**
+ * Minifiers are not idempotent: minifying their own output changes it again (and then the file is
+ * re-uploaded on every deploy). The state file that normally prevents this lives in the temp folder,
+ * which other parts of the plugin clear, so also recognize minified output by its shape: few, very long lines.
+ */
+export function looksMinified(text: string): boolean {
+  if (text.length < 400) return false;
+  const lines = text.split('\n').length;
+  return text.length / lines > 250;
+}
+
+/** Files shipped by the exporter itself are already minified and must stay byte-identical between runs. */
+const isOwnAsset = (p: string) => p.startsWith('ss-assets/');
+
 export async function minifyHtmlString(html: string): Promise<string> {
   return minifyHtml(html, {
     collapseWhitespace: true,
@@ -71,7 +85,7 @@ export async function optimize(dir: string, files: FileEntry[], opts: OptimizeOp
   const sharp = opts.images ? await loadSharp(log) : null;
   const quality = Math.max(1, Math.min(100, opts.quality ?? 80));
 
-  const candidates = files.filter((f) => !matchesAny(f.path, opts.exclude) && state[f.path] !== f.sha256);
+  const candidates = files.filter((f) => !isOwnAsset(f.path) && !matchesAny(f.path, opts.exclude) && state[f.path] !== f.sha256);
 
   await pool(candidates, 4, async (f) => {
     const e = ext(f.path);
@@ -83,21 +97,21 @@ export async function optimize(dir: string, files: FileEntry[], opts: OptimizeOp
     try {
       if ((e === 'html' || e === 'htm') && opts.html) {
         const src = await readFile(abs, 'utf8');
-        const out = await minifyHtmlString(src);
+        const out = looksMinified(src) ? src : await minifyHtmlString(src);
         if (out.length < src.length) {
           await writeFile(abs, out);
           after = Buffer.byteLength(out);
         }
       } else if (e === 'css' && opts.css && !isMin) {
         const src = await readFile(abs, 'utf8');
-        const out = minifyCssString(src);
+        const out = looksMinified(src) ? src : minifyCssString(src);
         if (out && out.length < src.length) {
           await writeFile(abs, out);
           after = Buffer.byteLength(out);
         }
       } else if (e === 'js' && opts.js && !isMin) {
         const src = await readFile(abs, 'utf8');
-        const out = await minifyJsString(src);
+        const out = looksMinified(src) ? src : await minifyJsString(src);
         if (out.length < src.length) {
           await writeFile(abs, out);
           after = Buffer.byteLength(out);

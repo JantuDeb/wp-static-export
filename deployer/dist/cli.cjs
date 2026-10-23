@@ -77681,6 +77681,12 @@ var minify2 = async function(value, options) {
 
 // src/process/optimize.ts
 var ext = (p) => import_node_path5.default.extname(p).slice(1).toLowerCase();
+function looksMinified(text) {
+  if (text.length < 400) return false;
+  const lines = text.split("\n").length;
+  return text.length / lines > 250;
+}
+var isOwnAsset = (p) => p.startsWith("ss-assets/");
 async function minifyHtmlString(html) {
   return minify2(html, {
     collapseWhitespace: true,
@@ -77717,7 +77723,7 @@ async function optimize(dir, files, opts, state, log2) {
   const result = { files: 0, bytesSaved: 0, webpCreated: [] };
   const sharp = opts.images ? await loadSharp(log2) : null;
   const quality = Math.max(1, Math.min(100, opts.quality ?? 80));
-  const candidates = files.filter((f) => !matchesAny(f.path, opts.exclude) && state[f.path] !== f.sha256);
+  const candidates = files.filter((f) => !isOwnAsset(f.path) && !matchesAny(f.path, opts.exclude) && state[f.path] !== f.sha256);
   await pool(candidates, 4, async (f) => {
     const e = ext(f.path);
     const abs = f.abs;
@@ -77727,21 +77733,21 @@ async function optimize(dir, files, opts, state, log2) {
     try {
       if ((e === "html" || e === "htm") && opts.html) {
         const src = await (0, import_promises9.readFile)(abs, "utf8");
-        const out = await minifyHtmlString(src);
+        const out = looksMinified(src) ? src : await minifyHtmlString(src);
         if (out.length < src.length) {
           await (0, import_promises9.writeFile)(abs, out);
           after = Buffer.byteLength(out);
         }
       } else if (e === "css" && opts.css && !isMin) {
         const src = await (0, import_promises9.readFile)(abs, "utf8");
-        const out = minifyCssString(src);
+        const out = looksMinified(src) ? src : minifyCssString(src);
         if (out && out.length < src.length) {
           await (0, import_promises9.writeFile)(abs, out);
           after = Buffer.byteLength(out);
         }
       } else if (e === "js" && opts.js && !isMin) {
         const src = await (0, import_promises9.readFile)(abs, "utf8");
-        const out = await minifyJsString(src);
+        const out = looksMinified(src) ? src : await minifyJsString(src);
         if (out.length < src.length) {
           await (0, import_promises9.writeFile)(abs, out);
           after = Buffer.byteLength(out);

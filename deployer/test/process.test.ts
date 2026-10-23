@@ -1,11 +1,11 @@
-import { mkdir, mkdtemp, readFile, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import sharp from 'sharp';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { matchesAny } from '../src/process/glob.js';
 import { runProcess } from '../src/process/index.js';
-import { addPictureSources, minifyCssString, minifyHtmlString, minifyJsString } from '../src/process/optimize.js';
+import { addPictureSources, looksMinified, minifyCssString, minifyHtmlString, minifyJsString } from '../src/process/optimize.js';
 import { extractRecord, filePathToUrl, isArchiveUrl, objectId } from '../src/process/search-index.js';
 import type { Logger } from '../src/types.js';
 
@@ -97,6 +97,55 @@ describe('archive detection', () => {
     ])
       expect(isArchiveUrl(u), u).toBe(true);
     for (const u of ['/', '/about/', '/category-guide/', '/pages/', '/hiking-2024/', '/2024-plan/', '/blog/hello/']) expect(isArchiveUrl(u), u).toBe(false);
+  });
+});
+
+describe('idempotence (the state file may be lost; outputs must not change again)', () => {
+  const opts = { html: true, css: true, js: true };
+  const run = (dir: string) => runProcess({ action: 'process', dir, scope: 'full', config: {}, ops: { optimize: opts } }, log);
+  const sha = async (f: string) =>
+    (await import('node:crypto'))
+      .createHash('sha256')
+      .update(await readFile(f))
+      .digest('hex');
+
+  it('re-running after the state file is deleted leaves minified js, css and html byte-identical', async () => {
+    const dir = await tmp();
+    await mkdir(path.join(dir, 'a'));
+    const big = Array.from(
+      { length: 60 },
+      (_, i) =>
+        `function handler${i}(element, options) {\n  var settings = options || {};\n  if (!element) { return null; }\n  return element.getAttribute("data-${i}") + settings.value;\n}`,
+    ).join('\n\n');
+    await writeFile(path.join(dir, 'a/app.js'), big);
+    await writeFile(path.join(dir, 'a/s.css'), Array.from({ length: 80 }, (_, i) => `.c${i} {\n  margin: ${i}px;\n  color: #abc;\n}`).join('\n\n'));
+    await writeFile(
+      path.join(dir, 'index.html'),
+      '<html><head><title>T</title></head><body>\n' +
+        Array.from({ length: 80 }, (_, i) => `  <p>Paragraph ${i} with   <b>bold</b>  text.</p>`).join('\n') +
+        '\n</body></html>',
+    );
+    await run(dir);
+    const first = await Promise.all(['a/app.js', 'a/s.css', 'index.html'].map((f) => sha(path.join(dir, f))));
+    await rm(path.join(path.dirname(dir), path.basename(dir) + '.process-state.json'), { force: true });
+    await run(dir);
+    const second = await Promise.all(['a/app.js', 'a/s.css', 'index.html'].map((f) => sha(path.join(dir, f))));
+    expect(second).toEqual(first);
+  });
+
+  it('never touches ss-assets (already minified, must stay stable)', async () => {
+    const dir = await tmp();
+    await mkdir(path.join(dir, 'ss-assets'));
+    const src = 'function   a ( x ) {\n  return x ;\n}\n'.repeat(40);
+    await writeFile(path.join(dir, 'ss-assets/search.js'), src);
+    await run(dir);
+    expect(await readFile(path.join(dir, 'ss-assets/search.js'), 'utf8')).toBe(src);
+  });
+
+  it('looksMinified separates readable source from minified output', () => {
+    expect(looksMinified('a'.repeat(1000))).toBe(true);
+    expect(looksMinified(Array.from({ length: 50 }, () => 'var x = 1; // readable').join('\n'))).toBe(false);
+    expect(looksMinified('tiny')).toBe(false);
   });
 });
 
