@@ -35,6 +35,9 @@ class CLI_Command {
 	 * [--deploy-to=<target>]
 	 * : Override the delivery method for this run (github, netlify, cloudflare-pages, s3, bunny, sftp, zip, local).
 	 *
+	 * [--post=<ids>]
+	 * : Export only these posts (comma separated IDs) and deliver them: "instant publishing".
+	 *
 	 * [--force-full]
 	 * : Ignore incremental deploy state and upload every file.
 	 *
@@ -63,7 +66,12 @@ class CLI_Command {
 		$type = isset( $assoc_args['type'] ) ? (string) $assoc_args['type'] : 'export';
 		$job  = Plugin::instance()->get_archive_creation_job();
 
-		if ( ! Plugin::instance()->run_static_export( 0, $type ) ) {
+		if ( ! empty( $assoc_args['post'] ) ) {
+			$started = Single_Export::start( $assoc_args['post'] );
+			if ( is_wp_error( $started ) ) {
+				\WP_CLI::error( $started->get_error_message() );
+			}
+		} elseif ( ! Plugin::instance()->run_static_export( 0, $type ) ) {
 			\WP_CLI::error( 'Could not start the export (is one already running?).' );
 		}
 

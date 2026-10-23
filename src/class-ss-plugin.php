@@ -98,6 +98,7 @@ class Plugin {
 
 				// Forms, comments, search, multilingual.
 				Deploy_Runner::init();
+				Single_Export::init();
 				Html_Enhancer::init();
 				Multilingual::init();
 				add_action( 'ss_before_finish_transferring_files_locally', array( '\\Simply_Static\\Process_Config', 'transfer_extra_files' ), 10, 2 );
@@ -214,6 +215,7 @@ class Plugin {
 		require_once $path . 'src/features/class-ss-forms-enhancer.php';
 		require_once $path . 'src/features/class-ss-comments-enhancer.php';
 		require_once $path . 'src/features/class-ss-search-enhancer.php';
+		require_once $path . 'src/features/class-ss-single-export.php';
 		require_once $path . 'src/features/class-ss-features-admin.php';
 		require_once $path . 'src/tasks/class-ss-deploy-task.php';
 		require_once $path . 'src/tasks/class-ss-process-task.php';

@@ -109,6 +109,28 @@ class Features_Admin {
 
 		register_rest_route(
 			self::REST_NS,
+			'/export-single',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'export_single' ),
+				'permission_callback' => function ( $request ) {
+					$ids = Single_Export::normalize_ids( $request->get_param( 'post_ids' ) );
+					if ( ! $ids ) {
+						return current_user_can( 'edit_posts' );
+					}
+					foreach ( $ids as $id ) {
+						if ( ! current_user_can( 'edit_post', $id ) ) {
+							return false;
+						}
+					}
+
+					return true;
+				},
+			)
+		);
+
+		register_rest_route(
+			self::REST_NS,
 			'/verify',
 			array(
 				'methods'             => 'POST',
@@ -188,6 +210,19 @@ class Features_Admin {
 		do_action( 'ss_features_settings_saved', $saved );
 
 		return $this->get_settings();
+	}
+
+	/**
+	 * @param \WP_REST_Request $request Request with post_ids.
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function export_single( $request ) {
+		$result = Single_Export::start( $request->get_param( 'post_ids' ) );
+		if ( is_wp_error( $result ) ) {
+			return new \WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => 'ss_single_busy' === $result->get_error_code() ? 409 : 400 ) );
+		}
+
+		return new \WP_REST_Response( array( 'started' => true ), 202 );
 	}
 
 	/**

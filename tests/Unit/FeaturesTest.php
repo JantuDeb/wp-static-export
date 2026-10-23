@@ -12,6 +12,7 @@ use Simply_Static\Html_Enhancer;
 use Simply_Static\Options;
 use Simply_Static\Process_Config;
 use Simply_Static\Search_Enhancer;
+use Simply_Static\Single_Export;
 use Simply_Static\Tests\Support\UnitTestCase;
 use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
 
@@ -30,6 +31,7 @@ final class FeaturesTest extends UnitTestCase {
 			'src/features/class-ss-forms-enhancer.php',
 			'src/features/class-ss-comments-enhancer.php',
 			'src/features/class-ss-search-enhancer.php',
+			'src/features/class-ss-single-export.php',
 		) as $file ) {
 			$this->requireSource( $file );
 		}
@@ -334,6 +336,24 @@ final class FeaturesTest extends UnitTestCase {
 
 		$ignore = \Simply_Static\Deploy_Runner::ignore_patterns();
 		$this->assertContains( '*/simply-static/deploy-state/*', $ignore );
+	}
+
+	public function test_single_export_normalizes_ids_and_clears_its_one_shot_flag(): void {
+		$this->assertSame( array( 5, 7 ), Single_Export::normalize_ids( '5, 7,x,0,5,-3' ) );
+		$this->assertSame( array( 9 ), Single_Export::normalize_ids( array( '9', 0, null ) ) );
+		$this->assertSame( array(), Single_Export::normalize_ids( '' ) );
+
+		// Core's wrap-up never clears this flag; leaving it would make every later export a single-page export.
+		WpEnv::$options['simply-static-use-single'] = '12';
+		Single_Export::clear_flag();
+		$this->assertArrayNotHasKey( 'simply-static-use-single', WpEnv::$options );
+
+	}
+
+	public function test_single_export_settings_exist_in_the_ui(): void {
+		$fields = Features_Schema::fields();
+		$this->assertSame( 'checkbox', $fields['single_auto_export']['type'] );
+		$this->assertSame( 10, $fields['single_auto_export_delay']['default'] );
 	}
 
 	public function test_scope_is_partial_for_single_update_and_404_exports(): void {

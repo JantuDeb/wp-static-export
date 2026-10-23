@@ -92,6 +92,15 @@ class Features_Schema {
 				),
 			),
 			array(
+				'id'          => 'instant',
+				'label'       => __( 'Instant publishing', 'simply-static' ),
+				'description' => __( 'Publish one post to the static site without exporting everything. Use "Publish to static site" in the post list, "wp simply-static run --post=ID", or turn on automatic publishing. Single exports never delete anything and do not refresh the search index, archives or home page: run a full export for those.', 'simply-static' ),
+				'fields'      => array(
+					self::f( 'single_auto_export', __( 'Publish automatically when a post is published or updated', 'simply-static' ), 'checkbox' ),
+					self::f( 'single_auto_export_delay', __( 'Wait this many seconds before exporting', 'simply-static' ), 'number', array( 'default' => 10, 'help' => __( 'Groups quick successive saves into one export.', 'simply-static' ), 'show_if' => array( 'single_auto_export' => true ) ) ),
+				),
+			),
+			array(
 				'id'          => 'forms',
 				'label'       => __( 'Forms', 'simply-static' ),
 				'description' => __( 'Static sites have no PHP, so form submissions are sent to a service instead. Each rule maps forms to a destination.', 'simply-static' ),
