@@ -1,11 +1,12 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { minify as minifyCss } from 'csso';
+import CleanCSS from 'clean-css';
 import { minify as minifyHtml } from 'html-minifier-terser';
 import { minify as minifyJs } from 'terser';
 import type { FileEntry, Logger } from '../types.js';
 import { pool } from '../util.js';
 import { matchesAny } from './glob.js';
+import { resolveSitePath } from './paths.js';
 
 export interface OptimizeOptions {
   html?: boolean;
@@ -40,7 +41,9 @@ export async function minifyHtmlString(html: string): Promise<string> {
 }
 
 export function minifyCssString(css: string): string {
-  return minifyCss(css, { restructure: false }).css;
+  const out = new CleanCSS({ level: 1, returnPromise: false }).minify(css);
+  if (out.errors.length) throw new Error(out.errors[0]);
+  return out.styles;
 }
 
 export async function minifyJsString(js: string): Promise<string> {
@@ -51,9 +54,8 @@ export async function minifyJsString(js: string): Promise<string> {
 
 async function loadSharp(log: Logger): Promise<any | null> {
   try {
-    // Optional dependency: resolved at runtime so the bundle still works without it.
-    const req = eval('require') as NodeRequire;
-    return req('sharp');
+    // Optional dependency, marked external in the bundle so the plugin still works without it.
+    return (await import('sharp')).default;
   } catch {
     log.warn('Image optimization skipped: install the optional "sharp" module (cd deployer && npm install sharp).');
     return null;
@@ -132,16 +134,7 @@ export async function optimize(dir: string, files: FileEntry[], opts: OptimizeOp
 
 /** Wrap <img> in <picture> with a WebP <source> when every referenced file has a WebP twin. */
 export function addPictureSources(html: string, pagePath: string, webp: Set<string>): string {
-  const pageDir = path.posix.dirname('/' + pagePath);
-  const toSitePath = (u: string): string | null => {
-    if (/^(data:|blob:)/i.test(u)) return null;
-    try {
-      const url = new URL(u, 'https://site.invalid' + (pageDir === '/' ? '/' : pageDir + '/'));
-      return decodeURIComponent(url.pathname).replace(/^\//, '');
-    } catch {
-      return null;
-    }
-  };
+  const toSitePath = (u: string) => resolveSitePath(u, pagePath);
   const attr = (tag: string, name: string) =>
     new RegExp(`\\s${name}\\s*=\\s*("([^"]*)"|'([^']*)')`, 'i')
       .exec(tag)

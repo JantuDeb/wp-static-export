@@ -38,11 +38,37 @@ class Process_Config {
 	 * Operations that need Node (everything else is plain PHP file copying).
 	 *
 	 * @param Options|null $o Options.
-	 * @return array{optimize?:array,search?:array}
+	 * @return array{fixes?:array,optimize?:array,search?:array}
 	 */
 	public static function node_ops( $o = null ) {
 		$o   = $o ?: Options::instance();
 		$ops = array();
+
+		if ( $o->get( 'quality_enabled' ) ) {
+			// Individual switches default to on once the feature is enabled (the meta description guess is opt-in).
+			$flag = static function ( $key, $default = true ) use ( $o ) {
+				$value = $o->get( $key );
+
+				return null === $value ? $default : (bool) $value;
+			};
+			$lang = trim( (string) $o->get( 'quality_lang' ) );
+			if ( '' === $lang ) {
+				$lang = function_exists( 'get_bloginfo' ) ? (string) get_bloginfo( 'language' ) : '';
+			}
+			$ops['fixes'] = array(
+				'viewport'        => $flag( 'quality_viewport' ),
+				'lang'            => '' !== $lang ? $lang : 'en',
+				'noopener'        => $flag( 'quality_noopener' ),
+				'imageAlt'        => $flag( 'quality_image_alt' ),
+				'linkNames'       => $flag( 'quality_link_names' ),
+				'imageDimensions' => $flag( 'quality_image_dimensions' ),
+				'lazyImages'      => $flag( 'quality_lazy_images' ),
+				'fontDisplay'     => $flag( 'quality_font_display' ),
+				'metaDescription' => $flag( 'quality_meta_description', false ),
+				// _headers is only understood by these two hosts; elsewhere it would be a stray file.
+				'headers'         => $flag( 'quality_headers' ) && in_array( $o->get( 'delivery_method' ), array( 'netlify', 'cloudflare-pages' ), true ),
+			);
+		}
 
 		if ( $o->get( 'optimize_html' ) || $o->get( 'optimize_css' ) || $o->get( 'optimize_js' ) || $o->get( 'optimize_images' ) ) {
 			$ops['optimize'] = array(

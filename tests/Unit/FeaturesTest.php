@@ -275,6 +275,27 @@ final class FeaturesTest extends UnitTestCase {
 		$this->assertSame( 'k', Process_Config::node_ops()['search']['algolia']['adminKey'] );
 	}
 
+	public function test_quality_fixes_default_on_once_enabled_with_description_guess_opt_in(): void {
+		$this->configure( array() );
+		$this->assertArrayNotHasKey( 'fixes', Process_Config::node_ops() );
+
+		$this->configure( array( 'quality_enabled' => true, 'delivery_method' => 'netlify' ) );
+		$fixes = Process_Config::node_ops()['fixes'];
+		$this->assertTrue( $fixes['lazyImages'] );
+		$this->assertTrue( $fixes['imageDimensions'] );
+		$this->assertTrue( $fixes['linkNames'] );
+		$this->assertFalse( $fixes['metaDescription'], 'invented descriptions must be opt-in' );
+		$this->assertTrue( $fixes['headers'] );
+		$this->assertTrue( Process_Config::needed() );
+
+		$this->configure( array( 'quality_enabled' => true, 'delivery_method' => 's3', 'quality_lazy_images' => false, 'quality_lang' => 'fr-FR', 'quality_meta_description' => true ) );
+		$fixes = Process_Config::node_ops()['fixes'];
+		$this->assertFalse( $fixes['lazyImages'] );
+		$this->assertFalse( $fixes['headers'], '_headers is only for Netlify / Cloudflare Pages' );
+		$this->assertSame( 'fr-FR', $fixes['lang'] );
+		$this->assertTrue( $fixes['metaDescription'] );
+	}
+
 	public function test_scope_is_partial_for_single_update_and_404_exports(): void {
 		$this->configure( array( 'generate_type' => 'export' ) );
 		$this->assertSame( 'full', Process_Config::scope() );

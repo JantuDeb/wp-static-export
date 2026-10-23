@@ -2,10 +2,12 @@ import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { DeployResult, Job, Logger } from '../types.js';
 import { scanDir } from '../util.js';
+import { applyFixes, type FixOptions } from '../quality/fixes.js';
 import { addPictureSources, optimize, type OptimizeOptions } from './optimize.js';
 import { buildSearchRecords, pushToAlgolia, writeSearchIndex, type SearchOptions } from './search-index.js';
 
 export interface ProcessOps {
+  fixes?: FixOptions;
   optimize?: OptimizeOptions;
   search?: SearchOptions;
 }
@@ -21,6 +23,16 @@ export async function runProcess(job: ProcessJob, log: Logger): Promise<DeployRe
   const parts: string[] = [];
   const created: string[] = [];
   let files = await scanDir(dir);
+
+  if (job.ops.fixes) {
+    const res = await applyFixes(dir, files, job.ops.fixes, log);
+    created.push(...res.created);
+    const summary = Object.entries(res.counts)
+      .map(([k, v]) => `${k} ${v}`)
+      .join(', ');
+    parts.push(summary ? `fixed ${res.files} file(s) (${summary})` : 'no Lighthouse fixes needed');
+    files = await scanDir(dir);
+  }
 
   if (job.ops.optimize) {
     const state: Record<string, string> = await readFile(stateFile(dir), 'utf8')
