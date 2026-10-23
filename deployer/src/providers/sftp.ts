@@ -24,6 +24,25 @@ export const sftp: Provider<SftpConfig> = {
     if (!cfg.password && !cfg.privateKey) throw new DeployError('sftp: provide a password or privateKey');
     return c as unknown as SftpConfig;
   },
+  async verify(config) {
+    const client = new SftpClient();
+    try {
+      await client.connect({
+        host: config.host,
+        port: config.port ?? 22,
+        username: config.username,
+        password: config.password,
+        privateKey: config.privateKey,
+        passphrase: config.passphrase,
+        readyTimeout: 15000,
+      });
+      const kind = await client.exists(config.folder);
+      if (!kind) throw new DeployError(`Connected, but ${config.folder} does not exist on the server`);
+      return { message: `Connected to ${config.host}, ${config.folder} exists` };
+    } finally {
+      await client.end().catch(() => undefined);
+    }
+  },
   async deploy({ changed, deleted, config, log }) {
     const client = new SftpClient();
     await client.connect({

@@ -23,6 +23,11 @@ export const netlify: Provider<NetlifyConfig> = {
     required(c as Record<string, unknown>, ['token', 'siteId'], 'netlify');
     return c as NetlifyConfig;
   },
+  async verify(config) {
+    const api = (config.apiUrl ?? 'https://api.netlify.com/api/v1').replace(/\/$/, '');
+    const site = (await (await http(`${api}/sites/${config.siteId}`, { headers: { Authorization: `Bearer ${config.token}` } })).json()) as any;
+    return { message: `Connected to Netlify site ${site.name ?? config.siteId}` };
+  },
   async deploy({ all, config, concurrency, log }) {
     const api = (config.apiUrl ?? 'https://api.netlify.com/api/v1').replace(/\/$/, '');
     const auth = { Authorization: `Bearer ${config.token}` };
@@ -33,7 +38,11 @@ export const netlify: Provider<NetlifyConfig> = {
     const body: Record<string, unknown> = { files: Object.fromEntries(digests), draft: !!config.draft };
     if (config.title) body.title = config.title;
     const created = (await (
-      await http(`${api}/sites/${config.siteId}/deploys`, { method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      await http(`${api}/sites/${config.siteId}/deploys`, {
+        method: 'POST',
+        headers: { ...auth, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
     ).json()) as any;
 
     const required_: string[] = created.required ?? [];

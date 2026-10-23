@@ -199,6 +199,85 @@ class Deploy_Runner {
 		);
 	}
 
+
+	/**
+	 * Run a short job and wait for it (used for "test connection").
+	 *
+	 * @param array $job     Job description.
+	 * @param int   $timeout Seconds before the process is killed.
+	 * @return array|\WP_Error The "result" event, or an error built from the "error" event.
+	 */
+	public static function run_sync( array $job, $timeout = 30 ) {
+		$node = self::find_node();
+		if ( is_wp_error( $node ) ) {
+			return $node;
+		}
+		$cli = self::cli_path();
+		if ( ! is_readable( $cli ) ) {
+			return new \WP_Error( 'ss_deploy_no_cli', __( 'The deployer bundle is missing. Run "npm run build" in the deployer folder.', 'simply-static' ) );
+		}
+
+		$dir = Util::get_temp_dir();
+		wp_mkdir_p( $dir );
+		$job_file = $dir . 'deploy-job-' . wp_generate_password( 12, false ) . '.json';
+		file_put_contents( $job_file, wp_json_encode( $job ) );
+		chmod( $job_file, 0600 );
+
+		$proc = proc_open(
+			array( $node, $cli, '--job', $job_file ),
+			array( 1 => array( 'pipe', 'w' ), 2 => array( 'pipe', 'w' ) ),
+			$pipes
+		);
+		if ( ! is_resource( $proc ) ) {
+			@unlink( $job_file ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			return new \WP_Error( 'ss_deploy_spawn', __( 'Could not start the deployer process.', 'simply-static' ) );
+		}
+		stream_set_blocking( $pipes[1], false );
+
+		$buffer   = '';
+		$deadline = time() + (int) $timeout;
+		while ( time() < $deadline ) {
+			$read = array( $pipes[1] );
+			$w    = null;
+			$e    = null;
+			if ( stream_select( $read, $w, $e, 1 ) ) {
+				$chunk = fread( $pipes[1], 8192 );
+				if ( false === $chunk || ( '' === $chunk && feof( $pipes[1] ) ) ) {
+					break;
+				}
+				$buffer .= $chunk;
+			}
+		}
+		$timed_out = time() >= $deadline;
+		if ( $timed_out ) {
+			proc_terminate( $proc );
+		}
+		fclose( $pipes[1] );
+		fclose( $pipes[2] );
+		proc_close( $proc );
+		@unlink( $job_file ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+
+		$result = null;
+		$error  = null;
+		foreach ( explode( "\n", $buffer ) as $line ) {
+			$event = json_decode( trim( $line ), true );
+			if ( is_array( $event ) && 'result' === ( $event['type'] ?? '' ) ) {
+				$result = $event;
+			} elseif ( is_array( $event ) && 'error' === ( $event['type'] ?? '' ) ) {
+				$error = (string) $event['message'];
+			}
+		}
+
+		if ( $timed_out && ! $result ) {
+			return new \WP_Error( 'ss_deploy_timeout', __( 'The check timed out.', 'simply-static' ) );
+		}
+		if ( $error || ! $result ) {
+			return new \WP_Error( 'ss_deploy_failed', $error ?: __( 'The deployer returned no result.', 'simply-static' ) );
+		}
+
+		return $result;
+	}
+
 	/**
 	 * Terminate a running deployer and remove its files.
 	 *

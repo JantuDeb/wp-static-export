@@ -97,8 +97,12 @@ final class PluginTaskLifecycleTest extends UnitTestCase {
 				array( 'setup', 'generate_404', 'transfer_files_locally', 'wrapup' ),
 			),
 			'extension delivery' => array(
-				's3',
+				'third-party-extension',
 				array( 'setup', 'generate_404', 'wrapup' ),
+			),
+			'built-in deploy target' => array(
+				's3',
+				array( 'setup', 'generate_404', 'deploy', 'wrapup' ),
 			),
 		);
 	}
@@ -128,7 +132,8 @@ final class PluginTaskLifecycleTest extends UnitTestCase {
 		return array(
 			'zip'   => array( 'zip', array( 'create_zip_archive' ) ),
 			'local' => array( 'local', array( 'transfer_files_locally' ) ),
-			'pro extension' => array( 's3', array() ),
+			'third-party extension' => array( 'third-party-extension', array() ),
+			'built-in deploy target' => array( 's3', array( 'deploy' ) ),
 		);
 	}
 

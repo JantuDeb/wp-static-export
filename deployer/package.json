@@ -5,21 +5,38 @@
   "private": true,
   "license": "GPL-2.0-or-later",
   "type": "module",
-  "engines": { "node": ">=18.17" },
+  "engines": {
+    "node": ">=18.17"
+  },
   "scripts": {
-    "build": "esbuild src/cli.ts --bundle --platform=node --target=node18 --format=cjs --outfile=dist/cli.cjs --external:cpu-features --external:./crypto/build/Release/sshcrypto.node",
+    "build": "npm run build:cli && npm run build:admin && npm run build:web",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build:cli": "esbuild src/cli.ts --bundle --platform=node --target=node18 --format=cjs --outfile=dist/cli.cjs --external:cpu-features --external:sharp --external:./crypto/build/Release/sshcrypto.node",
+    "build:admin": "esbuild src/admin/settings.ts --bundle --minify --target=es2019 --format=iife --outfile=dist/admin/settings.js",
+    "build:web": "esbuild src/web/forms.ts src/web/search.ts --bundle --minify --target=es2019 --format=iife --outdir=dist/web"
   },
   "dependencies": {
     "@noble/hashes": "^1.5.0",
-    "ssh2-sftp-client": "^11.0.0"
+    "csso": "^5.0.5",
+    "fuse.js": "^7.5.0",
+    "html-minifier-terser": "^7.2.0",
+    "node-html-parser": "^9.0.5",
+    "ssh2-sftp-client": "^11.0.0",
+    "terser": "^5.51.2"
   },
   "devDependencies": {
+    "@types/csso": "^5.0.5",
+    "@types/html-minifier-terser": "^7.0.2",
     "@types/node": "^20.14.0",
     "@types/ssh2-sftp-client": "^9.0.4",
     "esbuild": "^0.24.0",
+    "jsdom": "^25.0.0",
+    "prettier": "^3.9.10",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"
+  },
+  "optionalDependencies": {
+    "sharp": "^0.35.5"
   }
 }

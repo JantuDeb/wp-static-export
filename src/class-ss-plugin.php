@@ -96,6 +96,11 @@ class Plugin {
 				// Run export via WP-Cron.
 				add_action( 'simply_static_site_export_cron', array( self::$instance, 'run_static_export' ) );
 
+				// Forms, comments, search, multilingual.
+				Html_Enhancer::init();
+				Multilingual::init();
+				add_action( 'ss_before_finish_transferring_files_locally', array( '\\Simply_Static\\Process_Config', 'transfer_extra_files' ), 10, 2 );
+
 				// Filters.
 				add_filter( 'simplystatic.archive_creation_job.task_list', array(
 					self::$instance,
@@ -143,6 +148,7 @@ class Plugin {
 				Admin_Settings::get_instance();
 				// Register admin REST routes in a dedicated controller.
 				Admin_Rest::get_instance();
+				Features_Admin::get_instance();
 				Deploy_Manifest_Service::get_instance();
 
 				// Dashboard widget.
@@ -197,9 +203,19 @@ class Plugin {
 		require_once $path . 'src/tasks/class-ss-wrapup-task.php';
 		require_once $path . 'src/tasks/class-ss-cancel-task.php';
 		require_once $path . 'src/tasks/class-ss-generate-404-task.php';
+		require_once $path . 'src/tasks/traits/trait-ss-runs-node-job.php';
 		require_once $path . 'src/deploy/class-ss-deploy-config.php';
 		require_once $path . 'src/deploy/class-ss-deploy-runner.php';
+		require_once $path . 'src/features/class-ss-features-schema.php';
+		require_once $path . 'src/features/class-ss-multilingual.php';
+		require_once $path . 'src/features/class-ss-process-config.php';
+		require_once $path . 'src/features/class-ss-html-enhancer.php';
+		require_once $path . 'src/features/class-ss-forms-enhancer.php';
+		require_once $path . 'src/features/class-ss-comments-enhancer.php';
+		require_once $path . 'src/features/class-ss-search-enhancer.php';
+		require_once $path . 'src/features/class-ss-features-admin.php';
 		require_once $path . 'src/tasks/class-ss-deploy-task.php';
+		require_once $path . 'src/tasks/class-ss-process-task.php';
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			require_once $path . 'src/cli/class-ss-cli-command.php';
 			\WP_CLI::add_command( 'simply-static', '\\Simply_Static\\CLI_Command' );
@@ -756,6 +772,9 @@ class Plugin {
 			$task_list = [ 'setup' ];
 			// Always include the 404 generator for this mode.
 			$task_list[] = 'generate_404';
+			if ( Process_Config::needed() ) {
+				$task_list[] = 'process';
+			}
 			if ( 'zip' === $delivery_method ) {
 				$task_list[] = 'create_zip_archive';
 			} elseif ( 'local' === $delivery_method ) {
@@ -785,6 +804,10 @@ class Plugin {
 		// Add 404 task
 		if ( $generate_404 ) {
 			$task_list[] = 'generate_404';
+		}
+
+		if ( Process_Config::needed() ) {
+			$task_list[] = 'process';
 		}
 
 		if ( 'zip' === $delivery_method ) {

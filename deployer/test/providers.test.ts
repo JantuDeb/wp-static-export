@@ -97,7 +97,10 @@ describe('s3 provider', () => {
     const dir = await site();
     const state = path.join(dir, '..', `s3state-${Date.now()}.json`);
     await writeFile(state, JSON.stringify({ 'old.html': 'zzz' }));
-    await runJob({ provider: 's3', dir, stateFile: state, config: { bucket: 'b', region: 'eu-west-1', accessKeyId: 'k', secretAccessKey: 's', prefix: 'site' } }, log);
+    await runJob(
+      { provider: 's3', dir, stateFile: state, config: { bucket: 'b', region: 'eu-west-1', accessKeyId: 'k', secretAccessKey: 's', prefix: 'site' } },
+      log,
+    );
     const puts = seen.filter((s) => s.m === 'PUT');
     expect(puts.map((p) => p.url).sort()).toEqual(['https://b.s3.eu-west-1.amazonaws.com/site/a.css', 'https://b.s3.eu-west-1.amazonaws.com/site/index.html']);
     expect(puts[0]!.h.get('authorization')).toMatch(/^AWS4-HMAC-SHA256/);

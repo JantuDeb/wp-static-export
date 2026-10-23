@@ -3,7 +3,7 @@ import { DeployError, type DeployResult, type Job, type Logger } from './types.j
 import { diff, loadState, saveState, scanDir } from './util.js';
 
 export async function runJob(job: Job, log: Logger): Promise<DeployResult> {
-  const provider = providers[job.provider];
+  const provider = job.provider && providers[job.provider];
   if (!provider) throw new DeployError(`Unknown provider: ${job.provider}`);
   const config = provider.validate(job.config);
 
@@ -37,4 +37,11 @@ export async function runJob(job: Job, log: Logger): Promise<DeployResult> {
     }
   }
   return result;
+}
+
+export async function verifyJob(job: Job): Promise<DeployResult> {
+  const provider = job.provider && providers[job.provider];
+  if (!provider) throw new DeployError(`Unknown provider: ${job.provider}`);
+  const { message } = await provider.verify(provider.validate(job.config));
+  return { uploaded: 0, deleted: 0, message };
 }

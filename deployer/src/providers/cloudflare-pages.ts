@@ -30,6 +30,15 @@ export const cloudflarePages: Provider<CloudflareConfig> = {
     required(c as Record<string, unknown>, ['apiToken', 'accountId', 'project'], 'cloudflare-pages');
     return c as CloudflareConfig;
   },
+  async verify(config) {
+    const api = (config.apiUrl ?? 'https://api.cloudflare.com/client/v4').replace(/\/$/, '');
+    const res = (await (
+      await http(`${api}/accounts/${config.accountId}/pages/projects/${encodeURIComponent(config.project)}`, {
+        headers: { Authorization: `Bearer ${config.apiToken}` },
+      })
+    ).json()) as any;
+    return { message: `Connected to Pages project ${res.result?.name ?? config.project}` };
+  },
   async deploy({ all, config, log }) {
     const api = (config.apiUrl ?? 'https://api.cloudflare.com/client/v4').replace(/\/$/, '');
     const acct = `${api}/accounts/${config.accountId}/pages/projects/${encodeURIComponent(config.project)}`;
@@ -47,13 +56,15 @@ export const cloudflarePages: Provider<CloudflareConfig> = {
       byHash.set(h, f);
     }
 
-    const missing = ((await (
-      await http(`${api}/pages/assets/check-missing`, {
-        method: 'POST',
-        headers: { ...jwtAuth, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hashes: [...byHash.keys()] }),
-      })
-    ).json()) as any).result as string[];
+    const missing = (
+      (await (
+        await http(`${api}/pages/assets/check-missing`, {
+          method: 'POST',
+          headers: { ...jwtAuth, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hashes: [...byHash.keys()] }),
+        })
+      ).json()) as any
+    ).result as string[];
     log.info(`Cloudflare is missing ${missing.length} of ${byHash.size} assets`);
 
     // Upload in buckets bounded by payload size/count, as the API enforces limits.

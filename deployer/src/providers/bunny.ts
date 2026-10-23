@@ -21,6 +21,10 @@ export const bunny: Provider<BunnyConfig> = {
     required(c as Record<string, unknown>, ['storageKey', 'storageZone'], 'bunny');
     return c as BunnyConfig;
   },
+  async verify(config) {
+    await http(`https://${host(config.region)}/${encodeURIComponent(config.storageZone)}/`, { headers: { AccessKey: config.storageKey } });
+    return { message: `Storage zone ${config.storageZone} is reachable` };
+  },
   async deploy({ changed, deleted, config, concurrency, log }) {
     const base = `https://${host(config.region)}/${encodeURIComponent(config.storageZone)}`;
     const enc = (p: string) => p.split('/').map(encodeURIComponent).join('/');

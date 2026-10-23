@@ -42,8 +42,16 @@ export const s3Provider: Provider<S3Config> = {
     required(c as Record<string, unknown>, ['bucket', 'region', 'accessKeyId', 'secretAccessKey'], 's3');
     return c as S3Config;
   },
+  async verify(config) {
+    // HEAD on the bucket root: 200 = exists and we may list it; 403/404 raise a readable error.
+    await s3(config, 'HEAD', '');
+    return { message: `Bucket ${config.bucket} is reachable` };
+  },
   async deploy({ changed, deleted, config, concurrency, log }) {
-    const prefix = (config.prefix ?? '').replace(/^\/+/, '').replace(/([^/])$/, '$1/').replace(/^\/$/, '');
+    const prefix = (config.prefix ?? '')
+      .replace(/^\/+/, '')
+      .replace(/([^/])$/, '$1/')
+      .replace(/^\/$/, '');
     let done = 0;
     await pool(changed, concurrency, async (f) => {
       const ext = f.path.split('.').pop()?.toLowerCase() ?? '';
@@ -90,6 +98,15 @@ async function invalidate(cfg: S3Config, paths: string[], _prefix: string) {
     items.map((i) => `<Path>${escapeXml(i)}</Path>`).join('') +
     '</Items></Paths></InvalidationBatch>';
   const path = `/2020-05-31/distribution/${cfg.cloudfrontDistributionId}/invalidation`;
-  const headers = signV4({ method: 'POST', host: 'cloudfront.amazonaws.com', path, headers: { 'content-type': 'application/xml' }, body: xml, region: 'us-east-1', service: 'cloudfront', creds: cfg });
+  const headers = signV4({
+    method: 'POST',
+    host: 'cloudfront.amazonaws.com',
+    path,
+    headers: { 'content-type': 'application/xml' },
+    body: xml,
+    region: 'us-east-1',
+    service: 'cloudfront',
+    creds: cfg,
+  });
   await http(`https://cloudfront.amazonaws.com${path}`, { method: 'POST', headers, body: xml });
 }

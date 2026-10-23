@@ -1,0 +1,186 @@
+import { readFile, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { minify as minifyCss } from 'csso';
+import { minify as minifyHtml } from 'html-minifier-terser';
+import { minify as minifyJs } from 'terser';
+import type { FileEntry, Logger } from '../types.js';
+import { pool } from '../util.js';
+import { matchesAny } from './glob.js';
+
+export interface OptimizeOptions {
+  html?: boolean;
+  css?: boolean;
+  js?: boolean;
+  images?: boolean;
+  webp?: boolean;
+  quality?: number;
+  exclude?: string[];
+}
+
+export interface OptimizeResult {
+  files: number;
+  bytesSaved: number;
+  webpCreated: string[];
+}
+
+const ext = (p: string) => path.extname(p).slice(1).toLowerCase();
+
+export async function minifyHtmlString(html: string): Promise<string> {
+  return minifyHtml(html, {
+    collapseWhitespace: true,
+    conservativeCollapse: true, // keep one space so inline elements don't glue together
+    removeComments: true,
+    minifyCSS: true,
+    minifyJS: true,
+    continueOnParseError: true,
+    decodeEntities: false,
+    // Leave template-ish and JSON blocks alone.
+    ignoreCustomFragments: [/<%[\s\S]*?%>/, /<\?[\s\S]*?\?>/],
+  });
+}
+
+export function minifyCssString(css: string): string {
+  return minifyCss(css, { restructure: false }).css;
+}
+
+export async function minifyJsString(js: string): Promise<string> {
+  const out = await minifyJs(js, { compress: true, mangle: true, format: { comments: /^!|@license|@preserve/i } });
+  if (!out.code) throw new Error('empty terser output');
+  return out.code;
+}
+
+async function loadSharp(log: Logger): Promise<any | null> {
+  try {
+    // Optional dependency: resolved at runtime so the bundle still works without it.
+    const req = eval('require') as NodeRequire;
+    return req('sharp');
+  } catch {
+    log.warn('Image optimization skipped: install the optional "sharp" module (cd deployer && npm install sharp).');
+    return null;
+  }
+}
+
+/**
+ * Optimize files in place. `state` maps path -> sha256 of the already-optimized file so that
+ * repeated runs (e.g. update exports) don't re-encode images again and lose quality.
+ */
+export async function optimize(dir: string, files: FileEntry[], opts: OptimizeOptions, state: Record<string, string>, log: Logger): Promise<OptimizeResult> {
+  const result: OptimizeResult = { files: 0, bytesSaved: 0, webpCreated: [] };
+  const sharp = opts.images ? await loadSharp(log) : null;
+  const quality = Math.max(1, Math.min(100, opts.quality ?? 80));
+
+  const candidates = files.filter((f) => !matchesAny(f.path, opts.exclude) && state[f.path] !== f.sha256);
+
+  await pool(candidates, 4, async (f) => {
+    const e = ext(f.path);
+    const abs = f.abs;
+    const isMin = /\.min\.(js|css)$/.test(f.path);
+    let before = f.size;
+    let after: number | null = null;
+
+    try {
+      if ((e === 'html' || e === 'htm') && opts.html) {
+        const src = await readFile(abs, 'utf8');
+        const out = await minifyHtmlString(src);
+        if (out.length < src.length) {
+          await writeFile(abs, out);
+          after = Buffer.byteLength(out);
+        }
+      } else if (e === 'css' && opts.css && !isMin) {
+        const src = await readFile(abs, 'utf8');
+        const out = minifyCssString(src);
+        if (out && out.length < src.length) {
+          await writeFile(abs, out);
+          after = Buffer.byteLength(out);
+        }
+      } else if (e === 'js' && opts.js && !isMin) {
+        const src = await readFile(abs, 'utf8');
+        const out = await minifyJsString(src);
+        if (out.length < src.length) {
+          await writeFile(abs, out);
+          after = Buffer.byteLength(out);
+        }
+      } else if (sharp && ['jpg', 'jpeg', 'png'].includes(e)) {
+        const input = await readFile(abs);
+        const img = sharp(input);
+        const encoded: Buffer = await (e === 'png' ? img.png({ compressionLevel: 9, effort: 8 }) : img.jpeg({ quality, mozjpeg: true })).toBuffer();
+        if (encoded.length < input.length) {
+          await writeFile(abs, encoded);
+          after = encoded.length;
+        }
+        if (opts.webp) {
+          const webp: Buffer = await sharp(input).webp({ quality }).toBuffer();
+          // A WebP that isn't smaller than the (optimized) original isn't worth serving.
+          if (webp.length < (after ?? before)) {
+            await writeFile(abs + '.webp', webp);
+            result.webpCreated.push(f.path + '.webp');
+          }
+        }
+      }
+    } catch (err) {
+      log.warn(`Could not optimize ${f.path}: ${(err as Error).message}`);
+    }
+
+    if (after !== null) {
+      result.files++;
+      result.bytesSaved += before - after;
+    }
+  });
+
+  return result;
+}
+
+/** Wrap <img> in <picture> with a WebP <source> when every referenced file has a WebP twin. */
+export function addPictureSources(html: string, pagePath: string, webp: Set<string>): string {
+  const pageDir = path.posix.dirname('/' + pagePath);
+  const toSitePath = (u: string): string | null => {
+    if (/^(data:|blob:)/i.test(u)) return null;
+    try {
+      const url = new URL(u, 'https://site.invalid' + (pageDir === '/' ? '/' : pageDir + '/'));
+      return decodeURIComponent(url.pathname).replace(/^\//, '');
+    } catch {
+      return null;
+    }
+  };
+  const attr = (tag: string, name: string) =>
+    new RegExp(`\\s${name}\\s*=\\s*("([^"]*)"|'([^']*)')`, 'i')
+      .exec(tag)
+      ?.slice(2, 4)
+      .find((x) => x !== undefined);
+
+  let lastIndex = 0;
+  let out = '';
+  const re = /<img\b[^>]*>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html))) {
+    const tag = m[0];
+    const before = html.slice(0, m.index);
+    const insidePicture = before.lastIndexOf('<picture') > before.lastIndexOf('</picture>');
+    const src = attr(tag, 'src');
+    const srcset = attr(tag, 'srcset');
+    if (insidePicture || !src) continue;
+
+    const entries: { url: string; desc: string }[] = srcset
+      ? srcset
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .map((s) => {
+            const [url, ...rest] = s.split(/\s+/);
+            return { url: url as string, desc: rest.join(' ') };
+          })
+      : [{ url: src, desc: '' }];
+
+    const converted = entries.map((e) => {
+      const p = toSitePath(e.url);
+      return p && webp.has(p + '.webp') ? { ...e, url: e.url + '.webp' } : null;
+    });
+    if (converted.some((c) => c === null)) continue;
+
+    const sizes = attr(tag, 'sizes');
+    const source = `<source type="image/webp" srcset="${(converted as { url: string; desc: string }[]).map((c) => (c.desc ? `${c.url} ${c.desc}` : c.url)).join(', ')}"${sizes ? ` sizes="${sizes}"` : ''}>`;
+    out += html.slice(lastIndex, m.index) + `<picture>${source}${tag}</picture>`;
+    lastIndex = m.index + tag.length;
+  }
+  return lastIndex ? out + html.slice(lastIndex) : html;
+}

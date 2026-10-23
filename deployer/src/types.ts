@@ -31,6 +31,8 @@ export interface DeployResult {
   uploaded: number;
   deleted: number;
   message?: string;
+  /** Files the process stage added that are not tracked as pages (WebP twins, search index). */
+  created?: string[];
 }
 
 export type ProviderId = 'github' | 'netlify' | 'cloudflare-pages' | 's3' | 'bunny' | 'sftp';
@@ -40,10 +42,15 @@ export interface Provider<C = any> {
   /** Throws with a readable message if config is incomplete. */
   validate(config: unknown): C;
   deploy(ctx: DeployContext<C>): Promise<DeployResult>;
+  /** Cheap authenticated call proving the credentials work; must not change anything remotely. */
+  verify(config: C): Promise<{ message: string }>;
 }
 
 export interface Job {
-  provider: ProviderId;
+  /** deploy (default) uploads the export; verify only tests credentials; process post-processes files. */
+  action?: 'deploy' | 'verify' | 'process';
+  /** Required for deploy and verify. */
+  provider?: ProviderId;
   /** Absolute path of the static export. */
   dir: string;
   /** JSON file remembering hashes from the last successful deploy. Enables incremental deploys. */

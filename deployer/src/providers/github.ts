@@ -23,6 +23,15 @@ export const github: Provider<GithubConfig> = {
     if (!/^[\w.-]+\/[\w.-]+$/.test(String(cfg.repository))) throw new DeployError('github: repository must look like owner/repo');
     return { branch: 'main', apiUrl: 'https://api.github.com', ...cfg } as GithubConfig;
   },
+  async verify(config) {
+    const api = (config.apiUrl ?? 'https://api.github.com').replace(/\/$/, '');
+    const res = await http(`${api}/repos/${config.repository}`, {
+      headers: { Authorization: `Bearer ${config.token}`, Accept: 'application/vnd.github+json', 'User-Agent': 'static-deployer' },
+    });
+    const repo = (await res.json()) as any;
+    if (repo.permissions && !repo.permissions.push) throw new DeployError(`Token can read ${repo.full_name} but cannot push to it`);
+    return { message: `Connected to ${repo.full_name}` };
+  },
   async deploy({ changed, deleted, config, concurrency, log }) {
     const api = (config.apiUrl ?? 'https://api.github.com').replace(/\/$/, '');
     const base = `${api}/repos/${config.repository}`;
@@ -79,9 +88,7 @@ export const github: Provider<GithubConfig> = {
 
     const message = config.commitMessage ?? `Static export ${new Date().toISOString()}`;
     const author = config.authorName && config.authorEmail ? { name: config.authorName, email: config.authorEmail } : undefined;
-    const commit = await (
-      await gh('POST', '/git/commits', { message, tree, parents: headSha ? [headSha] : [], ...(author ? { author } : {}) })
-    ).json();
+    const commit = await (await gh('POST', '/git/commits', { message, tree, parents: headSha ? [headSha] : [], ...(author ? { author } : {}) })).json();
     const newSha = (commit as any).sha as string;
 
     if (headSha) await gh('PATCH', `/git/refs/heads/${encodeURIComponent(config.branch)}`, { sha: newSha });
