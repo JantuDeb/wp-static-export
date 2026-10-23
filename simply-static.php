@@ -5,13 +5,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Plugin Name:       Simply Static
- * Plugin URI:        https://simplystatic.com
- * Description:       A static site generator to create fast and secure static versions of your WordPress website.
+ * Plugin Name:       WP Static Export
+ * Plugin URI:        https://github.com/JantuDeb/wp-static-export
+ * Description:       Export your WordPress site to fast, secure static HTML and deploy it to GitHub, Netlify, Cloudflare Pages, S3, BunnyCDN or SFTP. Includes forms, search, comments, optimization and Lighthouse fixes. Based on Simply Static by Patrick Posner.
  * Version:           3.8.18
  * Requires at least:  6.2
- * Author:            Patrick Posner
- * Author URI:        https://patrickposner.com
+ * Author:            JantuDeb
+ * Author URI:        https://github.com/JantuDeb
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       simply-static
@@ -50,13 +50,13 @@ add_action( 'init', 'simply_static_load_textdomain', 0 );
 // Check PHP version.
 if ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
 	deactivate_plugins( plugin_basename( __FILE__ ) );
-	wp_die( esc_html__( 'Simply Static requires PHP 7.4 or higher.', 'simply-static' ), esc_html__( 'Plugin dependency check', 'simply-static' ), array( 'back_link' => true ) );
+	wp_die( esc_html__( 'WP Static Export requires PHP 7.4 or higher.', 'simply-static' ), esc_html__( 'Plugin dependency check', 'simply-static' ), array( 'back_link' => true ) );
 }
 
 // Check WordPress version.
 if ( version_compare( get_bloginfo( 'version' ), '6.2', '<' ) ) {
 	deactivate_plugins( plugin_basename( __FILE__ ) );
-	wp_die( esc_html__( 'Simply Static requires WordPress 6.2 or higher.', 'simply-static' ), esc_html__( 'Plugin dependency check', 'simply-static' ), array( 'back_link' => true ) );
+	wp_die( esc_html__( 'WP Static Export requires WordPress 6.2 or higher.', 'simply-static' ), esc_html__( 'Plugin dependency check', 'simply-static' ), array( 'back_link' => true ) );
 }
 
 // Run autoloader.
@@ -68,7 +68,7 @@ if ( file_exists( __DIR__ . '/vendor/autoload.php' ) && ! class_exists( 'Simply_
 require_once SIMPLY_STATIC_PATH . 'src/class-ss-pro-compatibility.php';
 add_action( 'plugins_loaded', array( 'Simply_Static\Pro_Compatibility', 'enforce' ), 1 );
 
-// Boot Simply Static.
+// Boot WP Static Export.
 if ( ! function_exists( 'simply_static_run_plugin' ) ) {
 	add_action( 'plugins_loaded', 'simply_static_run_plugin' );
 

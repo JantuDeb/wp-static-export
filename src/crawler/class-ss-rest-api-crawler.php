@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static REST API Crawler class
+ * WP Static Export REST API Crawler class
  *
  * This crawler detects WordPress REST API endpoints.
  * It is only active when the 'add_rest_api' option is enabled.

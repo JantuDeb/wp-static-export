@@ -735,7 +735,7 @@ function GeneralSettings() {
                             onChange={(pageId) => {
                                 updateSetting('custom_404_page', pageId);
                             }}
-                            help={__('If selected, Simply Static will use the content of this page for the 404 page instead of the theme default.', 'simply-static')}
+                            help={__('If selected, WP Static Export will use the content of this page for the 404 page instead of the theme default.', 'simply-static')}
                         />
                         {(isPro && typeof isPro === 'function' ? isPro() : false) && (
                             <Button

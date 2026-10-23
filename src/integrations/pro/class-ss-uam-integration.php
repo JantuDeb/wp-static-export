@@ -11,6 +11,6 @@ class SS_UAM_Integration extends Pro_Integration {
 
     public function __construct() {
         $this->name        = __( 'User Access Management (Core)', 'simply-static' );
-        $this->description = __( 'Control access to Simply Static pages, menus, and features by assigning a minimum role.', 'simply-static' );
+        $this->description = __( 'Control access to WP Static Export pages, menus, and features by assigning a minimum role.', 'simply-static' );
     }
 }

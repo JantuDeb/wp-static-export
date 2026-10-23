@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Elementor Crawler class
+ * WP Static Export Elementor Crawler class
  *
  * This crawler detects URLs for Elementor assets and jQuery files.
  */

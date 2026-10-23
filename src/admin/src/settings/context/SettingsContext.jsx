@@ -34,7 +34,7 @@ function SettingsContextProvider(props) {
             running: !!rollback.running,
             status: rollback.status || {},
             progress: rollback.progress || {},
-            message: rollback.message || __('Rollback in progress. Simply Static export actions are locked until the rollback has finished.', 'simply-static'),
+            message: rollback.message || __('Rollback in progress. WP Static Export export actions are locked until the rollback has finished.', 'simply-static'),
         };
     };
 

@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static options class
+ * WP Static Export options class
  */
 class Options {
 	/**

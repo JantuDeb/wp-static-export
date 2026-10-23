@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Taxonomy Crawler class
+ * WP Static Export Taxonomy Crawler class
  *
  * This crawler detects URLs for all public taxonomies.
  */

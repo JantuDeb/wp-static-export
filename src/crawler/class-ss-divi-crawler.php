@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Divi Crawler class
+ * WP Static Export Divi Crawler class
  *
  * This crawler detects URLs for Divi theme cached assets and theme asset files.
  */
@@ -143,7 +143,7 @@ class Divi_Crawler extends Crawler {
 	 * Return Divi asset roots appropriate for the active major version.
 	 *
 	 * Divi 5 exposes the assets used by a rendered page through its Dynamic
-	 * Assets system. Simply Static's normal URL extraction follows those assets,
+	 * Assets system. WP Static Export's normal URL extraction follows those assets,
 	 * while this crawler only needs to preserve Divi's generated cache. Divi 4
 	 * and unknown versions retain the complete-theme crawl as a compatibility
 	 * fallback.

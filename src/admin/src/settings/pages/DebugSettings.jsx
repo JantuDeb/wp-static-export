@@ -241,7 +241,7 @@ function DebugSettings() {
             <CardBody>
                 <ToggleControl
                     label={__('Activate Debug Log', 'simply-static')}
-                    help={__('Enable it to download the debug log from Simply Static -> Generate.', 'simply-static')}
+                    help={__('Enable it to download the debug log from WP Static Export -> Generate.', 'simply-static')}
                     __nextHasNoMarginBottom
                     checked={activateDebugLog}
                     onChange={(value) => {

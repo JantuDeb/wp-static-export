@@ -1,6 +1,6 @@
 <?php
 /**
- * Uninstall Simply Static.
+ * Uninstall WP Static Export.
  */
 
 // Exit if accessed directly.
@@ -248,7 +248,7 @@ function ss_cleanup_site_uninstall( $site_id ) {
 }
 
 /**
- * Remove values shared by all Simply Static sites in a network.
+ * Remove values shared by all WP Static Export sites in a network.
  *
  * @param int $network_id Network ID, or zero to use the current network.
  *
@@ -288,7 +288,7 @@ function ss_run_site_uninstall( $site_id, $callback ) {
 		return true;
 	} catch ( \Throwable $exception ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( sprintf( 'Simply Static uninstall failed for site %d: %s', $site_id, $exception->getMessage() ) );
+			error_log( sprintf( 'WP Static Export uninstall failed for site %d: %s', $site_id, $exception->getMessage() ) );
 		}
 
 		return false;

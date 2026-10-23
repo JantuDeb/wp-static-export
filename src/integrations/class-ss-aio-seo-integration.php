@@ -237,7 +237,7 @@ class AIO_SEO_Integration extends Integration {
 	/**
 	 * Maybe add robots.txt and llms.txt to additional files when AIOSEO is active.
 	 *
-	 * We fetch public endpoints and write temporary files into the archive so Simply Static can export them.
+	 * We fetch public endpoints and write temporary files into the archive so WP Static Export can export them.
 	 *
 	 * @param array $additional_files
 	 * @return array

@@ -597,7 +597,7 @@ class Fetch_Urls_Task extends Task {
 	}
 
 	/**
-	 * Normalize a local URL to the path Simply Static will generate for it.
+	 * Normalize a local URL to the path WP Static Export will generate for it.
 	 *
 	 * @param string $url URL to normalize.
 	 *

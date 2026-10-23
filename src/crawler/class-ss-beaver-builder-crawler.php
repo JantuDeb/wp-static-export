@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Beaver Builder Crawler class
+ * WP Static Export Beaver Builder Crawler class
  *
  * This crawler detects URLs for Beaver Builder cached assets stored in
  * wp-content/uploads/bb-plugin/cache/ and adds them to the export queue.

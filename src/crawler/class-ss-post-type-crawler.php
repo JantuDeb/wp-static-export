@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Post Type Crawler class
+ * WP Static Export Post Type Crawler class
  *
  * This crawler detects URLs for all public post types.
  */

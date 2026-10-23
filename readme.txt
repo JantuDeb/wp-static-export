@@ -1,4 +1,4 @@
-=== Simply Static - The Static Site Generator ===
+=== WP Static Export ===
 Contributors: patrickposner
 Tags: jamstack, performance, security, static site generator
 Requires at least: 6.2
@@ -11,11 +11,13 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Convert WordPress to static HTML. Boost performance 3-5x. Eliminate security vulnerabilities. Deploy anywhere.
 
 == Description ==
-Simply Static turns your WordPress site into secure, lightning-fast static HTML files.
+WP Static Export is based on [Simply Static](https://wordpress.org/plugins/simply-static/) by Patrick Posner and contributors (GPLv2 or later). It adds deployment targets, forms, search, optimization, comments, multilingual support and Lighthouse tooling. It is an independent fork and is not affiliated with or endorsed by the Simply Static authors.
+
+WP Static Export turns your WordPress site into secure, lightning-fast static HTML files.
 
 Stop worrying about WordPress security patches, performance plugins, and expensive hosting.
 
-Simply Static converts your entire WordPress site into static HTML, CSS, and JavaScript files that load instantly and can't be hacked.
+WP Static Export converts your entire WordPress site into static HTML, CSS, and JavaScript files that load instantly and can't be hacked.
 
 Perfect for blogs, marketing sites, documentation, portfolios, and any content-driven WordPress site.
 
@@ -31,7 +33,7 @@ Host your static site for free on platforms like Cloudflare Pages, Netlify, or G
 
 🎯 Zero Maintenance
 No more WordPress updates. No plugin conflicts. No security patches. Focus on content, not server management.
-= How Simply Static Works =
+= How WP Static Export Works =
 
 * Generate: Click one button to convert your entire WordPress site to static HTML
 * Export: Download as ZIP or deploy to a local directory
@@ -96,7 +98,7 @@ Perfect for businesses running 1-5 websites, content creators who want simplicit
 = Learning Resources =
 
 [Documentation](https://docs.simplystatic.com)
-Comprehensive guides covering every aspect of Simply Static.
+Comprehensive guides covering every aspect of WP Static Export.
 
 [Video Course](https://simplystatic.com/videos/)
 Watch our free YouTube course covering static WordPress from basics to advanced.
@@ -162,17 +164,17 @@ Static sites don't support user authentication or member-only areas.
 * Comments (special integration)
 * Newsletter signups (via external services)
 
-If your site relies heavily on the plugins listed above, Simply Static may not be the right solution. For questions about specific plugin compatibility, check our compatibility database or ask in our support forum.
+If your site relies heavily on the plugins listed above, WP Static Export may not be the right solution. For questions about specific plugin compatibility, check our compatibility database or ask in our support forum.
 
 == Installation ==
 = Automatic Installation (Recommended) =
 
 * Log into your WordPress admin panel
 * Navigate to Plugins → Add New
-* Search for "Simply Static"
-* Click "Install Now" on the Simply Static plugin
+* Search for "WP Static Export"
+* Click "Install Now" on the WP Static Export plugin
 * Click "Activate" after installation completes
-* Access Simply Static from the left admin menu
+* Access WP Static Export from the left admin menu
 
 = Manual Installation =
 * Download the plugin ZIP file
@@ -180,14 +182,14 @@ If your site relies heavily on the plugins listed above, Simply Static may not b
 * Navigate to Plugins → Add New → Upload Plugin
 * Choose the downloaded ZIP file and click "Install Now"
 * Click "Activate Plugin" after installation
-* Access Simply Static from the left admin menu
+* Access WP Static Export from the left admin menu
 
 = Getting Started =
 After activation:
 
-* Go to Simply Static → Settings
+* Go to WP Static Export → Settings
 * Review and configure your export settings (defaults work for most sites)
-* Go to Simply Static → Generate
+* Go to WP Static Export → Generate
 * Click "Generate Static Files"
 * Download your ZIP or access files in your local directory
 
@@ -196,7 +198,7 @@ Watch our quick start tutorial
 Need help? Check our comprehensive documentation or support forums.
 
 == Frequently Asked Questions ==
-= Is Simply Static really free? =
+= Is WP Static Export really free? =
 Yes! The core plugin is 100% free and open source. It provides everything you need for basic static site generation and ZIP export.
 Simply Static Pro and Studio are optional premium products for advanced features like automated deployment, forms, search, and managed hosting.
 = What's the difference between the free plugin, Pro, and Studio? =
@@ -208,10 +210,10 @@ See detailed comparison
 Yes, but you'll need to manually upload the ZIP file to your hosting provider each time you update your site.
 For production sites with frequent updates, we recommend Pro (automated deployments) or Studio (fully managed).
 = Will my site look different after going static? =
-No. Simply Static creates an exact copy of your WordPress site. Same HTML, same CSS, same JavaScript. The only difference is it loads faster and is more secure.
+No. WP Static Export creates an exact copy of your WordPress site. Same HTML, same CSS, same JavaScript. The only difference is it loads faster and is more secure.
 = Do I need to know how to code? =
-No. Simply Static works through a simple WordPress admin interface. Click a button, get your static site.
-Developers can extend Simply Static with 100+ hooks and filters, but coding knowledge is not required for basic use.
+No. WP Static Export works through a simple WordPress admin interface. Click a button, get your static site.
+Developers can extend WP Static Export with 100+ hooks and filters, but coding knowledge is not required for basic use.
 = Can I still use WordPress after generating a static site? =
 Yes! Your WordPress site remains fully functional. You use WordPress to manage content, then generate a new static version when you're ready to publish updates.
 = What happens to forms, search, and comments on my static site? =
@@ -226,8 +228,8 @@ Netlify (free tier)
 Vercel (free tier)
 
 Or host on any traditional web host or CDN for very low cost.
-= Does Simply Static work with my theme/plugins? =
-Simply Static works with virtually all WordPress themes and most plugins.
+= Does WP Static Export work with my theme/plugins? =
+WP Static Export works with virtually all WordPress themes and most plugins.
 Confirmed compatible themes: Virtually all (including block themes)
 Page builders: Elementor, Bricks, Gutenberg, Beaver Builder, Divi
 SEO plugins: Yoast SEO, Rank Math, AIOSEO, SEOPress
@@ -235,25 +237,25 @@ Form plugins: Contact Form 7, Gravity Forms, WPForms (forms work with Pro/Studio
 See full compatibility list
 = How is this different from caching plugins? =
 Caching plugins make your WordPress site faster, but your WordPress installation remains accessible and vulnerable.
-Simply Static creates a completely separate static copy that serves no PHP, has no database, and can't be hacked. Your WordPress installation stays private and secure.
-= Can I use Simply Static with Elementor/Gutenberg/other builders? =
-Yes! Simply Static works with all major page builders including Elementor, Elementor Pro, Bricks, Gutenberg, Beaver Builder, Divi, and more.
+WP Static Export creates a completely separate static copy that serves no PHP, has no database, and can't be hacked. Your WordPress installation stays private and secure.
+= Can I use WP Static Export with Elementor/Gutenberg/other builders? =
+Yes! WP Static Export works with all major page builders including Elementor, Elementor Pro, Bricks, Gutenberg, Beaver Builder, Divi, and more.
 = What about SEO? =
 Static sites are excellent for SEO. Faster load times = better rankings.
-Simply Static maintains all your SEO metadata, sitemaps, and schema markup. It works seamlessly with Yoast SEO, Rank Math, AIOSEO, and SEOPress.
+WP Static Export maintains all your SEO metadata, sitemaps, and schema markup. It works seamlessly with Yoast SEO, Rank Math, AIOSEO, and SEOPress.
 = Can I run a multilingual site? =
 Yes, with Simply Static Pro or Studio. Full support for WPML, Polylang, and TranslatePress.
 The free version can generate static sites in multiple languages, but managing separate exports per language is easier with Pro.
 = Will this work on WordPress.com? =
-Simply Static requires the ability to install plugins. It works on:
+WP Static Export requires the ability to install plugins. It works on:
 
 Self-hosted WordPress (wordpress.org)
 WordPress.com Business plan or higher
 Most shared hosting providers
 VPS and dedicated servers
 
-= How big of a site can Simply Static handle? =
-Simply Static has successfully generated static sites with 100,000+ pages. Site size is generally limited by your server's resources (memory, execution time).
+= How big of a site can WP Static Export handle? =
+WP Static Export has successfully generated static sites with 100,000+ pages. Site size is generally limited by your server's resources (memory, execution time).
 = Where can I get help? =
 Free Version:
 
@@ -878,7 +880,7 @@ Diagnostics - Check your WordPress environment for compatibility
 
 = 3.3.0 =
 
-* avoid parsing Simply Static config files (JSON parser)
+* avoid parsing WP Static Export config files (JSON parser)
 
 = 3.2.9 =
 
@@ -896,7 +898,7 @@ Diagnostics - Check your WordPress environment for compatibility
 
 = 3.2.8.1 =
 
-* avoid replacing URLs in JSON files generated by Simply Static
+* avoid replacing URLs in JSON files generated by WP Static Export
 
 = 3.2.8 =
 
@@ -1002,7 +1004,7 @@ Diagnostics - Check your WordPress environment for compatibility
 * included diagnostics check for no-index setting
 * included diagnostics check for Basic Auth without proper configuration in settings
 * tweak to avoid duplicate notes in export log
-* renamed Simply Static (Admin Bar) to Admin Bar (Core)
+* renamed WP Static Export (Admin Bar) to Admin Bar (Core)
 * renamed Environments to Environment (Core)
 * simplified http_request_args filter implementation
 * added notice to upgrade both (pro and free) because of removing deprecated methods

@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static view class
+ * WP Static Export view class
  */
 class View {
 

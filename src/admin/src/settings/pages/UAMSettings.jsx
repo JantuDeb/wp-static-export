@@ -116,7 +116,7 @@ function UAMSettings() {
                 <CardBody>
                     <p>
                         {__(
-                            'Control who can access Simply Static pages, menu entries, and selected features by assigning a minimum WordPress role.',
+                            'Control who can access WP Static Export pages, menu entries, and selected features by assigning a minimum WordPress role.',
                             'simply-static'
                         )}
                     </p>

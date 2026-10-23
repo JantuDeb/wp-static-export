@@ -100,7 +100,7 @@ function SearchSettings() {
                         <ToggleControl
                             label={__('Use Search Results Page', 'simply-static')}
                             __nextHasNoMarginBottom
-                            help={__('Simply Static will create a static search results page and the export will include a special __qs directory.', 'simply-static')}
+                            help={__('WP Static Export will create a static search results page and the export will include a special __qs directory.', 'simply-static')}
                             disabled={('free' === options.plan || !isPro())}
                             checked={(settings.use_search_results_page ?? true)}
                             onChange={(value) => {

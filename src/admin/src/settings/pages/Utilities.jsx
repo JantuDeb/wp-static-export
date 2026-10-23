@@ -320,7 +320,7 @@ function Utilities() {
                     <b>{__('Migrate Settings', 'simply-static')}</b>
                 </CardHeader>
                 <CardBody>
-                    <p>{__('Migrate all of your settings to Simply Static 3.0', 'simply-static')}</p>
+                    <p>{__('Migrate all of your settings to WP Static Export 3.0', 'simply-static')}</p>
                     <p>
                         <Button onClick={runMigrateSettings}
                                 disabled={maintenanceLocked || isBusy}

@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Diagnostic class
+ * WP Static Export Diagnostic class
  *
  * Checks to ensure that the user's server and WP installation meet a set of
  * minimum requirements.
@@ -441,7 +441,7 @@ class Diagnostic {
 	 */
 	public function is_incompatible_plugin( $plugin ) {
 		/* translators: %s: plugin name. */
-		$error_message = sprintf( __( '%s is not compatible with Simply Static.', 'simply-static' ), $plugin['Name'] );
+		$error_message = sprintf( __( '%s is not compatible with WP Static Export.', 'simply-static' ), $plugin['Name'] );
 
 		return array(
 			'test'  => false,
@@ -691,9 +691,9 @@ class Diagnostic {
 
 			if ( ! is_string( $basic_auth_user ) || ! is_string( $basic_auth_pass ) || '' === $basic_auth_user || '' === $basic_auth_pass ) {
 				$test    = false;
-				$message = __( 'Basic Auth is enabled, but no username or password is set in Simply Static -> Settings -> Debug -> Basic Auth', 'simply-static' );
+				$message = __( 'Basic Auth is enabled, but no username or password is set in WP Static Export -> Settings -> Debug -> Basic Auth', 'simply-static' );
 			} else {
-				$message = __( 'Basic Auth is enabled, and username and password are set in Simply Static -> Settings -> Debug -> Basic Auth', 'simply-static' );
+				$message = __( 'Basic Auth is enabled, and username and password are set in WP Static Export -> Settings -> Debug -> Basic Auth', 'simply-static' );
 			}
 		}
 

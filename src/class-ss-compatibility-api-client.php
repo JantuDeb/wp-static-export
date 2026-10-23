@@ -82,7 +82,7 @@ class Compatibility_API_Client {
 			'redirection'         => 3,
 			'limit_response_size' => self::MAX_RESPONSE_BYTES,
 			'headers'             => array( 'Accept' => 'application/json' ),
-			'user-agent'          => 'Simply Static/' . SIMPLY_STATIC_VERSION,
+			'user-agent'          => 'WP Static Export/' . SIMPLY_STATIC_VERSION,
 		);
 		$response = wp_safe_remote_get(
 			$endpoint,

@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Theme Assets Crawler class
+ * WP Static Export Theme Assets Crawler class
  *
  * This crawler detects URLs for assets (CSS, JS, images) used by the active theme.
  */

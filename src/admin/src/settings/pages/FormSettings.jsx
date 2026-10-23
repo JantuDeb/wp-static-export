@@ -201,7 +201,7 @@ function FormSettings() {
                         __nextHasNoMarginBottom
                         help={
                             saveFormEntries
-                                ? __('Store form entries inside WordPress (requires Simply Static Webhook).', 'simply-static')
+                                ? __('Store form entries inside WordPress (requires WP Static Export Webhook).', 'simply-static')
                                 : __('Do not store form entries in WordPress.', 'simply-static')
                         }
                         disabled={('free' === options.plan || !isPro())}

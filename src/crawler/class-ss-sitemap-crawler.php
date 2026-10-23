@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Sitemap Crawler class
+ * WP Static Export Sitemap Crawler class
  *
  * This crawler detects URLs from XML sitemaps.
  */

@@ -453,7 +453,7 @@ class Elementor_Integration extends Integration {
 		$elements_manager->add_category(
 			'simply-static',
 			[
-				'title' => __( 'Simply Static', 'simply-static' ),
+				'title' => __( 'WP Static Export', 'simply-static' ),
 				'icon' => 'fa fa-plug',
 			]
 		);

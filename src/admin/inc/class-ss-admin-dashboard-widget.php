@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Admin Dashboard Widget for Simply Static.
+ * Admin Dashboard Widget for WP Static Export.
  *
  * Shows latest export stats and promotes Simply Static Pro / Studio
  * on the free version.
@@ -56,7 +56,7 @@ class Admin_Dashboard_Widget {
 
 		wp_add_dashboard_widget(
 			'simply_static_dashboard_widget',
-			__( 'Simply Static — Latest Export', 'simply-static' ),
+			__( 'WP Static Export — Latest Export', 'simply-static' ),
 			array( $this, 'render_widget' )
 		);
 	}

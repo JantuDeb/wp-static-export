@@ -54,7 +54,7 @@ class Rank_Math_Integration extends Integration {
 	 * Maybe add robots.txt and llms.txt to additional files when RankMath is active.
 	 *
 	 * RankMath stores robots.txt content in settings and serves llms.txt dynamically.
-	 * We generate temporary files so Simply Static can export them.
+	 * We generate temporary files so WP Static Export can export them.
 	 *
 	 * @param array $additional_files
 	 * @return array

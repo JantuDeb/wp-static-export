@@ -9,7 +9,7 @@ function SidebarMultisite( props = null ) {
 
     return (<Card className={"plugin-nav"}>
         <div className={"plugin-logo"}>
-            <img alt={__('Simply Static logo', 'simply-static')}
+            <img alt={__('WP Static Export logo', 'simply-static')}
                  src={options.logo}/>
         </div>
         <Spacer margin={5}/>

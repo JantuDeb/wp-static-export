@@ -29,7 +29,7 @@ function ActivityLog() {
 		snapshotRollback && snapshotRollback.message
 			? snapshotRollback.message
 			: __(
-					'Rollback in progress. Simply Static export actions are locked until the rollback has finished.',
+					'Rollback in progress. WP Static Export export actions are locked until the rollback has finished.',
 					'simply-static'
 			  );
 	const rollbackProgress =

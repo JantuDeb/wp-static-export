@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Pagination Crawler class
+ * WP Static Export Pagination Crawler class
  *
  * This crawler detects pagination URLs for archives, posts, and other paginated content.
  */

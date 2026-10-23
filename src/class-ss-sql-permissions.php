@@ -7,9 +7,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static SQL Privilege Checker
+ * WP Static Export SQL Privilege Checker
  *
- * Checks to ensure that the MySQL has permissions needed for Simply Static.
+ * Checks to ensure that the MySQL has permissions needed for WP Static Export.
  */
 class Sql_Permissions {
 

@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static RSS Feeds Crawler class
+ * WP Static Export RSS Feeds Crawler class
  *
  * This crawler detects WordPress RSS feed URLs.
  * It is only active when the 'add_feeds' option is enabled.

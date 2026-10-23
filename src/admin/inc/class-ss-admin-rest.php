@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Admin REST controller: owns all wp-admin related REST API routes for Simply Static.
+ * Admin REST controller: owns all wp-admin related REST API routes for WP Static Export.
  *
  * This class only registers routes and forwards callbacks to the existing
  * implementations in Admin_Settings to keep behavior 100% backward compatible.

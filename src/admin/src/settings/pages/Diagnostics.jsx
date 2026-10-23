@@ -33,7 +33,7 @@ function Diagnostics() {
                 </CardHeader>
                 <CardBody>
                     <p>
-                        {__('Our diagnostics tool provides detailed insights into your WordPress installation and server configuration and tells you exactly what needs to be optimized to get the most out of Simply Static. Click the button below to get the latest results.', 'simply-static')}
+                        {__('Our diagnostics tool provides detailed insights into your WordPress installation and server configuration and tells you exactly what needs to be optimized to get the most out of WP Static Export. Click the button below to get the latest results.', 'simply-static')}
                     </p>
                     <p>
                         <Button onClick={runResetDiagnostics} variant="secondary">{__('Reset Diagnostics', 'simply-static')}</Button>

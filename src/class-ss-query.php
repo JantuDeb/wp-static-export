@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Query class
+ * WP Static Export Query class
  *
  * Used for creating queries for the WordPress database
  */

@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Uploads Crawler class
+ * WP Static Export Uploads Crawler class
  *
  * This crawler detects URLs for media files in the uploads directory.
  */

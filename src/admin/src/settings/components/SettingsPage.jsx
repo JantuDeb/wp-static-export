@@ -237,7 +237,7 @@ function SettingsPage() {
                     setShowMobileNav(true);
 				}} className={"show-nav"}><Dashicon icon="align-center"/> {__('Toggle menu', 'simply-static')}</Button>
                 {showMobileNav &&
-					<div id="simply-static-mobile-nav" className="mobile-nav-overlay" role="dialog" aria-modal="true" aria-label={__('Simply Static menu', 'simply-static')}>
+					<div id="simply-static-mobile-nav" className="mobile-nav-overlay" role="dialog" aria-modal="true" aria-label={__('WP Static Export menu', 'simply-static')}>
                         <div className="mobile-nav-header">
                             <span>{__('Menu', 'simply-static')}</span>
 							<Button isSmall variant="tertiary" aria-label={__('Close menu', 'simply-static')} onClick={() => setShowMobileNav(false)}>

@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static utility class
+ * WP Static Export utility class
  */
 class Util {
 
@@ -26,7 +26,7 @@ class Util {
 		$statuses = is_array( $statuses ) ? $statuses : array();
 
 		/**
-		 * Filter the post statuses that Simply Static treats as publicly exportable.
+		 * Filter the post statuses that WP Static Export treats as publicly exportable.
 		 *
 		 * @param string[] $statuses Public post status slugs.
 		 */
@@ -581,7 +581,7 @@ class Util {
 		$skip_lc = array_values( array_unique( array_merge( $admin_only_lc, $custom_skips_lc, $self_slugs_lc ) ) );
 		if ( in_array( $slug_lc, $skip_lc, true ) ) {
 			if ( apply_filters( 'ss_auto_include_debug', false ) ) {
-				error_log( sprintf( '[Simply Static] Auto-include skipped for plugin "%s" (in skip list).', $slug ) );
+				error_log( sprintf( '[WP Static Export] Auto-include skipped for plugin "%s" (in skip list).', $slug ) );
 			}
 
 			return;
@@ -597,7 +597,7 @@ class Util {
 				}
 			}
 			if ( apply_filters( 'ss_auto_include_debug', false ) ) {
-				error_log( sprintf( '[Simply Static] Auto-included plugin "%s" for %d site(s) via network activation.', $slug, is_array( $sites ) ? count( $sites ) : 0 ) );
+				error_log( sprintf( '[WP Static Export] Auto-included plugin "%s" for %d site(s) via network activation.', $slug, is_array( $sites ) ? count( $sites ) : 0 ) );
 			}
 
 			return;
@@ -606,7 +606,7 @@ class Util {
 		// Single site or per-site activation.
 		self::add_plugin_to_enhanced_crawl( $slug );
 		if ( apply_filters( 'ss_auto_include_debug', false ) ) {
-			error_log( sprintf( '[Simply Static] Auto-included plugin "%s" on this site.', $slug ) );
+			error_log( sprintf( '[WP Static Export] Auto-included plugin "%s" on this site.', $slug ) );
 		}
 	}
 
@@ -852,7 +852,7 @@ class Util {
 	 * @return bool
 	 */
 	public static function is_url_excluded( string $url ): bool {
-		// Never exclude core WordPress or Simply Static assets
+		// Never exclude core WordPress or WP Static Export assets
 		if ( self::is_core_include_asset( $url ) ) {
 			return false;
 		}
@@ -861,7 +861,7 @@ class Util {
 		// check in the central exclusion path so previously queued records are also
 		// skipped on later exports, not only during uploads-directory discovery.
 		if ( self::is_private_backup_path( $url ) ) {
-			self::debug_log( sprintf( 'Excluding URL "%s" — matched built-in rule: Simply Static private backup directory', $url ) );
+			self::debug_log( sprintf( 'Excluding URL "%s" — matched built-in rule: WP Static Export private backup directory', $url ) );
 
 			return true;
 		}
@@ -1028,7 +1028,7 @@ class Util {
 	}
 
 	/**
-	 * Compute the target Static Site URL based on Simply Static settings.
+	 * Compute the target Static Site URL based on WP Static Export settings.
 	 * Returns an empty string if it cannot be determined.
 	 *
 	 * Logic:
@@ -2821,7 +2821,7 @@ class Util {
 	}
 
 	/**
-	 * Check if a URL belongs to core WordPress or Simply Static assets that should never be excluded.
+	 * Check if a URL belongs to core WordPress or WP Static Export assets that should never be excluded.
 	 *
 	 * @param string $url The URL to check.
 	 *
@@ -3098,7 +3098,7 @@ class Util {
 	}
 
 	/**
-	 * Clear all transients used in Simply Static.
+	 * Clear all transients used in WP Static Export.
 	 *
 	 * @return void
 	 */

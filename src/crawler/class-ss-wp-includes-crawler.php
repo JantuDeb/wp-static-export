@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static WP Includes Crawler class
+ * WP Static Export WP Includes Crawler class
  *
  * This crawler detects URLs for essential files in wp-includes directory.
  */

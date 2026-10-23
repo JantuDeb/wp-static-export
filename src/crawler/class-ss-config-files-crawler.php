@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Config Files Crawler class
+ * WP Static Export Config Files Crawler class
  *
  * This crawler detects JSON configuration files in the Simply Static Pro configs directory.
  */

@@ -91,7 +91,7 @@ function SidebarSite( props = null ) {
     const [unpushedChanges, setUnpushedChanges] = useState(0);
     const hasAutoSelectedExportType = useRef(false);
     const hasSelectedExportTypeManually = useRef(false);
-    const rollbackMessage = snapshotRollback && snapshotRollback.message ? snapshotRollback.message : __('Rollback in progress. Simply Static export actions are locked until the rollback has finished.', 'simply-static');
+    const rollbackMessage = snapshotRollback && snapshotRollback.message ? snapshotRollback.message : __('Rollback in progress. WP Static Export export actions are locked until the rollback has finished.', 'simply-static');
     const rollbackProgress = snapshotRollback && snapshotRollback.progress ? snapshotRollback.progress : {};
     const rollbackProgressText = rollbackProgress.label
         ? `${rollbackProgress.label}${rollbackProgress.total ? ` (${rollbackProgress.percent || 0}%, ${rollbackProgress.completed || 0}/${rollbackProgress.total})` : ''}`
@@ -405,7 +405,7 @@ function SidebarSite( props = null ) {
 
     return <Card className={"plugin-nav"}>
         <div className={"plugin-logo"}>
-            <img alt={__('Simply Static logo', 'simply-static')}
+            <img alt={__('WP Static Export logo', 'simply-static')}
                  src={options.logo}/>
         </div>
         <div className={`generate-container ${disabledButton && !isRollbackRunning ? 'generating' : ''} ${isRollbackRunning ? 'rollback-locked' : ''}`}>

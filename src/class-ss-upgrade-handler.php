@@ -8,9 +8,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Upgrade Handler class
+ * WP Static Export Upgrade Handler class
  *
- * Used for handling upgrades/downgrades of Simply Static
+ * Used for handling upgrades/downgrades of WP Static Export
  */
 class Upgrade_Handler {
 

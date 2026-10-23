@@ -5,10 +5,10 @@ namespace Simply_Static;
 class AIO_SEO_Sitemap_Handler extends Page_Handler {
 
 	/**
-	 * Serve the static stylesheet while Simply Static fetches its queued page.
+	 * Serve the static stylesheet while WP Static Export fetches its queued page.
 	 *
 	 * AIOSEO 5.x hard-codes default-sitemap.xsl in generated sitemap XML and no
-	 * longer exposes the old stylesheet filter. Simply Static therefore provides
+	 * longer exposes the old stylesheet filter. WP Static Export therefore provides
 	 * one stable stylesheet endpoint of its own and rewrites every exported
 	 * sitemap to reference it.
 	 *

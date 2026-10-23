@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once( ABSPATH . 'wp-admin/includes/admin.php' );
 
 /**
- * Simply Static archive manager class
+ * WP Static Export archive manager class
  */
 class Archive_Creation_Job extends Background_Process {
 

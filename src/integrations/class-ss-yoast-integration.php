@@ -28,7 +28,7 @@ class Yoast_Integration extends Integration {
 		add_filter( 'ss_additional_urls', [ $this, 'add_dynamic_robots_url' ] );
 		add_filter( 'ss_additional_files', [ $this, 'maybe_add_text_files' ] );
 
-  // Allow Simply Static setting to control sitemap inclusion on Single Export.
+  // Allow WP Static Export setting to control sitemap inclusion on Single Export.
   // Register early so that other plugins/themes (default priority 10+) can override via the same filter.
   add_filter( 'ssp_single_export_add_xml_sitemap', [ $this, 'maybe_enable_sitemap_single_export' ], 1 );
 

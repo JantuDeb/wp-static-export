@@ -18,7 +18,7 @@ class Plugin_Compatibility {
 	const ASSET_HANDLE = 'ss-plugin-install';
 
 	/**
-	 * List of Simply Static plugins.
+	 * List of WP Static Export plugins.
 	 *
 	 * @var array
 	 */
@@ -62,9 +62,9 @@ class Plugin_Compatibility {
 	}
 
 	/**
-	 * Get list of Simply Static plugins.
+	 * Get list of WP Static Export plugins.
 	 *
-	 * @return array List of Simply Static plugins.
+	 * @return array List of WP Static Export plugins.
 	 */
 	public function get_plugins() {
 
@@ -199,7 +199,7 @@ class Plugin_Compatibility {
 	}
 
 	/**
-	 * Modify args for the plugins_api query on the Simply Static-compatible tab in plugin install screen.
+	 * Modify args for the plugins_api query on the WP Static Export-compatible tab in plugin install screen.
 	 *
 	 * @return array
 	 */
@@ -251,7 +251,7 @@ class Plugin_Compatibility {
 	}
 
 	/**
-	 * Add plugin metadata for Simply Static compatibility in plugin listing page.
+	 * Add plugin metadata for WP Static Export compatibility in plugin listing page.
 	 *
 	 * @param string[] $plugin_meta An array of the plugin's metadata, including
 	 *                              the version, author, author URI, and plugin URI.
@@ -270,8 +270,8 @@ class Plugin_Compatibility {
 		if ( ! empty( $plugin_data['slug'] ) && isset( $ss_plugins[ $plugin_data['slug'] ] ) ) {
 			$record        = $ss_plugins[ $plugin_data['slug'] ];
 			$plugin_meta[] = 'compatible_with_config' === $record['status']
-				? esc_html__( 'Simply Static Compatible with configuration', 'simply-static' )
-				: esc_html__( 'Simply Static Compatible', 'simply-static' );
+				? esc_html__( 'WP Static Export Compatible with configuration', 'simply-static' )
+				: esc_html__( 'WP Static Export Compatible', 'simply-static' );
 		}
 
 		return $plugin_meta;

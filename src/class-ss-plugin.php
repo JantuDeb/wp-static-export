@@ -75,7 +75,7 @@ class Plugin {
 
 
 	/**
-	 * Return an instance of the Simply Static plugin
+	 * Return an instance of the WP Static Export plugin
 	 * @return Simply_Static
 	 */
 	public static function instance() {
@@ -341,7 +341,7 @@ class Plugin {
 				if ( ! $credentials_configured ) {
 					// Reject the export before dispatching background work. Starting and
 					// immediately cancelling left stale queue and archive state behind.
-					$message = __( 'Missing Basic Auth credentials - you need to configure the Basic Auth credentials in Simply Static -> Settings -> Misc -> Basic Auth to continue the export.', 'simply-static' );
+					$message = __( 'Missing Basic Auth credentials - you need to configure the Basic Auth credentials in WP Static Export -> Settings -> Misc -> Basic Auth to continue the export.', 'simply-static' );
 					$this->archive_creation_job->save_status_message( $message, 'error' );
 					return false;
 				}

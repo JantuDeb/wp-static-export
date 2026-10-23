@@ -11,9 +11,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Search Widget
+ * WP Static Export Search Widget
  *
- * Elementor widget for Simply Static search functionality.
+ * Elementor widget for WP Static Export search functionality.
  *
  * @since 1.0.0
  */

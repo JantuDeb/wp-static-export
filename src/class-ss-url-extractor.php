@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static URL extractor class
+ * WP Static Export URL extractor class
  *
  * Note that in addition to extracting URLs this class also makes modifications
  * to the Simply_Static\Url_Response that is passed into it: URLs in the body of
@@ -156,7 +156,7 @@ class Url_Extractor {
 	 *
 	 * Managed and reverse-proxy environments can fetch a page from a runtime
 	 * hostname that differs from WordPress home_url(), site_url(), and the
-	 * configured Simply Static origin.
+	 * configured WP Static Export origin.
 	 *
 	 * @var string
 	 */

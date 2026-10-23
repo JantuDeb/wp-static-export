@@ -470,7 +470,7 @@ function DeploymentSettings() {
                             label={__('Branch', 'simply-static')}
                             type={settings.github_branch}
                             placeholder={"main"}
-                            help={__('Simply Static automatically uses "main" as the branch. For GitHub Pages, you may want to change it to gh-pages.', 'simply-static')}
+                            help={__('WP Static Export automatically uses "main" as the branch. For GitHub Pages, you may want to change it to gh-pages.', 'simply-static')}
                             disabled={('free' === options.plan || !isPro())}
                             __next40pxDefaultSize
                             __nextHasNoMarginBottom
@@ -483,7 +483,7 @@ function DeploymentSettings() {
                         <TextControl
                             label={__('Webhook URL', 'simply-static')}
                             type={"url"}
-                            help={__('Enter your Webhook URL here and Simply Static will send a POST request after all files are committed to GitHub.', 'simply-static')}
+                            help={__('Enter your Webhook URL here and WP Static Export will send a POST request after all files are committed to GitHub.', 'simply-static')}
                             disabled={('free' === options.plan || !isPro())}
                             __next40pxDefaultSize
                             __nextHasNoMarginBottom
@@ -668,7 +668,7 @@ function DeploymentSettings() {
                         <TextControl
                             label={__('Pull Zone', 'simply-static')}
                             type={"text"}
-                            help={__('A pull zone is the connection of your CDN to the internet. Simply Static will try to find an existing pull zone with the provided name, if there is none it creates a new pull zone.', 'simply-static')}
+                            help={__('A pull zone is the connection of your CDN to the internet. WP Static Export will try to find an existing pull zone with the provided name, if there is none it creates a new pull zone.', 'simply-static')}
                             disabled={('free' === options.plan || !isPro())}
                             __next40pxDefaultSize
                             __nextHasNoMarginBottom
@@ -681,7 +681,7 @@ function DeploymentSettings() {
                         <TextControl
                             label={__('Storage Zone', 'simply-static')}
                             type={"text"}
-                            help={__('A storage zone contains your static files. Simply Static will try to find an existing storage zone with the provided name, if there is none it creates a new storage zone.', 'simply-static')}
+                            help={__('A storage zone contains your static files. WP Static Export will try to find an existing storage zone with the provided name, if there is none it creates a new storage zone.', 'simply-static')}
                             disabled={('free' === options.plan || !isPro())}
                             __next40pxDefaultSize
                             __nextHasNoMarginBottom
@@ -863,7 +863,7 @@ function DeploymentSettings() {
                         <TextControl
                             label={__('Webhook URL', 'simply-static')}
                             type={"url"}
-                            help={__('Enter your Webhook URL here and Simply Static will send a POST request after all files are transferred to AWS S3.', 'simply-static')}
+                            help={__('Enter your Webhook URL here and WP Static Export will send a POST request after all files are transferred to AWS S3.', 'simply-static')}
                             disabled={('free' === options.plan || !isPro())}
                             __next40pxDefaultSize
                             __nextHasNoMarginBottom

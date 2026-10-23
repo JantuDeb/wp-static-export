@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Vendor Files Crawler class
+ * WP Static Export Vendor Files Crawler class
  *
  * This crawler detects URLs for vendor files (third-party libraries, frameworks, etc.).
  */

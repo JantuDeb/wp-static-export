@@ -3,7 +3,7 @@
 namespace Simply_Static;
 
 /**
- * Enforce compatibility between Simply Static and Simply Static Pro.
+ * Enforce compatibility between WP Static Export and Simply Static Pro.
  *
  * The guard runs before either plugin's normal plugins_loaded callback. An
  * incompatible Pro version remains active so it can recover automatically
@@ -27,7 +27,7 @@ final class Pro_Compatibility {
 	/**
 	 * Return the minimum Pro version required by a Core release.
 	 *
-	 * @param string $core_version Simply Static version.
+	 * @param string $core_version WP Static Export version.
 	 * @return string
 	 */
 	public static function required_pro_version( $core_version ) {
@@ -111,10 +111,10 @@ final class Pro_Compatibility {
 
 		if ( $network_admin ) {
 			/* translators: %1$s: required Simply Static Pro version. */
-			$message = __( 'Simply Static Pro did not load network-wide because this version of Simply Static requires Simply Static Pro %1$s or newer. Please update Simply Static Pro to continue using Pro features.', 'simply-static' );
+			$message = __( 'Simply Static Pro did not load network-wide because this version of WP Static Export requires Simply Static Pro %1$s or newer. Please update Simply Static Pro to continue using Pro features.', 'simply-static' );
 		} else {
 			/* translators: %1$s: required Simply Static Pro version. */
-			$message = __( 'Simply Static Pro did not load because this version of Simply Static requires Simply Static Pro %1$s or newer. Please update Simply Static Pro to continue using Pro features.', 'simply-static' );
+			$message = __( 'Simply Static Pro did not load because this version of WP Static Export requires Simply Static Pro %1$s or newer. Please update Simply Static Pro to continue using Pro features.', 'simply-static' );
 		}
 
 		echo '<div class="notice notice-error"><p>'

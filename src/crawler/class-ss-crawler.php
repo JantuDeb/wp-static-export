@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Crawler base class
+ * WP Static Export Crawler base class
  *
  * This is the base class for all crawler implementations.
  * Each crawler is responsible for detecting URLs of a specific type.
@@ -110,7 +110,7 @@ abstract class Crawler {
 	}
 
 	/**
-	 * Add detected URLs to the Simply Static page queue.
+	 * Add detected URLs to the WP Static Export page queue.
 	 *
 	 * @return int Number of URLs added
 	 */

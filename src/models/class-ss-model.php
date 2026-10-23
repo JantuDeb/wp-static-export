@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Model class
+ * WP Static Export Model class
  *
  * Represents a single database table with accessors for finding, creating, and
  * updating records.

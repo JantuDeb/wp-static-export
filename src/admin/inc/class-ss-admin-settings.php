@@ -98,7 +98,7 @@ class Admin_Settings {
     public function __construct() {
         add_action( 'admin_menu', array( $this, 'add_menu' ) );
         // REST route registration moved to Admin_Rest. Keep method for BC, but do not hook here.
-        // Prevent WP core from altering the admin URL with history.replaceState on Simply Static pages.
+        // Prevent WP core from altering the admin URL with history.replaceState on WP Static Export pages.
         // This avoids a SecurityError when Basic Auth credentials are present in the URL.
         add_action( 'admin_head', array( $this, 'maybe_disable_admin_canonical' ), 1 );
 
@@ -137,7 +137,7 @@ class Admin_Settings {
     public function add_menu() {
         $hide_menu  = apply_filters( 'ss_hide_admin_menu', false );
 
-        $menu_title = apply_filters( 'ss_menu_title', __( 'Simply Static', 'simply-static' ) );
+        $menu_title = apply_filters( 'ss_menu_title', __( 'WP Static Export', 'simply-static' ) );
         $menu_icon  = apply_filters( 'ss_menu_icon', SIMPLY_STATIC_URL . '/assets/simply-static-icon.svg' );
 
         // Generate settings page.
@@ -241,7 +241,7 @@ class Admin_Settings {
             } );
         }
 
-      		// Command Center: hide the top-level sidebar menu and add a link under Tools → Simply Static.
+      		// Command Center: hide the top-level sidebar menu and add a link under Tools → WP Static Export.
         if ( $hide_menu ) {
             add_action( 'admin_head', function () {
                 echo '<style>#toplevel_page_simply-static-generate{display:none!important;}</style>';
@@ -249,14 +249,14 @@ class Admin_Settings {
 
             // Register a Tools submenu that links directly to the original page.
             global $submenu;
-            $tools_brand = defined( 'SSS_VERSION' ) ? __( 'Static Studio', 'simply-static' ) : __( 'Simply Static', 'simply-static' );
+            $tools_brand = defined( 'SSS_VERSION' ) ? __( 'Static Studio', 'simply-static' ) : __( 'WP Static Export', 'simply-static' );
             $submenu['tools.php'][] = array(
                 $tools_brand,
                 apply_filters( 'ss_user_capability', 'publish_pages', 'generate' ),
                 admin_url( 'admin.php?page=simply-static-generate' ),
             );
 
-            // Make the Tools menu open and Simply Static highlighted when on any SS page.
+            // Make the Tools menu open and WP Static Export highlighted when on any SS page.
             add_filter( 'parent_file', function ( $parent_file ) {
                 $screen = get_current_screen();
                 if ( $screen && isset( $_GET['page'] ) && strpos( $_GET['page'], 'simply-static' ) === 0 ) {
@@ -302,7 +302,7 @@ class Admin_Settings {
     }
 
     public function maybe_disable_admin_canonical() {
-        // Only run in admin and on Simply Static pages.
+        // Only run in admin and on WP Static Export pages.
         if ( ! is_admin() ) {
             return;
         }
@@ -1493,7 +1493,7 @@ class Admin_Settings {
 
         $ajax_url     = admin_url( 'admin-ajax.php' );
         $nonce        = wp_create_nonce( 'ss-export-progress-title-nonce' );
-        $title_prefix = esc_js( __( 'Simply Static', 'simply-static' ) );
+        $title_prefix = esc_js( __( 'WP Static Export', 'simply-static' ) );
         ?>
         <script id="ss-export-progress-title-js">
         (function(){

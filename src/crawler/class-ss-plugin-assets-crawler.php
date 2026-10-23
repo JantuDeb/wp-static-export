@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Plugin Assets Crawler class
+ * WP Static Export Plugin Assets Crawler class
  *
  * This crawler detects URLs for assets (CSS, JS, images) used by plugins.
  */

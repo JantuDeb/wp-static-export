@@ -91,7 +91,7 @@ class Page_Handlers {
 	 * page handler. Leaving it in REQUEST_URI after that point allows plugins
 	 * which serialize the current request URL to expose the internal identifier
 	 * in the generated static page. Keep $_GET intact for integrations which use
-	 * it to detect a Simply Static request.
+	 * it to detect a WP Static Export request.
 	 *
 	 * @return void
 	 */

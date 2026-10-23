@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Page class, for tracking the status of pages / static files
+ * WP Static Export Page class, for tracking the status of pages / static files
  */
 class Page extends Model {
 

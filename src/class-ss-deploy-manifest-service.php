@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Builds, stores, and exposes deploy manifests from Simply Static export data.
+ * Builds, stores, and exposes deploy manifests from WP Static Export export data.
  */
 class Deploy_Manifest_Service {
 
@@ -81,7 +81,7 @@ class Deploy_Manifest_Service {
 	}
 
 	/**
-	 * Build the current manifest from Simply Static page records.
+	 * Build the current manifest from WP Static Export page records.
 	 *
 	 * @param string $result Export result.
 	 * @param string $message Optional failure message.

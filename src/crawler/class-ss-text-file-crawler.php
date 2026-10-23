@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static public text file crawler.
+ * WP Static Export public text file crawler.
  *
  * Discovers conventional text endpoints which are normally not linked from an
  * HTML page and may be generated dynamically rather than stored on disk.

@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Crawlers class
+ * WP Static Export Crawlers class
  *
  * This class manages all the crawler implementations.
  */

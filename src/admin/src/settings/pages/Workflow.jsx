@@ -436,8 +436,8 @@ function Workflow() {
                     <ToggleControl
                         label={__('Move menu to Tools submenu', 'simply-static')}
                         help={toolsSubmenu
-                            ? __('The Simply Static menu is placed under the Tools menu in the admin sidebar.', 'simply-static')
-                            : __('The Simply Static menu is shown as a top-level item in the admin sidebar.', 'simply-static')}
+                            ? __('The WP Static Export menu is placed under the Tools menu in the admin sidebar.', 'simply-static')
+                            : __('The WP Static Export menu is shown as a top-level item in the admin sidebar.', 'simply-static')}
                         checked={!!toolsSubmenu}
                         disabled={!proEnabled}
                         onChange={(value) => {
@@ -475,7 +475,7 @@ function Workflow() {
                             setWebhookUrl(value);
                             updateSetting('ss_webhook_url', value);
                         }}
-                        help={__('Simply Static will POST a JSON payload to this URL after pushes finish.', 'simply-static')}
+                        help={__('WP Static Export will POST a JSON payload to this URL after pushes finish.', 'simply-static')}
                     />
                     <p className={'description'}>{__('Fire for these push types:', 'simply-static')}</p>
                     <div className="ss-webhook-types">

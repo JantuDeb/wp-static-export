@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Author Crawler class
+ * WP Static Export Author Crawler class
  *
  * This crawler detects author URLs.
  */

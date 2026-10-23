@@ -428,7 +428,7 @@ function Optimize() {
                             <TextareaControl
                                 label={__('Delay Exclude Patterns', 'simply-static')}
                                 __nextHasNoMarginBottom
-                                help={__('Glob patterns for scripts that must run without Simply Static\'s interaction delay (one per line). Patterns match script URLs, element IDs, and inline script content. You can also add data-ssp-no-delay to a script tag. Exclusions do not override your consent manager.', 'simply-static')}
+                                help={__('Glob patterns for scripts that must run without WP Static Export\'s interaction delay (one per line). Patterns match script URLs, element IDs, and inline script content. You can also add data-ssp-no-delay to a script tag. Exclusions do not override your consent manager.', 'simply-static')}
                                 disabled={('free' === options.plan || !isPro())}
                                 value={settings.css_optimize_delay_js_excludes || ''}
                                 placeholder={'*googletagmanager.com*\ngtm-bootstrap'}

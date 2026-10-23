@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static URL fetcher class
+ * WP Static Export URL fetcher class
  */
 class Url_Fetcher {
 	/**
@@ -516,7 +516,7 @@ class Url_Fetcher {
 			$use_results_page = (bool) $use_search && (bool) $use_results_page;
 
 			/**
-			 * Filter whether Simply Static should use the dedicated Search Results Page export (`__qs`) for query-string URLs.
+			 * Filter whether WP Static Export should use the dedicated Search Results Page export (`__qs`) for query-string URLs.
 			 * Returning false will skip creating any `__qs` directory/files for query-string URLs entirely.
 			 *
 			 * @param bool $use_results_page Whether to use the Search Results Page export. Default requires search to be enabled.
@@ -534,7 +534,7 @@ class Url_Fetcher {
 				$use_hash_dir = false;
 			}
 			/**
-			 * Filter whether Simply Static should use a hash directory for query-string URLs.
+			 * Filter whether WP Static Export should use a hash directory for query-string URLs.
 			 *
 			 * Returning false writes query-string URLs directly under `__qs/` without the hash subdirectory.
 			 *
@@ -626,9 +626,9 @@ class Url_Fetcher {
 		Util::debug_log( "Fetching URL: " . $url );
 
 		/**
-		 * Filter the User-Agent string used by the Simply Static crawler.
+		 * Filter the User-Agent string used by the WP Static Export crawler.
 		 *
-		 * Return a different string to override the default Simply Static
+		 * Return a different string to override the default WP Static Export
 		 * User-Agent.
 		 *
 		 * @param string $user_agent Default User-Agent.

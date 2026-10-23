@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Home Crawler class
+ * WP Static Export Home Crawler class
  *
  * This crawler detects the home page URL.
  */

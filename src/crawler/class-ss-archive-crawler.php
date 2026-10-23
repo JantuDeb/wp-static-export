@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Simply Static Archive Crawler class
+ * WP Static Export Archive Crawler class
  *
  * This crawler detects archive URLs (yearly, monthly, daily).
  */

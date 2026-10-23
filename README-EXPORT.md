@@ -1,10 +1,10 @@
 # Static export for WordPress
 
-A fork of the GPL-2.0+ Simply Static plugin with deployment targets, forms, search,
+A fork of the GPL-2.0+ WP Static Export plugin with deployment targets, forms, search,
 optimization, comments, multilingual support and Lighthouse tooling. PHP does the export;
 TypeScript (in `deployer/`) does everything that talks to other services or runs in the browser.
 
-> Rename the plugin before you distribute it. "Simply Static" is its authors' trademark.
+> Rename the plugin before you distribute it. "WP Static Export" is its authors' trademark.
 
 ## Build
 
@@ -22,7 +22,7 @@ multilingual need no Node. For image compression also run `npm install sharp` in
 
 ## Where to configure
 
-**Simply Static → Deploy & Features.** Secrets (tokens, keys, passwords) are write-only: the
+**WP Static Export → Deploy & Features.** Secrets (tokens, keys, passwords) are write-only: the
 page shows "saved" but never sends them back. Any setting can be fixed with a
 `SIMPLY_STATIC_<OPTION>` constant in `wp-config.php`; the page then shows it as locked.
 Use **Save & test connection** to check credentials without deploying.
