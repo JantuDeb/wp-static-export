@@ -1,5 +1,6 @@
 import { providers } from './providers.js';
 import { DeployError, type DeployResult, type Job, type Logger } from './types.js';
+import { matchesAny } from './process/glob.js';
 import { diff, loadState, saveState, scanDir } from './util.js';
 
 export async function runJob(job: Job, log: Logger): Promise<DeployResult> {
@@ -7,7 +8,7 @@ export async function runJob(job: Job, log: Logger): Promise<DeployResult> {
   if (!provider) throw new DeployError(`Unknown provider: ${job.provider}`);
   const config = provider.validate(job.config);
 
-  const all = await scanDir(job.dir);
+  const all = (await scanDir(job.dir)).filter((f) => !matchesAny(f.path, job.ignore));
   if (all.length === 0) throw new DeployError(`Export directory is empty: ${job.dir}`);
 
   const scope = job.scope ?? 'full';

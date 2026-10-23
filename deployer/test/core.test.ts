@@ -77,3 +77,26 @@ describe('delete safety', () => {
     expect(calls.some((c) => c.startsWith('DELETE'))).toBe(false);
   });
 });
+
+describe('ignore', () => {
+  it('never deploys files matching the ignore globs and does not record them in state', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'ig-'));
+    await mkdir(path.join(dir, 'wp-content/uploads/simply-static/deploy-state'), { recursive: true });
+    await wf(path.join(dir, 'wp-content/uploads/simply-static/deploy-state/s3.json'), '{"secret":"paths"}');
+    await wf(path.join(dir, 'index.html'), 'x');
+    const state = path.join(dir, '..', `ig-state-${Date.now()}.json`);
+    const puts: string[] = [];
+    vi.stubGlobal('fetch', async (url: string, init: RequestInit = {}) => {
+      if (init.method === 'PUT') puts.push(new URL(url).pathname);
+      return new Response('', { status: 200 });
+    });
+    const r = await runJob(
+      { provider: 'bunny', dir, stateFile: state, ignore: ['*/simply-static/deploy-state/*'], config: { storageKey: 'k', storageZone: 'z' } },
+      { info() {}, warn() {}, progress() {} },
+    );
+    vi.unstubAllGlobals();
+    expect(puts).toEqual(['/z/index.html']);
+    expect(r.uploaded).toBe(1);
+    expect(Object.keys(JSON.parse(await (await import('node:fs/promises')).readFile(state, 'utf8')))).toEqual(['index.html']);
+  });
+});

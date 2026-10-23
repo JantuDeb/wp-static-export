@@ -86,6 +86,7 @@ class Deploy_Task extends Task {
 			'scope'       => Process_Config::scope(),
 			'force'       => (bool) $this->options->get( 'deploy_force_full' ),
 			'concurrency' => (int) apply_filters( 'ss_deploy_concurrency', 8 ),
+			'ignore'      => Deploy_Runner::ignore_patterns(),
 			'config'      => $config,
 		);
 

@@ -40294,12 +40294,23 @@ var providers = {
   sftp
 };
 
+// src/process/glob.ts
+function matchesAny(path9, patterns) {
+  if (!patterns?.length) return false;
+  return patterns.some((p) => {
+    const trimmed = p.trim();
+    if (!trimmed) return false;
+    const re = new RegExp("^" + trimmed.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*") + "$");
+    return re.test(path9) || re.test("/" + path9);
+  });
+}
+
 // src/deploy.ts
 async function runJob(job, log2) {
   const provider = job.provider && providers[job.provider];
   if (!provider) throw new DeployError(`Unknown provider: ${job.provider}`);
   const config = provider.validate(job.config);
-  const all = await scanDir(job.dir);
+  const all = (await scanDir(job.dir)).filter((f) => !matchesAny(f.path, job.ignore));
   if (all.length === 0) throw new DeployError(`Export directory is empty: ${job.dir}`);
   const scope = job.scope ?? "full";
   const prev = job.force ? {} : await loadState(job.stateFile);
@@ -77670,17 +77681,6 @@ var minify2 = async function(value, options) {
   options.log("minified in: " + (Date.now() - start) + "ms");
   return result;
 };
-
-// src/process/glob.ts
-function matchesAny(path9, patterns) {
-  if (!patterns?.length) return false;
-  return patterns.some((p) => {
-    const trimmed = p.trim();
-    if (!trimmed) return false;
-    const re = new RegExp("^" + trimmed.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*") + "$");
-    return re.test(path9) || re.test("/" + path9);
-  });
-}
 
 // src/process/optimize.ts
 var ext = (p) => import_node_path5.default.extname(p).slice(1).toLowerCase();

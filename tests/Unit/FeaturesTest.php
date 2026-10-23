@@ -324,6 +324,18 @@ final class FeaturesTest extends UnitTestCase {
 		$this->assertTrue( $fixes['metaDescription'] );
 	}
 
+	public function test_deploy_state_dir_is_excluded_from_the_uploads_crawl_and_the_deploy(): void {
+		$this->requireSource( 'src/deploy/class-ss-deploy-runner.php' );
+		\Simply_Static\Deploy_Runner::init();
+
+		$skip = apply_filters( 'ss_skip_crawl_uploads_directories', array( 'tmp' ) );
+		$this->assertContains( 'simply-static/deploy-state', $skip );
+		$this->assertContains( 'tmp', $skip, 'existing entries are kept' );
+
+		$ignore = \Simply_Static\Deploy_Runner::ignore_patterns();
+		$this->assertContains( '*/simply-static/deploy-state/*', $ignore );
+	}
+
 	public function test_scope_is_partial_for_single_update_and_404_exports(): void {
 		$this->configure( array( 'generate_type' => 'export' ) );
 		$this->assertSame( 'full', Process_Config::scope() );

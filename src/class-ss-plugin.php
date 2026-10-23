@@ -97,6 +97,7 @@ class Plugin {
 				add_action( 'simply_static_site_export_cron', array( self::$instance, 'run_static_export' ) );
 
 				// Forms, comments, search, multilingual.
+				Deploy_Runner::init();
 				Html_Enhancer::init();
 				Multilingual::init();
 				add_action( 'ss_before_finish_transferring_files_locally', array( '\\Simply_Static\\Process_Config', 'transfer_extra_files' ), 10, 2 );

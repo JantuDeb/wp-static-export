@@ -16,6 +16,38 @@ class Deploy_Runner {
 
 	const MIN_NODE_MAJOR = 18;
 
+	/** Directory (relative to uploads) holding incremental deploy state. */
+	const STATE_DIR = 'simply-static/deploy-state';
+
+	/**
+	 * Keep the state directory out of exports: it lives in uploads, which the crawler scans, and the
+	 * files list every deployed path and hash.
+	 */
+	public static function init() {
+		add_filter(
+			'ss_skip_crawl_uploads_directories',
+			static function ( $dirs ) {
+				return array_merge( (array) $dirs, array( self::STATE_DIR ) );
+			}
+		);
+	}
+
+	/**
+	 * Path globs (relative to the export) that must never be deployed even if they end up in it.
+	 *
+	 * @return string[]
+	 */
+	public static function ignore_patterns() {
+		return apply_filters(
+			'ss_deploy_ignore',
+			array(
+				'*/' . self::STATE_DIR . '/*',
+				'*/simply-static/temp-files/*',
+				'*/ss-deploy-state/*',
+			)
+		);
+	}
+
 	/**
 	 * Path of the bundled CLI.
 	 *
@@ -88,7 +120,7 @@ class Deploy_Runner {
 	 */
 	public static function state_dir() {
 		$upload = wp_upload_dir( null, false );
-		$dir    = trailingslashit( $upload['basedir'] ) . 'ss-deploy-state/';
+		$dir    = trailingslashit( $upload['basedir'] ) . self::STATE_DIR . '/';
 		if ( ! is_dir( $dir ) ) {
 			wp_mkdir_p( $dir );
 			// State only holds paths and hashes, but there is no reason to serve it.
