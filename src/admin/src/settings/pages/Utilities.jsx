@@ -1,0 +1,349 @@
+import {
+    Card,
+    CardBody,
+    CardHeader,
+    __experimentalSpacer as Spacer,
+    Button,
+    Notice,
+    Animate,
+    ClipboardButton,
+    // Note: We are not using TextareaControl here to keep the field read-only without extra handlers.
+} from "@wordpress/components";
+import {useState, useContext} from "@wordpress/element";
+import {SettingsContext} from "../context/SettingsContext";
+import OperationsMode from "../components/OperationsMode";
+
+const {__} = wp.i18n;
+
+function Utilities() {
+
+    const {
+        importSettings,
+        resetSettings,
+        migrateSettings,
+        resetDatabase,
+        resetBackgroundQueue,
+        isRunning,
+        isPaused,
+        isRollbackRunning,
+    } = useContext(SettingsContext);
+    const [isExport, setIsExport] = useState(false);
+    const [isImport, setIsImport] = useState(false);
+    const [isReset, setIsReset] = useState(false);
+    const [isResetDatabase, setIsResetDatabase] = useState(false);
+    const [isMigrate, setIsMigrate] = useState(false);
+    const [hasCopied, setHasCopied] = useState(false);
+    const [importData, setImportData] = useState('');
+    const [exportJson, setExportJson] = useState('');
+    const [exportLoading, setExportLoading] = useState(false);
+    const [exportError, setExportError] = useState('');
+    const [isResetBackgroundQueue, setIsResetBackgroundQueue] = useState(false);
+    const [pendingAction, setPendingAction] = useState('');
+    const [actionError, setActionError] = useState('');
+    const maintenanceLocked = isRunning || isPaused || isRollbackRunning;
+    const isBusy = pendingAction !== '';
+	const hasOperationsMode = 'undefined' !== typeof options && 'pro' === options.plan && !!options.operations_mode;
+
+    const setImportDataValue = event => {
+        setImportData(event.target.value);
+        setActionError('');
+    };
+
+    const finishSuccessNotice = (setter) => {
+        setter(true);
+        window.setTimeout(() => setter(false), 2000);
+    }
+
+    const runAction = async (name, action, successSetter) => {
+        setPendingAction(name);
+        setActionError('');
+        try {
+            await action();
+            finishSuccessNotice(successSetter);
+            return true;
+        } catch (error) {
+            setActionError(
+                error && error.message
+                    ? error.message
+                    : __('The requested action could not be completed.', 'simply-static')
+            );
+            return false;
+        } finally {
+            setPendingAction('');
+        }
+    };
+
+    const runImportSettings = async () => {
+        let parsed;
+        try {
+            parsed = JSON.parse(importData);
+            if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') {
+                throw new Error(__('Import data must be a JSON object.', 'simply-static'));
+            }
+        } catch (error) {
+            setActionError(
+                error && error.message
+                    ? error.message
+                    : __('Enter valid settings JSON before importing.', 'simply-static')
+            );
+            return;
+        }
+
+        await runAction('import', () => importSettings(parsed), setIsImport);
+    }
+
+    const runResetSettings = () => runAction('reset-settings', resetSettings, setIsReset);
+
+    const runResetDatabase = () => runAction('reset-database', resetDatabase, setIsResetDatabase);
+
+    const runMigrateSettings = async () => {
+        const succeeded = await runAction('migrate', migrateSettings, setIsMigrate);
+        if (succeeded) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        }
+    }
+
+    const runResetBackgroundQueue = () => runAction(
+        'reset-background',
+        resetBackgroundQueue,
+        setIsResetBackgroundQueue
+    );
+
+    const startExport = () => {
+        setIsExport(true);
+        setExportLoading(true);
+        setExportError('');
+        // Fetch sanitized settings intended for export (excludes site-specific keys)
+        wp.apiFetch({ path: '/simplystatic/v1/settings/export', method: 'GET' })
+            .then((resp) => {
+                try {
+                    // Endpoint returns JSON-encoded string (php json_encode). If resp is string, try parse; else use as object
+                    let obj = resp;
+                    if (typeof resp === 'string') {
+                        obj = JSON.parse(resp);
+                    }
+                    const pretty = JSON.stringify(obj || {}, null, 2);
+                    setExportJson(pretty);
+                } catch (e) {
+                    setExportError(__('Failed to prepare export JSON.', 'simply-static'));
+                    setExportJson('');
+                }
+            })
+            .catch(() => {
+                setExportError(__('Failed to fetch export data.', 'simply-static'));
+                setExportJson('');
+            })
+            .finally(() => setExportLoading(false));
+    };
+
+    return (
+        <div className={"inner-settings"}>
+			{hasOperationsMode &&
+				<>
+					<OperationsMode/>
+					<Spacer margin={5}/>
+				</>
+			}
+            {maintenanceLocked && (
+                <Notice status="warning" isDismissible={false}>
+                    <p>{__('Import, reset, and migration actions are unavailable until the active export or rollback finishes.', 'simply-static')}</p>
+                </Notice>
+            )}
+            {actionError && (
+                <Notice status="error" isDismissible onRemove={() => setActionError('')}>
+                    <p>{actionError}</p>
+                </Notice>
+            )}
+            <Card>
+                <CardHeader>
+                    <b>{__('Export', 'simply-static')}</b>
+                </CardHeader>
+                <CardBody>
+                    {!isExport ?
+                        <p>
+                            <Button onClick={startExport}
+                                    variant="primary">{__('Export Settings', 'simply-static')}</Button>
+                        </p>
+                        :
+                        <>
+                            <>
+                                {exportLoading && (
+                                    <p>{__('Preparing export...', 'simply-static')}</p>
+                                )}
+                                {exportError && (
+                                    <Notice status="error" isDismissible={true}>
+                                        <p>{exportError}</p>
+                                    </Notice>
+                                )}
+                                {!exportLoading && !exportError && (
+                                    <>
+                                        <div style={{marginBottom: '12px'}}>
+                                            <textarea
+                                                className="ss-export-textarea"
+                                                value={exportJson}
+                                                readOnly
+                                                style={{
+                                                    width: '100%',
+                                                    height: '300px',
+                                                    fontFamily: 'Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                                                    fontSize: '12px',
+                                                    whiteSpace: 'pre',
+                                                    overflow: 'auto',
+                                                    boxSizing: 'border-box'
+                                                }}
+                                            />
+                                        </div>
+                                        <p>
+                                            <ClipboardButton
+                                                variant="secondary"
+                                                text={exportJson}
+                                                onCopy={() => setHasCopied(true)}
+                                                onFinishCopy={() => setHasCopied(false)}
+                                            >
+                                                {hasCopied ? __('Copied!', 'simply-static') : __('Copy export data', 'simply-static')}
+                                            </ClipboardButton>
+                                        </p>
+                                    </>
+                                )}
+                            </>
+                        </>
+                    }
+                </CardBody>
+            </Card>
+            <Spacer margin={5}/>
+            <Card>
+                <CardHeader>
+                    <b>{__('Import', 'simply-static')}</b>
+                </CardHeader>
+                <CardBody>
+                    <p>
+                        {__('Paste in the JSON string you got from your export to import all settings for the plugin.', 'simply-static')}
+                    </p>
+                    <label className="screen-reader-text" htmlFor="ss-import-data">
+                        {__('Settings JSON to import', 'simply-static')}
+                    </label>
+                    <textarea
+                        id="ss-import-data"
+                        rows="8"
+                        name="import-data"
+                        value={importData}
+                        onChange={setImportDataValue}
+                    />
+                    <p>
+                        <Button onClick={runImportSettings}
+                                disabled={maintenanceLocked || isBusy || importData.trim() === ''}
+                                isBusy={pendingAction === 'import'}
+                                variant="primary">{__('Import Settings', 'simply-static')}</Button>
+                    </p>
+                    {isImport ?
+                        <Animate type="slide-in" options={{origin: 'top'}}>
+                            {() => (
+                                <Notice status="success" isDismissible={false}>
+                                    <p>
+                                        {__('Settings imported successfully.', 'simply-static')}
+                                    </p>
+                                </Notice>
+                            )}
+                        </Animate>
+                        :
+                        ''
+                    }
+                </CardBody>
+            </Card>
+            <Spacer margin={5}/>
+            <Card>
+                <CardHeader>
+                    <b>{__('Reset', 'simply-static')}</b>
+                </CardHeader>
+                <CardBody>
+                    <p>{__('By clicking the "Reset Plugin Settings", you will reset all plugin settings. This can be useful if you want to import a new set of settings or you want a fresh start.', 'simply-static')}</p>
+                    <p>{__('If you click the "Reset Database Table" button instead, you will keep all your settings, and we will only recreate our DB table.', 'simply-static')}</p>
+                    <p>{__('If the background process is stuck and your debug log shows "There is already an export running", use the "Reset Background Queue" button to clear the queue and locks.', 'simply-static')}</p>
+                    <p>
+                        <Button onClick={runResetSettings}
+                                disabled={maintenanceLocked || isBusy}
+                                isBusy={pendingAction === 'reset-settings'}
+                                variant="primary">{__('Reset Plugin Settings', 'simply-static')}</Button>
+                        <Button onClick={runResetDatabase} className={"reset-db-btn"}
+                                disabled={maintenanceLocked || isBusy}
+                                isBusy={pendingAction === 'reset-database'}
+                                variant="primary">{__('Reset Database Table', 'simply-static')}</Button>
+                        <Button onClick={runResetBackgroundQueue} className={"reset-bg-btn"}
+                                disabled={isBusy}
+                                isBusy={pendingAction === 'reset-background'}
+                                variant="primary">{__('Reset Background Queue', 'simply-static')}</Button>
+                    </p>
+                    {isReset ?
+                        <Animate type="slide-in" options={{origin: 'top'}}>
+                            {() => (
+                                <Notice status="success" isDismissible={false}>
+                                    <p>
+                                        {__('Settings reset successfully.', 'simply-static')}
+                                    </p>
+                                </Notice>
+                            )}
+                        </Animate>
+                        :
+                        ''
+                    }
+                    {isResetDatabase ?
+                        <Animate type="slide-in" options={{origin: 'top'}}>
+                            {() => (
+                                <Notice status="success" isDismissible={false}>
+                                    <p>
+                                        {__('Database table reset successfully.', 'simply-static')}
+                                    </p>
+                                </Notice>
+                            )}
+                        </Animate>
+                        :
+                        ''
+                    }
+                    {isResetBackgroundQueue ?
+                        <Animate type="slide-in" options={{origin: 'top'}}>
+                            {() => (
+                                <Notice status="success" isDismissible={false}>
+                                    <p>
+                                        {__('Background queue reset successfully.', 'simply-static')}
+                                    </p>
+                                </Notice>
+                            )}
+                        </Animate>
+                        :
+                        ''
+                    }
+                </CardBody>
+            </Card>
+            <Spacer margin={5}/>
+            <Card>
+                <CardHeader>
+                    <b>{__('Migrate Settings', 'simply-static')}</b>
+                </CardHeader>
+                <CardBody>
+                    <p>{__('Migrate all of your settings to Simply Static 3.0', 'simply-static')}</p>
+                    <p>
+                        <Button onClick={runMigrateSettings}
+                                disabled={maintenanceLocked || isBusy}
+                                isBusy={pendingAction === 'migrate'}
+                                variant="primary">{__('Migrate settings', 'simply-static')}</Button>
+                    </p>
+                    {isMigrate ?
+                        <Animate type="slide-in" options={{origin: 'top'}}>
+                            {() => (
+                                <Notice status="success" isDismissible={false}>
+                                    <p>
+                                        {__('Settings migration completed successfully.', 'simply-static')}
+                                    </p>
+                                </Notice>
+                            )}
+                        </Animate>
+                        :
+                        ''
+                    }
+                </CardBody>
+            </Card>
+        </div>
+    )
+}
+
+export default Utilities;

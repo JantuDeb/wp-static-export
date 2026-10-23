@@ -1,0 +1,416 @@
+<?php
+
+namespace Simply_Static;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Simply Static Upgrade Handler class
+ *
+ * Used for handling upgrades/downgrades of Simply Static
+ */
+class Upgrade_Handler {
+
+	/**
+	 * An instance of the options structure containing all options for this plugin
+	 *
+	 * @var Simply_Static\Options
+	 */
+	protected static $options = null;
+
+	/**
+	 * Default options to set for the plugin
+	 *
+	 * @var array
+	 */
+	protected static $default_options = null;
+
+	/**
+	 * Disable usage of "new"
+	 *
+	 * @return void
+	 */
+	protected function __construct() {
+	}
+
+	/**
+	 * Disable cloning of the class
+	 *
+	 * @return void
+	 */
+	protected function __clone() {
+	}
+
+	/**
+	 * Disable unserializing of the class
+	 *
+	 * @return void
+	 */
+	public function __wakeup() {
+	}
+
+	/**
+	 * Return the canonical defaults used by both installation and reset.
+	 *
+	 * @return array
+	 */
+	public static function get_default_options() {
+		$defaults = array(
+			'destination_scheme'            => 'https://',
+			'destination_host'              => '',
+			'destination_url'               => '',
+			'temp_files_dir'                => '',
+			'additional_urls'               => '',
+			'additional_files'              => '',
+			'urls_to_exclude'               => "",
+			'delivery_method'               => 'zip',
+			'local_dir'                     => '',
+			'relative_path'                 => '',
+			'destination_url_type'          => 'relative',
+			'generate_type'                 => 'export',
+			'debugging_mode'                => false,
+			'server_cron'                   => false,
+			'whitelist_plugins'             => '',
+			'crawlers'                      => null,
+			'post_types'                    => array(),
+			'post_types_configured'         => false,
+			'plugins_to_include'            => array(),
+			'themes_to_include'             => array(),
+			'http_basic_auth_on'            => false,
+			'http_basic_auth_username'      => '',
+			'http_basic_auth_password'      => '',
+			'origin_url'                    => '',
+			'force_replace_url'             => true,
+			'clear_directory_before_export' => false,
+			'iframe_urls'                   => '',
+			'iframe_custom_css'             => '',
+			'tiiny_email'                   => get_bloginfo( 'admin_email' ),
+			'tiiny_subdomain'               => '',
+			'tiiny_domain_suffix'           => 'tiiny.site',
+			'tiiny_password'                => '',
+			'cdn_api_key'                   => '',
+			'cdn_storage_host'              => 'storage.bunnycdn.com',
+			'cdn_access_key'                => '',
+			'cdn_pull_zone'                 => '',
+			'cdn_storage_zone'              => '',
+			'cdn_directory'                 => '',
+			'github_account_type'           => 'personal',
+			'github_user'                   => '',
+			'github_email'                  => '',
+			'github_personal_access_token'  => '',
+			'github_repository'             => '',
+			'github_repository_visibility'  => 'public',
+			'github_branch'                 => 'main',
+			'github_webhook_url'            => '',
+			'github_folder_path'            => '',
+			'github_throttle_requests'      => false,
+			'github_batch_size'             => 100,
+			'aws_auth_method'               => 'aws-iam-key',
+			'aws_region'                    => 'us-east-2',
+			'aws_access_key'                => '',
+			'aws_access_secret'             => '',
+			'aws_bucket'                    => '',
+			'aws_subdirectory'              => '',
+			'aws_distribution_id'           => '',
+			'aws_webhook_url'               => '',
+			'aws_empty'                     => false,
+			'aws_disable_acl'               => false,
+			's3_access_key'                 => '',
+			's3_base_url'                   => '',
+			's3_access_secret'              => '',
+			's3_bucket'                     => '',
+			's3_subdirectory'               => '',
+			'fix_cors'                      => 'allowed_http_origins',
+			'static_url'                    => '',
+			'use_forms'                     => false,
+			'use_form_conditional_loading'  => false,
+			'save_form_entries'             => false,
+			'captcha_service'               => '',
+			'cloudflare_turnstile_site_key' => '',
+			'cloudflare_turnstile_secret_key' => '',
+			'cloudflare_turnstile_theme'    => 'auto',
+			'cloudflare_turnstile_size'     => 'normal',
+			'recaptcha_site_key'            => '',
+			'recaptcha_secret_key'          => '',
+			'use_comments'                  => false,
+			'comment_redirect'              => '',
+			'use_search'                    => false,
+			'use_search_results_page'       => true,
+			'search_type'                   => 'fuse',
+			'search_index_title'            => 'title',
+			'search_index_content'          => 'body',
+			'search_index_excerpt'          => '.entry-content',
+			'search_excludable'             => '',
+			'search_metadata'               => '',
+			'fuse_selector'                 => '.search-field',
+			'fuse_threshold'                => 0.1,
+			'fuse_use_extended_search'      => false,
+			'fuse_ignore_location'          => false,
+			'fuse_weight_title'             => 1,
+			'fuse_weight_content'           => 1,
+			'fuse_weight_excerpt'           => 1,
+			'search_show_submit'            => false,
+			'search_show_excerpt'           => false,
+			'search_placeholder'            => '',
+			'search_submit_text'            => '',
+			'search_fuse_show_submit'       => false,
+			'search_fuse_placeholder'       => '',
+			'search_fuse_submit_text'       => '',
+			'algolia_app_id'                => '',
+			'algolia_admin_api_key'         => '',
+			'algolia_search_api_key'        => '',
+			'algolia_index'                 => 'simply_static',
+			'algolia_selector'              => '.search-field',
+			'use_minify'                    => false,
+			'minify_html'                   => false,
+			'minify_css'                    => false,
+			'minify_inline_css'             => false,
+			'minify_js'                     => false,
+			'minify_inline_js'              => false,
+			'minify_css_exclude'            => '',
+			'minify_js_exclude'             => '',
+			'version_css'                   => false,
+			'version_js'                    => false,
+			'use_css_optimize'              => false,
+			'css_optimize_defer_css'        => false,
+			'css_optimize_defer_js'         => false,
+			'css_optimize_google_fonts'     => false,
+			'css_optimize_preconnect_hints' => false,
+			'css_optimize_delay_js'           => false,
+			'css_optimize_delay_js_patterns'  => '',
+			'css_optimize_delay_js_excludes'  => '',
+			'css_optimize_delay_js_timeout'   => 10,
+			'css_optimize_defer_js_excludes'  => '',
+			'css_optimize_critical_patterns'  => '',
+			'css_js_aggregate_css'              => false,
+			'css_js_aggregate_js'               => false,
+			'css_js_aggregate_exclude_patterns'  => '',
+			'css_js_aggregate_protect_jquery'    => true,
+			'use_critical_css'                => false,
+			'critical_css_additional_urls'    => '',
+			'critical_css_custom'             => '',
+			'generate_404'                  => false,
+            'custom_404_page'              => 0,
+			'add_feeds'                     => false,
+			'add_rest_api'                  => false,
+			'smart_crawl'                   => true,
+			'wp_content_directory'          => 'wp-content',
+			'wp_includes_directory'         => 'wp-includes',
+			'wp_uploads_directory'          => 'uploads',
+			'wp_plugins_directory'          => 'plugins',
+			'wp_themes_directory'           => 'themes',
+			'theme_style_name'              => 'style',
+			'author_url'                    => '',
+			'custom_replacements'           => array(),
+			'hide_comments'                 => false,
+			'hide_version'                  => false,
+			'hide_generator'                => false,
+			'hide_prefetch'                 => false,
+			'hide_rsd'                      => false,
+			'hide_emotes'                   => false,
+			'disable_xmlrpc'                => false,
+			'disable_embed'                 => false,
+			'disable_db_debug'              => false,
+			'disable_wlw_manifest'          => false,
+			'sftp_host'                     => '',
+			'sftp_user'                     => '',
+			'sftp_pass'                     => '',
+			'sftp_folder'                   => '',
+			'sftp_port'                     => 22,
+			'sftp_bulk_upload'              => false,
+			'sftp_private_key'              => '',
+			'sftp_host_fingerprint'         => '',
+			'sftp_timeout'                  => 30,
+			'ftp_host'                      => '',
+			'ftp_user'                      => '',
+			'ftp_pass'                      => '',
+			'ftp_folder'                    => '',
+			'ftp_port'                      => 21,
+			'ftp_passive_mode'              => true,
+			'ftp_timeout'                   => 30,
+			'shortpixel_enabled'            => false,
+			'shortpixel_api_key'            => '',
+			'shortpixel_webp_enabled'       => false,
+			'shortpixel_backup_enabled'     => false,
+			'ss_use_single_exports'         => true,
+			'ss_use_builds'                 => false,
+			'ss_single_pages'               => array(),
+			'ss_single_taxonomy_archives'   => array( 'category', 'post_tag' ),
+			'ss_single_include_archives'    => true,
+			'ss_single_include_pagination'  => true,
+			'ss_single_export_add_xml_sitemap' => false,
+			'ss_single_auto_export'         => false,
+			'ss_single_auto_export_delay'   => 0,
+			'ss_single_auto_export_types'   => array(),
+			'ss_single_export_webhook_url'  => '',
+			'ss_webhook_url'                => '',
+			'ss_webhook_enabled_types'      => array( 'export', 'update', 'build', 'single' ),
+			'ss_tools_submenu'              => false,
+			'ss_uam_access'                 => array(),
+			'archive_status_messages'       => array(),
+			'archive_deploy_id'             => null,
+			'deploy_manifest_schema_version'=> null,
+			'pages_status'                  => array(),
+			'archive_name'                  => null,
+			'archive_start_time'            => null,
+			'archive_end_time'              => null,
+			'archive_task_list'             => array(),
+			'version'                       => SIMPLY_STATIC_VERSION,
+			);
+
+		$filtered = apply_filters( 'ss_default_options', $defaults );
+
+		return is_array( $filtered ) ? $filtered : $defaults;
+	}
+
+	/**
+	 * Create settings and setup database.
+	 *
+	 * @return void
+	 */
+	public static function run() {
+		self::$options = Options::instance();
+
+		// Check if directory exists, if not, create it.
+		Util::get_temp_dir();
+
+		self::$default_options = self::get_default_options();
+
+		$version = self::$options->get( 'version' );
+		self::maybe_update_manifest_schema();
+
+		// New installation, set default options.
+		if ( null === $version ) {
+			Page::create_or_update_table();
+			Deploy_Manifest_Service::create_or_update_tables();
+			self::set_default_options();
+		} else {
+			if ( version_compare( $version, SIMPLY_STATIC_VERSION, '!=' ) ) {
+				// Sync database.
+				Page::create_or_update_table();
+				Deploy_Manifest_Service::create_or_update_tables();
+
+				// Preserve legacy Hide WP path settings under the current option names.
+				self::migrate_legacy_hide_wp_options();
+
+				// Clean up renamed crawlers in the crawlers option
+				self::cleanup_renamed_crawlers();
+
+				// Update version.
+				self::$options
+					->set( 'version', SIMPLY_STATIC_VERSION )
+					->save();
+			}
+		}
+	}
+
+	/**
+	 * Add default options where they don't exist
+	 *
+	 * @return void
+	 */
+	protected static function set_default_options() {
+		self::migrate_legacy_hide_wp_options();
+
+		foreach ( self::$default_options as $option_key => $option_value ) {
+			// For new installations, ensure smart_crawl is set to true
+			if ( $option_key === 'smart_crawl' ) {
+				self::$options->set( $option_key, true );
+			} else if ( self::$options->get( $option_key ) === null ) {
+				self::$options->set( $option_key, $option_value );
+			}
+		}
+
+		// Save the options
+		self::$options->save();
+	}
+
+	/**
+	 * Create or update deploy manifest tables when the schema version changes.
+	 *
+	 * @return void
+	 */
+	protected static function maybe_update_manifest_schema() {
+		if ( self::$options->get( 'deploy_manifest_schema_version' ) === Deploy_Manifest_Service::SCHEMA_VERSION ) {
+			return;
+		}
+
+		Deploy_Manifest_Service::create_or_update_tables();
+
+		self::$options
+			->set( 'deploy_manifest_schema_version', Deploy_Manifest_Service::SCHEMA_VERSION )
+			->save();
+	}
+
+	/**
+	 * Migrate legacy Hide WP folder option keys to the current directory keys.
+	 *
+	 * @return void
+	 */
+	protected static function migrate_legacy_hide_wp_options() {
+		$legacy_hide_wp_options = array(
+			'wp_content_folder'  => 'wp_content_directory',
+			'wp_includes_folder' => 'wp_includes_directory',
+			'wp_uploads_folder'  => 'wp_uploads_directory',
+			'wp_plugins_folder'  => 'wp_plugins_directory',
+			'wp_themes_folder'   => 'wp_themes_directory',
+		);
+
+		foreach ( $legacy_hide_wp_options as $legacy_key => $current_key ) {
+			if ( self::$options->get( $current_key ) === null && self::$options->get( $legacy_key ) !== null ) {
+				self::$options->set( $current_key, self::$options->get( $legacy_key ) );
+			}
+		}
+	}
+
+	/**
+	 * Clean up renamed crawlers in the crawlers option
+	 *
+	 * @return void
+	 */
+	protected static function cleanup_renamed_crawlers() {
+		$crawlers = self::$options->get( 'crawlers' );
+
+		// If crawlers is not an array or is empty, nothing to do
+		if ( ! is_array( $crawlers ) || empty( $crawlers ) ) {
+			return;
+		}
+
+		$updated = false;
+
+		// Check for old crawler IDs and replace them with new ones
+		$crawler_replacements = [
+			'block_theme' => 'wp_includes'
+		];
+
+		foreach ( $crawler_replacements as $old_id => $new_id ) {
+			$old_id_index = array_search( $old_id, $crawlers, true );
+
+			// If the old ID exists in the array
+			if ( $old_id_index !== false ) {
+				// Remove the old ID
+				unset( $crawlers[ $old_id_index ] );
+
+				// Add the new ID if it doesn't already exist
+				if ( ! in_array( $new_id, $crawlers, true ) ) {
+					$crawlers[] = $new_id;
+				}
+
+				$updated = true;
+			}
+		}
+
+		// If we made changes, save the updated crawlers
+		if ( $updated ) {
+			// Reindex the array to ensure sequential numeric keys
+			$crawlers = array_values( $crawlers );
+
+			self::$options->set( 'crawlers', $crawlers )->save();
+
+			\Simply_Static\Util::debug_log( 'Updated crawler IDs in options: ' . implode( ', ', $crawlers ) );
+		}
+	}
+}

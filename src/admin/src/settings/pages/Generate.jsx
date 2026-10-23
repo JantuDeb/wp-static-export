@@ -1,0 +1,75 @@
+import {
+    Card,
+    CardBody,
+    CardHeader,
+    __experimentalSpacer as Spacer,
+    Flex, FlexItem, SelectControl, Button,
+} from "@wordpress/components";
+import {useContext} from '@wordpress/element';
+import {SettingsContext} from "../context/SettingsContext";
+import ActivityLog from "../components/ActivityLog";
+import ExportLog from "../components/ExportLog";
+import LogButtons from "../components/LogButtons";
+import Sites from "../components/Sites";
+import BFBanner from "../components/Marketing/BFBanner";
+import OperationsMode from "../components/OperationsMode";
+
+const {__} = wp.i18n;
+
+function Generate() {
+    const {settings, blogId, setBlogId} = useContext(SettingsContext);
+
+    return (<div className={"inner-settings"}>
+		{options.operations_mode && options.operations_mode.enabled && !options.operations_mode.unlocked &&
+			<>
+				<OperationsMode locked={true}/>
+				<Spacer margin={5}/>
+			</>
+		}
+		{!options.is_network && options.can_view_activity_log &&
+            <>
+                <BFBanner />
+                <ActivityLog/>
+                <Spacer margin={5}/>
+            </>
+        }
+        <Flex align={"top"}>
+            {options.is_network &&
+                <FlexItem isBlock={true}>
+                    <Card>
+                        <CardBody>
+                            <Sites />
+                        </CardBody>
+
+                    </Card>
+                </FlexItem>
+            }
+		{settings.debugging_mode && options.log_file && options.can_manage_settings && !options.is_network &&
+                <FlexItem isBlock={true}>
+                    <Card>
+                        <CardHeader>
+                            <b>{__('Debugging', 'simply-static')}</b>
+                        </CardHeader>
+                        <CardBody>
+                            <LogButtons/>
+                        </CardBody>
+                    </Card>
+                </FlexItem>
+            }
+        </Flex>
+		{!options.is_network && options.can_view_activity_log && <>
+            <Spacer margin={5}/>
+            <Card>
+                <CardHeader>
+                    <b>{__('Export Log', 'simply-static')}</b>
+                </CardHeader>
+                <CardBody>
+                    <ExportLog/>
+                </CardBody>
+            </Card>
+        </>
+        }
+    </div>)
+}
+
+export default Generate;

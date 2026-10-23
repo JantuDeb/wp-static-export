@@ -1,0 +1,905 @@
+<?php
+
+namespace Simply_Static;
+
+/**
+ * Class which handles fetch url task.
+ */
+class Fetch_Urls_Task extends Task {
+
+	use canProcessPages {
+		get_generate_type as parent_get_generate_type;
+	}
+
+	/**
+	 * Task name.
+	 *
+	 * @var string
+	 */
+	public static $task_name = 'fetch_urls';
+
+	/**
+	 * The path to the archive directory.
+	 *
+	 * @var string
+	 */
+	public string $archive_dir;
+
+	/**
+	 * The time the archive was started.
+	 *
+	 * @var string
+	 */
+	public string $archive_start_time;
+
+	/**
+	 * Constructor
+	 */
+	public function __construct() {
+		parent::__construct();
+
+		$this->archive_dir        = $this->options->get_archive_dir();
+		$this->archive_start_time = $this->options->get( 'archive_start_time' );
+		$this->processing_column  = 'last_checked_at';
+		$this->needs_file_path    = false;
+	}
+
+	protected function process_page( $static_page ) {
+		Util::debug_log( "URL: " . $static_page->url );
+
+		$excludable = apply_filters( 'ss_find_excludable', $this->find_excludable( $static_page ), $static_page );
+		if ( $excludable !== false ) {
+			$save_file   = false;
+			$follow_urls = false;
+			Util::debug_log( "Excludable found: URL: " . $static_page->url );
+		} else {
+			$save_file   = true;
+			$follow_urls = true;
+			Util::debug_log( "URL is not being excluded" );
+		}
+
+		// If we're not saving a copy of the page or following URLs on that
+		// page, then we don't need to bother fetching it.
+		if ( $save_file === false && $follow_urls === false ) {
+			Util::debug_log( "Skipping URL because it is no-save and no-follow" );
+			// Incremental exports retain page records. Clear an older generated path
+			// so a backup that was queued before this built-in exclusion cannot be
+			// picked up by a later deployment task.
+			if ( Util::is_private_backup_path( $static_page->url ) ) {
+				$static_page->file_path = null;
+			}
+			$static_page->last_checked_at = Util::formatted_datetime();
+			$static_page->set_status_message( __( "Do not save or follow", 'simply-static' ) );
+			$static_page->save();
+			return;
+		} else {
+			if ( $this->maybe_handle_registered_redirect( $static_page, $save_file, $follow_urls ) ) {
+				return;
+			}
+
+			$success = Url_Fetcher::instance()->fetch( $static_page );
+		}
+
+		if ( ! $success ) {
+			throw new \RuntimeException( 'Unable to fetch and save URL: ' . $static_page->url );
+		}
+
+		// Not found? It's maybe a redirection page. Let's try it without our param.
+		if ( $static_page->http_status_code === 404 ) {
+			$success = Url_Fetcher::instance()->fetch( $static_page, false );
+
+			if ( ! $success ) {
+				throw new \RuntimeException( 'Unable to fetch and save URL without the page-handler parameter: ' . $static_page->url );
+			}
+		}
+
+		// If we get a 30x redirect...
+		if ( in_array( $static_page->http_status_code, array( 301, 302, 303, 307, 308 ) ) ) {
+			$this->handle_30x_redirect( $static_page, $save_file, $follow_urls );
+			return;
+		}
+
+		// Not a 200 for the response code? Move on.
+		if ( $static_page->http_status_code != 200 ) {
+			return;
+		}
+
+		$this->handle_200_response( $static_page, $save_file, $follow_urls );
+
+		do_action(
+			'ss_after_setup_static_page',
+			$static_page,
+			$this
+		);
+
+	}
+
+	/**
+	 * Generate a redirect page directly from redirect metadata registered by an integration.
+	 *
+	 * Redirect plugins already store the source and target in WordPress. Asking WordPress to
+	 * resolve the source over HTTP adds an unnecessary failure point, especially when the
+	 * configured public URL and the WordPress origin differ. Integrations can return an array
+	 * containing a URL and optional status code to bypass that request.
+	 *
+	 * @param Page $static_page Static page being processed.
+	 * @param bool $save_file Whether to save a static redirect page.
+	 * @param bool $follow_urls Whether to queue a local redirect target.
+	 *
+	 * @return bool Whether a registered redirect was handled.
+	 */
+	protected function maybe_handle_registered_redirect( $static_page, $save_file, $follow_urls ) {
+		/**
+		 * Filter a redirect registered by an integration before its source URL is fetched.
+		 *
+		 * @param null|array{url:string,status_code?:int} $redirect Redirect data or null.
+		 * @param Page                                  $static_page Static page being processed.
+		 */
+		$redirect = apply_filters( 'simply_static_registered_redirect', null, $static_page );
+
+		if ( ! is_array( $redirect ) || empty( $redirect['url'] ) || ! is_string( $redirect['url'] ) ) {
+			return false;
+		}
+
+		$redirect_url = trim( $redirect['url'] );
+		if ( '' === $redirect_url ) {
+			return false;
+		}
+
+		$status_code = isset( $redirect['status_code'] ) ? (int) $redirect['status_code'] : 301;
+		if ( ! in_array( $status_code, array( 301, 302, 303, 307, 308 ), true ) ) {
+			return false;
+		}
+
+		$static_page->clear_error_message();
+		$static_page->last_checked_at  = Util::formatted_datetime();
+		$static_page->http_status_code = $status_code;
+		$static_page->redirect_url     = $redirect_url;
+
+		Util::debug_log( 'Using registered redirect target for URL: ' . $static_page->url );
+		$this->handle_30x_redirect( $static_page, $save_file, $follow_urls );
+		// Some redirect-handler branches only queue the normalized target because
+		// an HTTP fetch normally persists the source page before they run.
+		$static_page->save();
+
+		return true;
+	}
+
+	/**
+	 * Fetch and save pages for the static archive
+	 *
+	 * @return boolean|\WP_Error true if done, false if not done, WP_Error if error.
+	 * @throws \Exception
+	 */
+	public function perform() {
+		$done = $this->process_pages();
+		if ( is_wp_error( $done ) ) {
+			return $done;
+		}
+
+		if ( $done ) {
+			// Last check.
+			$remaining_pages = $this->get_pages_to_process();
+
+			if ( count( $remaining_pages ) > 0 ) {
+				$done = false;
+			}
+		}
+
+		// If we've processed all pages for this export, signal completion of this task.
+		if ( $done ) {
+			do_action( 'ss_finished_fetching_pages' );
+		}
+
+		return $done;
+	}
+
+	/**
+	 * @deprecated Using trait now to process pages.
+	 * @return bool
+	 * @depends Use perform instead. Will be deleted in future versions.
+	 *
+	 * @throws Pause_Exception
+	 */
+	public function old_perform() {
+		$batch_size = apply_filters( 'simply_static_fetch_urls_batch_size', 50 );
+
+		$static_pages = apply_filters(
+			'ss_static_pages',
+			Page::query()
+			    ->where( 'last_checked_at < ? OR last_checked_at IS NULL', $this->archive_start_time )
+				->limit( $batch_size )
+				->find(),
+			$this->archive_start_time
+		);
+
+		// Compute remaining and total using the dedicated filters so Single/Build exports report correctly
+		$pages_remaining = (int) apply_filters(
+			'ss_remaining_pages',
+			Page::query()
+			    ->where( 'last_checked_at < ? OR last_checked_at IS NULL', $this->archive_start_time )
+			    ->count(),
+			$this->archive_start_time
+		);
+
+		$total_pages = (int) apply_filters( 'ss_total_pages', Page::query()->count() );
+
+		// Note: We will recalculate these values again after processing this batch so the
+		// status message always reflects the latest progress.
+		$pages_processed = $total_pages - $pages_remaining;
+		Util::debug_log( "Total pages: " . $total_pages . '; Pages remaining: ' . $pages_remaining );
+
+		// Track remaining pages locally so we can update progress accurately without extra DB queries.
+		$remaining_counter = (int) $pages_remaining;
+
+		while ( $static_page = array_shift( $static_pages ) ) {
+			$this->check_if_running();
+			Util::debug_log( "URL: " . $static_page->url );
+			//$this->save_pages_status( $remaining_counter, (int) $total_pages );
+			// Decrement after scheduling processing of this page.
+			$remaining_counter = max( 0, $remaining_counter - 1 );
+
+			$excludable = apply_filters( 'ss_find_excludable', $this->find_excludable( $static_page ), $static_page );
+			if ( $excludable !== false ) {
+				$save_file   = false;
+				$follow_urls = false;
+				Util::debug_log( "Excludable found: URL: " . $static_page->url );
+			} else {
+				$save_file   = true;
+				$follow_urls = true;
+				Util::debug_log( "URL is not being excluded" );
+			}
+
+			// If we're not saving a copy of the page or following URLs on that
+			// page, then we don't need to bother fetching it.
+			if ( $save_file === false && $follow_urls === false ) {
+				Util::debug_log( "Skipping URL because it is no-save and no-follow" );
+				$static_page->last_checked_at = Util::formatted_datetime();
+				$static_page->set_status_message( __( "Do not save or follow", 'simply-static' ) );
+				$static_page->save();
+				continue;
+			} else {
+				$success = Url_Fetcher::instance()->fetch( $static_page );
+			}
+
+			if ( ! $success ) {
+				continue;
+			}
+
+			// Not found? It's maybe a redirection page. Let's try it without our param.
+			if ( $static_page->http_status_code === 404 ) {
+				$success = Url_Fetcher::instance()->fetch( $static_page, false );
+
+				if ( ! $success ) {
+					continue;
+				}
+			}
+
+			// If we get a 30x redirect...
+			if ( in_array( $static_page->http_status_code, array( 301, 302, 303, 307, 308 ) ) ) {
+				$this->handle_30x_redirect( $static_page, $save_file, $follow_urls );
+				continue;
+			}
+
+			// Not a 200 for the response code? Move on.
+			if ( $static_page->http_status_code != 200 ) {
+				continue;
+			}
+
+			$this->handle_200_response( $static_page, $save_file, $follow_urls );
+
+			do_action( 'ss_after_setup_static_page', $static_page, $pages_remaining );
+
+		}
+
+		// Recalculate progress after processing this batch to avoid stale counters.
+		$pages_remaining = (int) apply_filters(
+			'ss_remaining_pages',
+			Page::query()
+		        ->where( 'last_checked_at < ? OR last_checked_at IS NULL', $this->archive_start_time )
+		        ->count(),
+			$this->archive_start_time
+		);
+		$total_pages = (int) apply_filters( 'ss_total_pages', Page::query()->count() );
+		$pages_processed = $total_pages - $pages_remaining;
+
+		$message = sprintf(
+			/* translators: 1: number of pages/files fetched, 2: total number of pages/files. */
+			__( 'Fetched %1$d of %2$d pages/files', 'simply-static' ),
+			$pages_processed,
+			$total_pages
+		);
+		$this->save_status_message( $message );
+
+		// If we've processed all pages for this export, signal completion of this task.
+		if ( $pages_remaining == 0 ) {
+			do_action( 'ss_finished_fetching_pages' );
+		}
+
+		return $pages_remaining == 0;
+	}
+
+
+	/**
+	 * Process the response for a 200 response (success)
+	 *
+	 * @param \Simply_Static\Page $static_page Record to update.
+	 * @param boolean $save_file Save a static copy of the page.
+	 * @param boolean $follow_urls Save found URLs to database.
+	 *
+	 * @return void
+	 */
+	public function handle_200_response( $static_page, $save_file, $follow_urls ) {
+		if ( empty( $static_page->file_path ) ) {
+			Util::debug_log( 'Skipping response processing because no generated file was kept for URL: ' . $static_page->url );
+			$static_page->save();
+
+			return;
+		}
+
+		$urls = array();
+
+		if ( ( $save_file || $follow_urls ) && $this->can_extract_urls_from_static_page( $static_page ) ) {
+			Util::debug_log( "Extracting URLs and replacing URLs in the static file" );
+			// Fetch all URLs from the page and add them to the queue...
+			$extractor = new Url_Extractor( $static_page );
+			$urls      = $extractor->extract_and_update_urls();
+		} elseif ( $save_file || $follow_urls ) {
+			Util::debug_log( "Skipping URL extraction for non-text file: " . $static_page->content_type );
+		}
+
+		if ( $follow_urls ) {
+			Util::debug_log( "Adding " . sizeof( $urls ) . " URLs to the queue" );
+			foreach ( $urls as $url ) {
+				$this->set_url_found_on( $static_page, $url );
+			}
+		} else {
+			Util::debug_log( "Not following URLs from this page" );
+			$static_page->set_status_message( __( "Do not follow", 'simply-static' ) );
+		}
+
+		$file = $this->archive_dir . $static_page->file_path;
+		if ( $save_file ) {
+			Util::debug_log( "We're saving this URL; keeping the static file" );
+
+			try {
+				$sha1 = sha1_file( $file, true );
+				if ( false === $sha1 ) {
+					$sha1 = '';
+				}
+			} catch ( \Exception $e ) {
+				$sha1 = '';
+			}
+
+			// if the content is identical, move on to the next file
+			if ( $static_page->is_content_identical( $sha1 ) ) {
+				// continue;
+			} else {
+				$static_page->set_content_hash( $sha1 );
+			}
+		} else {
+			Util::debug_log( "Not saving this URL; deleting the static file" );
+			unlink( $file ); // delete saved file
+			$static_page->file_path = null;
+			$static_page->set_status_message( __( "Do not save", 'simply-static' ) );
+		}
+
+		$static_page->save();
+	}
+
+	/**
+	 * Only text-like files can contain URLs that should be extracted or replaced.
+	 *
+	 * @param \Simply_Static\Page $static_page Record to inspect.
+	 *
+	 * @return bool
+	 */
+	protected function can_extract_urls_from_static_page( $static_page ) {
+		$file_path = isset( $static_page->file_path ) ? (string) $static_page->file_path : '';
+
+		if (
+			$static_page->is_type( 'html' ) ||
+			$static_page->is_type( 'css' ) ||
+			$static_page->is_type( 'xml' ) ||
+			$static_page->is_type( 'xsl' ) ||
+			$static_page->is_type( 'json' )
+		) {
+			return true;
+		}
+
+		if ( '' !== $file_path && substr( $file_path, -4 ) === '.css' ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Process the response to a 30x redirection
+	 *
+	 * @param \Simply_Static\Page $static_page Record to update
+	 * @param boolean $save_file Save a static copy of the page?
+	 * @param boolean $follow_urls Save redirect URL to database?
+	 *
+	 * @return void
+	 */
+	public function handle_30x_redirect( $static_page, $save_file, $follow_urls ) {
+		$destination_url = $this->options->get_destination_url();
+		$current_url     = $static_page->url;
+
+		// Remove simply_static_page parameter from the redirect URL
+		$redirect_url = $static_page->redirect_url;
+
+		// First try standard removal for normal query parameters
+		$redirect_url = remove_query_arg( 'simply_static_page', $redirect_url );
+
+		// Also handle cases where simply_static_page is embedded in another parameter
+		// Look for patterns like %3Fsimply_static_page%3D12345 (URL-encoded ?simply_static_page=12345)
+		$redirect_url = preg_replace( '/%3Fsimply_static_page%3D\d+/i', '', $redirect_url );
+
+		// Handle standard query string formats
+		$redirect_url = preg_replace( '/\?simply_static_page=\d+/i', '', $redirect_url );
+		$redirect_url = preg_replace( '/&simply_static_page=\d+/i', '', $redirect_url );
+
+		Util::debug_log( "redirect_url: " . $redirect_url );
+
+		// convert our potentially relative URL to an absolute URL
+		$redirect_url = Util::relative_to_absolute_url( $redirect_url, $current_url );
+		$redirect_parts = $redirect_url ? wp_parse_url( $redirect_url ) : false;
+		$redirect_scheme = is_array( $redirect_parts ) && isset( $redirect_parts['scheme'] ) ? strtolower( $redirect_parts['scheme'] ) : '';
+
+		if (
+			! is_array( $redirect_parts )
+			|| empty( $redirect_parts['host'] )
+			|| ! in_array( $redirect_scheme, array( 'http', 'https' ), true )
+			|| array_key_exists( 'user', $redirect_parts )
+			|| array_key_exists( 'pass', $redirect_parts )
+		) {
+			$static_page->file_path = null;
+			$static_page->set_error_message( __( 'Unsafe or invalid redirect target', 'simply-static' ) );
+			$static_page->save();
+
+			return;
+		}
+
+		if ( $redirect_url ) {
+			/**
+			 * Filter whether redirects to local static assets should be queued
+			 * directly instead of creating an HTML redirect page.
+			 *
+			 * @param bool                  $skip_redirect_page Whether to skip creating the redirect page.
+			 * @param string                $redirect_url        Absolute redirect target URL.
+			 * @param string                $current_url         Current URL being fetched.
+			 * @param \Simply_Static\Page   $static_page         Current static page record.
+			 */
+			$skip_local_asset_redirect_page = apply_filters( 'simply_static_skip_local_asset_redirect_page', true, $redirect_url, $current_url, $static_page );
+			$has_known_static_reference     = null !== $static_page->found_on_id;
+
+			if ( $skip_local_asset_redirect_page && ! $has_known_static_reference && Util::is_local_asset_url( $redirect_url ) ) {
+				if ( $follow_urls ) {
+					Util::debug_log( 'Redirect URL is a local asset; adding the asset URL to the queue without creating a redirect page' );
+					$this->set_url_found_on( $static_page, $redirect_url );
+				} else {
+					Util::debug_log( 'Not following the local asset redirect URL for this page' );
+					$static_page->set_status_message( __( "Do not follow", 'simply-static' ) );
+				}
+
+				$static_page->file_path = null;
+				$static_page->set_status_message( __( "Do not save", 'simply-static' ) );
+				$static_page->save();
+
+				return;
+			}
+
+			// WP likes to 301 redirect `/path` to `/path/` -- we want to
+			// check for this and just add the trailing slashed version
+			if ( $redirect_url === trailingslashit( $current_url ) || untrailingslashit( $redirect_url ) === untrailingslashit( $current_url ) ) {
+				Util::debug_log( "This is a redirect to a trailing slashed version of the same page; adding new URL to the queue" );
+				$this->set_url_found_on( $static_page, $redirect_url );
+
+				// Don't create a redirect page if it's just a redirect from
+				// http to https. Instead just add the new url to the queue.
+				// TODO: Make this less horrible.
+			} else if (
+				Util::strip_index_filenames_from_url( Util::remove_params_and_fragment( Util::strip_protocol_from_url( $redirect_url ) ) ) ===
+				Util::strip_index_filenames_from_url( Util::remove_params_and_fragment( Util::strip_protocol_from_url( $current_url ) ) ) ) {
+
+				Util::debug_log( "This looks like a redirect from http to https (or visa versa); adding new URL to the queue" );
+				$this->set_url_found_on( $static_page, $redirect_url );
+
+			} else if ( $this->redirect_resolves_to_same_static_path( $current_url, $redirect_url ) ) {
+				if ( Util::is_local_url( $redirect_url ) ) {
+					Util::debug_log( "This redirect resolves to the same static file path; adding new URL to the queue" );
+					$this->set_url_found_on( $static_page, $redirect_url );
+				} else {
+					Util::debug_log( "This redirect resolves to the same static file path; not adding non-local URL to the queue" );
+				}
+
+			} else {
+				// check if this is a local URL
+				if ( Util::is_local_url( $redirect_url ) ) {
+
+					if ( $follow_urls ) {
+						Util::debug_log( "Redirect URL is on the same domain; adding the URL to the queue" );
+						$this->set_url_found_on( $static_page, $redirect_url );
+					} else {
+						Util::debug_log( "Not following the redirect URL for this page" );
+						$static_page->set_status_message( __( "Do not follow", 'simply-static' ) );
+					}
+					// and update the URL
+					// Replace the matching local base with the configured destination URL. In proxy
+					// setups the redirect may point to home_url()/site_url() instead of the configured
+					// Origin URL, so use the local base that actually matched the redirect.
+					$redirect_url = Util::replace_local_url_base( $redirect_url, $destination_url );
+
+				}
+
+				if ( $save_file ) {
+					Util::debug_log( "Creating a redirect page" );
+
+					$view = new View();
+
+					$content = $view->set_template( 'redirect' )
+					                ->assign( 'redirect_url', $redirect_url )
+					                ->render_to_string();
+
+					$filename = $this->save_static_page_content_to_file( $static_page, $content );
+					if ( $filename ) {
+						$static_page->file_path = $filename;
+					}
+
+					try {
+						$sha1 = sha1_file( $this->archive_dir . $filename, true );
+						if ( false === $sha1 ) {
+							$sha1 = '';
+						}
+					} catch ( \Exception $e ) {
+						$sha1 = '';
+					}
+
+					// if the content is identical, move on to the next file
+					if ( $static_page->is_content_identical( $sha1 ) ) {
+						// continue;
+					} else {
+						$static_page->set_content_hash( $sha1 );
+					}
+				} else {
+					Util::debug_log( "Not creating a redirect page" );
+					$static_page->set_status_message( __( "Do not save", 'simply-static' ) );
+				}
+
+				$static_page->save();
+			}
+		}
+	}
+
+	/**
+	 * Check whether two URLs would be written to the same generated file.
+	 *
+	 * Proxy/subdirectory setups can redirect between the configured public origin
+	 * and the real WordPress install URL. Those are not user-facing redirects for
+	 * the static site; they are alternate local bases for the same static path.
+	 *
+	 * @param string $current_url Current URL.
+	 * @param string $redirect_url Redirect target URL.
+	 *
+	 * @return bool
+	 */
+	protected function redirect_resolves_to_same_static_path( $current_url, $redirect_url ) {
+		if ( ! Util::is_local_url( $current_url ) ) {
+			return false;
+		}
+
+		$current_path = $this->normalize_static_redirect_path( $current_url );
+		$redirect_path = $this->normalize_static_redirect_path( $redirect_url );
+
+		return '' !== $current_path && $current_path === $redirect_path;
+	}
+
+	/**
+	 * Normalize a local URL to the path Simply Static will generate for it.
+	 *
+	 * @param string $url URL to normalize.
+	 *
+	 * @return string
+	 */
+	protected function normalize_static_redirect_path( $url ) {
+		$url_without_fragment = preg_replace( '/#.*/', '', $url );
+		$export_path          = $this->get_path_from_export_url( $url_without_fragment );
+		$path                 = '' !== $export_path ? $export_path : '';
+
+		if ( '' === $path && Util::is_local_url( $url_without_fragment ) ) {
+			$path = Util::get_path_from_local_url( $url_without_fragment );
+		}
+
+		if ( ! is_string( $path ) || '' === $path ) {
+			return '';
+		}
+
+		$clean_path = Util::remove_params_and_fragment( $path );
+		$query      = Util::is_local_asset_url( $url ) ? '' : substr( $path, strlen( $clean_path ) );
+		$path       = Util::strip_index_filenames_from_url( $clean_path );
+		$path       = trailingslashit( $path );
+
+		return '/' . ltrim( $path, '/' ) . $query;
+	}
+
+	/**
+	 * Get the export-relative path from a URL that may use the configured static destination.
+	 *
+	 * @param string $url URL to normalize.
+	 *
+	 * @return string
+	 */
+	protected function get_path_from_export_url( $url ) {
+		if ( ! is_string( $url ) || '' === $url ) {
+			return '';
+		}
+
+		$url_parts = function_exists( 'wp_parse_url' ) ? wp_parse_url( $url ) : parse_url( $url );
+		if ( ! is_array( $url_parts ) || empty( $url_parts['host'] ) ) {
+			return '';
+		}
+
+		$url_host = strtolower( preg_replace( '/:\d+$/', '', (string) $url_parts['host'] ) );
+		$url_path = isset( $url_parts['path'] ) ? $url_parts['path'] : '/';
+
+		foreach ( $this->get_export_url_bases() as $base ) {
+			$base_parts = function_exists( 'wp_parse_url' ) ? wp_parse_url( $base ) : parse_url( $base );
+			if ( ! is_array( $base_parts ) || empty( $base_parts['host'] ) ) {
+				continue;
+			}
+
+			$base_host = strtolower( preg_replace( '/:\d+$/', '', (string) $base_parts['host'] ) );
+			if ( $url_host !== $base_host ) {
+				continue;
+			}
+
+			$base_path = isset( $base_parts['path'] ) ? untrailingslashit( $base_parts['path'] ) : '';
+			$match     = '' === $base_path || '/' === $base_path || untrailingslashit( $url_path ) === $base_path || strpos( untrailingslashit( $url_path ) . '/', trailingslashit( $base_path ) ) === 0;
+			if ( ! $match ) {
+				continue;
+			}
+
+			if ( '' !== $base_path && '/' !== $base_path ) {
+				$url_path = substr( $url_path, strlen( $base_path ) );
+				$url_path = '' === $url_path ? '/' : $url_path;
+			}
+
+			$query    = isset( $url_parts['query'] ) ? '?' . $url_parts['query'] : '';
+			$fragment = isset( $url_parts['fragment'] ) ? '#' . $url_parts['fragment'] : '';
+
+			return '/' . ltrim( $url_path, '/' ) . $query . $fragment;
+		}
+
+		return '';
+	}
+
+	/**
+	 * Get configured static destination bases used only for redirect equivalence checks.
+	 *
+	 * @return array
+	 */
+	protected function get_export_url_bases() {
+		$bases = array();
+
+		if ( 'absolute' === $this->options->get( 'destination_url_type' ) ) {
+			$bases[] = $this->options->get_destination_url();
+		}
+
+		$static_site_url = Util::get_static_site_url();
+		if ( '' !== $static_site_url ) {
+			$bases[] = $static_site_url;
+		}
+
+		$bases = array_filter( array_map( 'untrailingslashit', $bases ) );
+		$bases = array_values( array_unique( $bases ) );
+
+		usort( $bases, function ( $a, $b ) {
+			$a_path = function_exists( 'wp_parse_url' ) ? wp_parse_url( $a, PHP_URL_PATH ) : parse_url( $a, PHP_URL_PATH );
+			$b_path = function_exists( 'wp_parse_url' ) ? wp_parse_url( $b, PHP_URL_PATH ) : parse_url( $b, PHP_URL_PATH );
+
+			return strlen( (string) $b_path ) <=> strlen( (string) $a_path );
+		} );
+
+		return $bases;
+	}
+
+	/**
+	 * Find excludable.
+	 *
+	 * @param object $static_page current page.
+	 *
+	 * @return bool
+	 */
+	public function find_excludable( $static_page ) {
+		return \Simply_Static\Util::is_url_excluded( $static_page->url );
+	}
+
+	/**
+	 * Set ID for which page a URL was found on (& create page if not in DB yet)
+	 *
+	 * Given a URL, find the associated Simply_Static\Page, and then set the ID
+	 * for which page it was found on if the ID isn't yet set or if the record
+	 * hasn't been updated in this instance of static generation yet.
+	 *
+	 * @param \Simply_Static\Page $static_page The record for the parent page.
+	 * @param string $child_url The URL of the child page.
+	 * @param string $start_time Static generation start time.
+	 *
+	 * @return void
+	 */
+	public function set_url_found_on( $static_page, $child_url ) {
+		// Skip adding the selected custom 404 page as a regular page
+		$exclude_url = '';
+		if ( $this->options->get( 'generate_404' ) && (int) $this->options->get( 'custom_404_page' ) ) {
+			$permalink = get_permalink( (int) $this->options->get( 'custom_404_page' ) );
+			if ( $permalink ) {
+				$exclude_url = untrailingslashit( $permalink );
+			}
+		}
+		if ( ! empty( $exclude_url ) && 0 === strcasecmp( untrailingslashit( $child_url ), $exclude_url ) ) {
+			Util::debug_log( sprintf( 'Skipping link-follow to custom 404 page URL "%s"', $child_url ) );
+			return;
+		}
+
+		// Do not add excluded URLs to the database at all
+		if ( Util::is_url_excluded( $child_url ) ) {
+			Util::debug_log( sprintf( 'Skipping excluded child URL: %s', $child_url ) );
+			return;
+		}
+
+		// Skip URLs that resolve to a non-public post (trashed, draft, private, etc.)
+		$resolved_post_id = url_to_postid( $child_url );
+		if ( $resolved_post_id > 0 ) {
+			$resolved_status = get_post_status( $resolved_post_id );
+			if ( $resolved_status && ! Util::is_public_post_status( $resolved_status ) ) {
+				Util::debug_log( sprintf( 'Skipping non-public post URL (status: %s): %s', $resolved_status, $child_url ) );
+				return;
+			}
+		}
+
+		$child_static_page = Page::query()->find_or_create_by( 'url', $child_url );
+		$path_migration    = $this->maybe_requeue_asset_for_path_migration( $child_static_page );
+
+		// During single exports, ensure discovered assets inherit the parent's
+		// post_id so they pass the post_id filter in get_pages_to_process_sql().
+		// This must run outside the found_on_id/updated_at guard below because
+		// crawlers may have already touched the record in this same export
+		// (setting found_on_id and updated_at) without assigning a post_id.
+		if ( ! $child_static_page->post_id && $static_page->post_id ) {
+			$child_static_page->post_id = $static_page->post_id;
+			$child_static_page->save();
+		}
+
+		if ( $child_static_page->found_on_id === null || $child_static_page->updated_at < $this->archive_start_time ) {
+			$child_static_page->found_on_id = $static_page->id;
+			if ( ! $child_static_page->post_id ) {
+				$id = url_to_postid( $child_url );
+				if ( $id ) {
+					$child_static_page->post_id = $id;
+				}
+			}
+
+			$child_static_page->handler = apply_filters( 'simply_static_handler_class_on_url_found', $static_page->get_handler_class(), $child_url, $static_page );
+
+			do_action( 'simply_static_child_page_found_on_url_before_save', $child_static_page, $static_page );
+
+			$child_static_page->save();
+		} elseif ( $path_migration ) {
+			$child_static_page->save();
+		}
+	}
+
+	/**
+	 * Requeue an existing local asset when its generated output path changed.
+	 *
+	 * Filename sanitization and path filters can change between plugin versions.
+	 * An update export may otherwise rewrite a changed page to the new asset path
+	 * while treating the existing asset record as unchanged and omitting the
+	 * corresponding file from the delta.
+	 *
+	 * @param \Simply_Static\Page $static_page Existing child asset record.
+	 *
+	 * @return bool Whether the asset was marked for refetch and transfer.
+	 */
+	protected function maybe_requeue_asset_for_path_migration( $static_page ) {
+		if ( 'update' !== $this->get_generate_type() ) {
+			return false;
+		}
+
+		if (
+			empty( $static_page->url )
+			|| empty( $static_page->file_path )
+			|| ! Util::is_local_asset_url( $static_page->url )
+		) {
+			return false;
+		}
+
+		$expected_file_path = Url_Fetcher::instance()->get_expected_file_path_for_static_page( $static_page );
+		if ( ! is_string( $expected_file_path ) || '' === $expected_file_path ) {
+			return false;
+		}
+
+		$stored_file_path   = ltrim( Util::normalize_slashes( (string) $static_page->file_path ), '/' );
+		$expected_file_path = ltrim( Util::normalize_slashes( $expected_file_path ), '/' );
+
+		if ( $stored_file_path === $expected_file_path ) {
+			return false;
+		}
+
+		$static_page->last_modified_at = Util::formatted_datetime();
+
+		Util::debug_log(
+			sprintf(
+				'Requeueing asset because its generated path changed from "%s" to "%s": %s',
+				$stored_file_path,
+				$expected_file_path,
+				$static_page->url
+			)
+		);
+
+		return true;
+	}
+
+	/**
+	 * Save the contents of a page to a file in our archive directory
+	 *
+	 * @param \Simply_Static\Page $static_page The Simply_Static\Page record.
+	 * @param string $content The content of the page we want to save.
+	 *
+	 * @return string|null                The file path of the saved file.
+	 */
+	public function save_static_page_content_to_file( $static_page, $content ) {
+		$relative_filename = Url_Fetcher::instance()->create_directories_for_static_page( $static_page );
+
+		if ( $relative_filename ) {
+			$file_path = $this->archive_dir . $relative_filename;
+
+			$write = file_put_contents( $file_path, $content );
+			if ( $write === false ) {
+				$static_page->set_error_message( 'Unable to write temporary file' );
+			} else {
+				return $relative_filename;
+			}
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * Message to set when processed pages.
+	 *
+	 * @param integer $processed Number of pages processed.
+	 * @param integer $total Number of total pages to process.
+	 *
+	 * @return string
+	 */
+	protected function processed_pages_message( $processed, $total ) {
+		return sprintf(
+			/* translators: 1: number of pages/files fetched, 2: total number of pages/files. */
+			__( 'Fetched %1$d of %2$d pages/files', 'simply-static' ),
+			$processed,
+			$total
+		);
+	}
+
+	/**
+	 * Get generation type (export, update, build)
+	 *
+	 * @return mixed|string|null
+	 */
+	public function get_generate_type() {
+		$type = $this->parent_get_generate_type();
+
+		// Changes-only exports should stay scoped to pages marked as changed by
+		// the update/detect-changes flow. Installations that need a full
+		// revalidation pass can opt back into export-scoped fetching.
+		if ( 'update' === $type ) {
+			$type = apply_filters( 'simply_static_fetch_urls_update_generate_type', 'update', $this );
+		}
+
+		return $type;
+	}
+
+}

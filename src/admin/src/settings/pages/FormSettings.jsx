@@ -1,0 +1,464 @@
+import {
+    Button,
+    Card,
+    CardBody,
+    CardHeader,
+    __experimentalSpacer as Spacer,
+    Notice,
+    Animate,
+    TextControl, SelectControl, ToggleControl, TextareaControl, Flex, FlexItem, ExternalLink,
+} from "@wordpress/components";
+import {useContext, useEffect, useState} from '@wordpress/element';
+import {SettingsContext} from "../context/SettingsContext";
+import apiFetch from "@wordpress/api-fetch";
+
+const {__} = wp.i18n;
+
+function FormSettings() {
+    const {
+        settings,
+        updateSetting,
+        saveSettings,
+        settingsSaved,
+        setSettingsSaved,
+        isPro
+    } = useContext(SettingsContext);
+    const [useForms, setUseForms] = useState(false);
+    const [useFormConditionalLoading, setUseFormConditionalLoading] = useState(false);
+    const [useComments, setUseComments] = useState(false);
+    const [saveFormEntries, setSaveFormEntries] = useState(true);
+    const [pagesSlugs, setPagesSlugs] = useState(false);
+    const [detectingCredentials, setDetectingCredentials] = useState(false);
+    const [detectedCredentials, setDetectedCredentials] = useState(null);
+    const [credentialsNotice, setCredentialsNotice] = useState(null);
+
+    const setSavingSettings = () => {
+        saveSettings();
+        setSettingsSaved(true);
+
+        setTimeout(function () {
+            setSettingsSaved(false);
+
+            if (useForms) {
+                localStorage.setItem('ss-initial-page', '/forms');
+                window.location.reload();
+            }
+        }, 2000);
+    }
+
+    const getPages = () => {
+        apiFetch({path: '/simplystatic/v1/pages-slugs'}).then((fetched_pages) => {
+            let pages = fetched_pages;
+
+            pages.unshift({label: __('No page selected', 'simply-static'), value: ''});
+            setPagesSlugs(pages);
+        });
+    }
+
+    const detectExistingCredentials = () => {
+        setDetectingCredentials(true);
+        setCredentialsNotice(null);
+        
+        apiFetch({path: '/simplystatic/v1/captcha/detect-credentials'})
+            .then((response) => {
+                setDetectingCredentials(false);
+                
+                if (!response.success) {
+                    setCredentialsNotice({
+                        type: 'error',
+                        message: __('Failed to detect credentials.', 'simply-static')
+                    });
+                    return;
+                }
+                
+                const credentials = response.credentials;
+                const currentService = settings.captcha_service || '';
+                const recaptchaCredentials = credentials.recaptcha
+                    ? credentials.recaptcha.filter((credential) => {
+                        // Older Pro versions did not expose a service marker and
+                        // only detected reCAPTCHA v3 credentials.
+                        const service = credential.service || 'recaptcha_v3';
+                        return service === currentService;
+                    })
+                    : [];
+                
+                // Check for credentials based on current service
+                let foundCredentials = null;
+                let sourceName = '';
+                
+                if (currentService === 'turnstile' && credentials.turnstile && credentials.turnstile.length > 0) {
+                    foundCredentials = credentials.turnstile[0];
+                    sourceName = foundCredentials.source;
+                    
+                    // Apply Turnstile credentials
+                    updateSetting('cloudflare_turnstile_site_key', foundCredentials.site_key);
+                    updateSetting('cloudflare_turnstile_secret_key', foundCredentials.secret_key);
+                    
+                    setCredentialsNotice({
+                        type: 'success',
+                        message: __('Turnstile credentials copied from ', 'simply-static') + sourceName + '!'
+                    });
+                } else if ((currentService === 'recaptcha_v2' || currentService === 'recaptcha_v3') && recaptchaCredentials.length > 0) {
+                    foundCredentials = recaptchaCredentials[0];
+                    sourceName = foundCredentials.source;
+                    
+                    // Apply reCAPTCHA credentials
+                    updateSetting('recaptcha_site_key', foundCredentials.site_key);
+                    updateSetting('recaptcha_secret_key', foundCredentials.secret_key);
+                    
+                    setCredentialsNotice({
+                        type: 'success',
+                        message: __('reCAPTCHA credentials copied from ', 'simply-static') + sourceName + '!'
+                    });
+                } else {
+                    // No credentials found for current service, check if other service has credentials
+                    let alternativeMsg = '';
+                    if (currentService === 'turnstile' && credentials.recaptcha && credentials.recaptcha.length > 0) {
+                        alternativeMsg = __(' reCAPTCHA credentials were found - switch to the matching reCAPTCHA version to use them.', 'simply-static');
+                    } else if ((currentService === 'recaptcha_v2' || currentService === 'recaptcha_v3') && credentials.turnstile && credentials.turnstile.length > 0) {
+                        alternativeMsg = __(' Turnstile credentials were found - switch to Turnstile to use them.', 'simply-static');
+                    } else if (currentService === 'recaptcha_v2' && credentials.recaptcha && credentials.recaptcha.length > 0) {
+                        alternativeMsg = __(' reCAPTCHA v3 credentials were found - switch to reCAPTCHA v3 to use them.', 'simply-static');
+                    } else if (currentService === 'recaptcha_v3' && credentials.recaptcha && credentials.recaptcha.length > 0) {
+                        alternativeMsg = __(' reCAPTCHA v2 credentials were found - switch to reCAPTCHA v2 to use them.', 'simply-static');
+                    }
+                    
+                    setCredentialsNotice({
+                        type: 'warning',
+                        message: __('No credentials found for the selected captcha service.', 'simply-static') + alternativeMsg
+                    });
+                }
+                
+                setDetectedCredentials(credentials);
+            })
+            .catch((error) => {
+                setDetectingCredentials(false);
+                setCredentialsNotice({
+                    type: 'error',
+                    message: __('Error detecting credentials: ', 'simply-static') + (error.message || __('Unknown error', 'simply-static'))
+                });
+            });
+    }
+
+    useEffect(() => {
+        getPages();
+
+        if (settings.use_forms) {
+            setUseForms(settings.use_forms);
+        }
+
+        if (settings.use_comments) {
+            setUseComments(settings.use_comments);
+        }
+
+        // Save Form Entries (default on)
+        if (typeof settings.save_form_entries !== 'undefined') {
+            setSaveFormEntries(!!settings.save_form_entries);
+        } else {
+            setSaveFormEntries(true);
+        }
+
+        if (typeof settings.use_form_conditional_loading !== 'undefined') {
+            setUseFormConditionalLoading(!!settings.use_form_conditional_loading);
+        }
+
+    }, [settings]);
+
+    return (<div className={"inner-settings"}>
+        <Card>
+            <CardHeader>
+                <Flex>
+                    <FlexItem>
+                        <b>{__('Forms', 'simply-static')}</b>
+                    </FlexItem>
+                    {('free' === options.plan || !isPro()) &&
+                        <FlexItem>
+                            <ExternalLink
+                                href="https://simplystatic.com"> {__('Requires Simply Static Pro', 'simply-static')}</ExternalLink>
+                        </FlexItem>
+                    }
+                </Flex>
+            </CardHeader>
+            <CardBody>
+                <ToggleControl
+                    label={__('Use forms?', 'simply-static')}
+                    __nextHasNoMarginBottom
+                    help={
+                        useForms
+                            ? __('Use Forms on your static website.', 'simply-static')
+                            : __('Don\'t use forms on your static website.', 'simply-static')
+                    }
+                    disabled={('free' === options.plan || !isPro())}
+                    checked={useForms}
+                    onChange={(value) => {
+                        setUseForms(value);
+                        updateSetting('use_forms', value);
+                    }}
+                />
+                {useForms && (
+                    <ToggleControl
+                        label={__('Store form entries', 'simply-static')}
+                        __nextHasNoMarginBottom
+                        help={
+                            saveFormEntries
+                                ? __('Store form entries inside WordPress (requires Simply Static Webhook).', 'simply-static')
+                                : __('Do not store form entries in WordPress.', 'simply-static')
+                        }
+                        disabled={('free' === options.plan || !isPro())}
+                        checked={!!saveFormEntries}
+                        onChange={(value) => {
+                            setSaveFormEntries(value);
+                            updateSetting('save_form_entries', value);
+                        }}
+                    />
+                )}
+                {useForms && (
+                    <ToggleControl
+                        label={__('Enable conditional loading', 'simply-static')}
+                        __nextHasNoMarginBottom
+                        help={
+                            useFormConditionalLoading
+                                ? __('Form scripts are only loaded on pages that contain a connected form.', 'simply-static')
+                                : __('Form scripts are loaded on all pages for maximum compatibility.', 'simply-static')
+                        }
+                        disabled={('free' === options.plan || !isPro())}
+                        checked={useFormConditionalLoading}
+                        onChange={(value) => {
+                            setUseFormConditionalLoading(value);
+                            updateSetting('use_form_conditional_loading', value);
+                        }}
+                    />
+                )}
+                {useForms && options.form_connection_url && 'free' !== options.plan &&
+                    <Button href={options.form_connection_url}
+                            variant="secondary">{__('Create a form connection', 'simply-static')}</Button>
+                }
+            </CardBody>
+        </Card>
+        <Spacer margin={5}/>
+        <Card>
+            <CardHeader>
+                <Flex>
+                    <FlexItem>
+                        <b>{__('Comments', 'simply-static')}</b>
+                    </FlexItem>
+                    {('free' === options.plan || !isPro()) &&
+                        <FlexItem>
+                            <ExternalLink
+                                href="https://simplystatic.com"> {__('Requires Simply Static Pro', 'simply-static')}</ExternalLink>
+                        </FlexItem>
+                    }
+                </Flex>
+            </CardHeader>
+            <CardBody>
+                <ToggleControl
+                    label={__('Use comments?', 'simply-static')}
+                    __nextHasNoMarginBottom
+                    help={
+                        useComments
+                            ? __('Use comments on your static website.', 'simply-static')
+                            : __('Don\'t use comments on your static website.', 'simply-static')
+                    }
+                    disabled={('free' === options.plan || !isPro())}
+                    checked={useComments}
+                    onChange={(value) => {
+                        setUseComments(value);
+                        updateSetting('use_comments', value);
+                    }}
+                />
+
+                {useComments &&
+                    <>
+                        <SelectControl
+                            label={__('Select a redirect page', 'content-protector')}
+                            options={pagesSlugs}
+                            help={__('The post will be regenerated after comment submission, but it might take a while, so it is good practice to redirect the visitor.', 'simply-static')}
+                            disabled={('free' === options.plan || !isPro())}
+                            value={settings.comment_redirect}
+                            __next40pxDefaultSize
+                            __nextHasNoMarginBottom
+                            onChange={(value) => {
+                                updateSetting('comment_redirect', value);
+                            }}
+                        />
+                    </>
+                }
+            </CardBody>
+        </Card>
+        <Spacer margin={5}/>
+        {(useForms || useComments) && (
+            <>
+                <Card>
+                    <CardHeader>
+                        <Flex>
+                            <FlexItem>
+                                <b>{__('Captcha', 'simply-static')}</b>
+                            </FlexItem>
+                            {('free' === options.plan || !isPro()) && (
+                                <FlexItem>
+                                    <ExternalLink
+                                        href="https://simplystatic.com"> {__('Requires Simply Static Pro', 'simply-static')}</ExternalLink>
+                                </FlexItem>
+                            )}
+                        </Flex>
+                    </CardHeader>
+                    <CardBody>
+                        <p>{__('We will automatically protect your forms and comments with a captcha on your static site.', 'simply-static')}</p>
+                        <SelectControl
+                            label={__('Captcha Service', 'simply-static')}
+                            help={__('Choose which captcha service to use.', 'simply-static')}
+                            __next40pxDefaultSize
+                            __nextHasNoMarginBottom
+                            disabled={('free' === options.plan || !isPro())}
+                            value={settings.captcha_service || ''}
+                            options={[
+                                { label: __('Choose Service', 'simply-static'), value: '' },
+                                { label: __('Cloudflare Turnstile', 'simply-static'), value: 'turnstile' },
+                                { label: __('Google reCAPTCHA v2 (Checkbox)', 'simply-static'), value: 'recaptcha_v2' },
+                                { label: __('Google reCAPTCHA v3', 'simply-static'), value: 'recaptcha_v3' },
+                            ]}
+                            onChange={(value) => updateSetting('captcha_service', value)}
+                        />
+                        <Spacer margin={3}/>
+                        {credentialsNotice && (
+                            <Animate type="slide-in" options={{origin: 'top'}}>
+                                {() => (
+                                    <>
+                                        <Notice
+                                            status={credentialsNotice.type}
+                                            isDismissible={true}
+                                            onRemove={() => setCredentialsNotice(null)}
+                                        >
+                                            {credentialsNotice.message}
+                                        </Notice>
+                                        <Spacer margin={3}/>
+                                    </>
+                                )}
+                            </Animate>
+                        )}
+                        <Button
+                            variant="secondary"
+                            disabled={('free' === options.plan || !isPro()) || detectingCredentials}
+                            isBusy={detectingCredentials}
+                            onClick={detectExistingCredentials}
+                        >
+                            {detectingCredentials 
+                                ? __('Detecting...', 'simply-static') 
+                                : __('Copy existing Credentials', 'simply-static')}
+                        </Button>
+                        <p className="components-base-control__help">
+                            {__('Automatically detect and copy captcha credentials from form plugins like Contact Form 7, WPForms, or Fluent Forms.', 'simply-static')}
+                        </p>
+                        <Spacer margin={3}/>
+                        {settings.captcha_service === 'turnstile' && (
+                            <>
+                                <TextControl
+                                    label={__('Site Key', 'simply-static')}
+                                    help={__('Your public key will be used on the static site.', 'simply-static')}
+                                    placeholder={__('Enter your Turnstile site key', 'simply-static')}
+                                    __next40pxDefaultSize
+                                    __nextHasNoMarginBottom
+                                    disabled={('free' === options.plan || !isPro())}
+                                    value={settings.cloudflare_turnstile_site_key || ''}
+                                    onChange={(value) => updateSetting('cloudflare_turnstile_site_key', value)}
+                                />
+                                <Spacer margin={3}/>
+                                <TextControl
+                                    label={__('Secret Key', 'simply-static')}
+                                    help={__('Your secret key will be stored in WordPress.', 'simply-static')}
+                                    placeholder={__('Enter your Turnstile secret key', 'simply-static')}
+                                    type={'password'}
+                                    __next40pxDefaultSize
+                                    __nextHasNoMarginBottom
+                                    disabled={('free' === options.plan || !isPro())}
+                                    value={settings.cloudflare_turnstile_secret_key || ''}
+                                    onChange={(value) => updateSetting('cloudflare_turnstile_secret_key', value)}
+                                />
+                                <Spacer margin={3}/>
+                                <SelectControl
+                                    label={__('Theme', 'simply-static')}
+                                    help={__('Choose how the widget should look on your site.', 'simply-static')}
+                                    __next40pxDefaultSize
+                                    __nextHasNoMarginBottom
+                                    disabled={('free' === options.plan || !isPro())}
+                                    value={settings.cloudflare_turnstile_theme || 'auto'}
+                                    options={[
+                                        { label: __('Auto', 'simply-static'), value: 'auto' },
+                                        { label: __('Light', 'simply-static'), value: 'light' },
+                                        { label: __('Dark', 'simply-static'), value: 'dark' },
+                                    ]}
+                                    onChange={(value) => updateSetting('cloudflare_turnstile_theme', value)}
+                                />
+                                <Spacer margin={3}/>
+                                <SelectControl
+                                    label={__('Size', 'simply-static')}
+                                    help={__('Choose the widget size.', 'simply-static')}
+                                    __next40pxDefaultSize
+                                    __nextHasNoMarginBottom
+                                    disabled={('free' === options.plan || !isPro())}
+                                    value={settings.cloudflare_turnstile_size || 'normal'}
+                                    options={[
+                                        { label: __('Normal', 'simply-static'), value: 'normal' },
+                                        { label: __('Flexible', 'simply-static'), value: 'flexible' },
+                                        { label: __('Compact', 'simply-static'), value: 'compact' },
+                                    ]}
+                                    onChange={(value) => updateSetting('cloudflare_turnstile_size', value)}
+                                />
+                            </>
+                        )}
+                        {(settings.captcha_service === 'recaptcha_v2' || settings.captcha_service === 'recaptcha_v3') && (
+                            <>
+                                <TextControl
+                                    label={__('Site Key', 'simply-static')}
+                                    help={__('Your public key will be used on the static site.', 'simply-static')}
+                                    placeholder={__('Enter your reCAPTCHA site key', 'simply-static')}
+                                    __next40pxDefaultSize
+                                    __nextHasNoMarginBottom
+                                    disabled={('free' === options.plan || !isPro())}
+                                    value={settings.recaptcha_site_key || ''}
+                                    onChange={(value) => updateSetting('recaptcha_site_key', value)}
+                                />
+                                <Spacer margin={3}/>
+                                <TextControl
+                                    label={__('Secret Key', 'simply-static')}
+                                    help={__('Your secret key will be stored in WordPress.', 'simply-static')}
+                                    placeholder={__('Enter your reCAPTCHA secret key', 'simply-static')}
+                                    type={'password'}
+                                    __next40pxDefaultSize
+                                    __nextHasNoMarginBottom
+                                    disabled={('free' === options.plan || !isPro())}
+                                    value={settings.recaptcha_secret_key || ''}
+                                    onChange={(value) => updateSetting('recaptcha_secret_key', value)}
+                                />
+                            </>
+                        )}
+                    </CardBody>
+                </Card>
+                <Spacer margin={5}/>
+            </>
+        )}
+
+        {settingsSaved &&
+            <>
+                <Animate type="slide-in" options={{origin: 'top'}}>
+                    {() => (
+                        <Notice status="success" isDismissible={false}>
+                            <p>
+                                {__('Settings saved successfully.', 'simply-static')}
+                            </p>
+                        </Notice>
+                    )}
+                </Animate>
+                <Spacer margin={5}/>
+            </>
+        }
+        <div className={"save-settings"}>
+            {'pro' === options.plan && isPro() &&
+                <Button onClick={setSavingSettings}
+                        variant="primary">{__('Save Settings', 'simply-static')}</Button>
+            }
+        </div>
+    </div>)
+}
+
+export default FormSettings;

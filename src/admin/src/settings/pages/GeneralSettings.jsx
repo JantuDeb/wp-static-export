@@ -1,0 +1,899 @@
+import {
+    Button,
+    ClipboardButton,
+    Card,
+    CardBody,
+    CardHeader,
+    __experimentalSpacer as Spacer,
+    Notice,
+    Animate,
+    TextControl, SelectControl, Flex, FlexItem, TextareaControl, ToggleControl,
+    FormTokenField, ExternalLink,
+} from "@wordpress/components";
+import apiFetch from "@wordpress/api-fetch";
+import {useContext, useEffect, useState} from '@wordpress/element';
+import {SettingsContext} from "../context/SettingsContext";
+import StudioNotice from "../components/StudioNotice";
+
+const {__} = wp.i18n;
+
+function GeneralSettings() {
+    const {
+        settings,
+        updateSetting,
+        saveSettings,
+        settingsSaved,
+        setSettingsSaved,
+        isPro,
+        isRunning,
+        setIsRunning,
+        isStudio
+    } = useContext(SettingsContext);
+
+    const [replaceType, setReplaceType] = useState('relative');
+    const [useForms, setUseForms] = useState(false);
+    const [scheme, setScheme] = useState('https://');
+    const [host, setHost] = useState('');
+    const [path, setPath] = useState('/');
+    const [forceURLReplacement, setForceURLReplacement] = useState(false);
+    const [hasCopied, setHasCopied] = useState(false);
+    const [generate404, setGenerate404] = useState(false);
+    const [enableEnhancedCrawl, setEnableEnhancedCrawl] = useState(false);
+    const [addFeeds, setAddFeeds] = useState(false);
+    const [addRestApi, setAddRestApi] = useState(false);
+    const [crawlers, setCrawlers] = useState([]);
+    const [selectedCrawlers, setSelectedCrawlers] = useState([]);
+    const [apiError, setApiError] = useState(null);
+    const [postTypes, setPostTypes] = useState([]);
+    const [selectedPostTypes, setSelectedPostTypes] = useState([]);
+    const [postTypesApiError, setPostTypesApiError] = useState(null);
+
+    // Plugins/Themes for Enhanced Crawl
+    const [plugins, setPlugins] = useState([]);
+    const [selectedPlugins, setSelectedPlugins] = useState([]);
+    const [pluginsApiError, setPluginsApiError] = useState(null);
+    const [themes, setThemes] = useState([]);
+    const [selectedThemes, setSelectedThemes] = useState([]);
+    const [themesApiError, setThemesApiError] = useState(null);
+
+    const [pages, setPages] = useState([]);
+
+    const setSavingSettings = () => {
+        saveSettings();
+        setSettingsSaved(true);
+
+        setTimeout(function () {
+            setSettingsSaved(false);
+        }, 2000);
+    }
+
+    // Function to fetch crawlers from API
+    const fetchCrawlers = () => {
+        // Reset API error
+        setApiError(null);
+
+        apiFetch({
+            path: '/simplystatic/v1/crawlers',
+            // Use raw: true to get the raw response
+            parse: true
+        })
+            .then(response => {
+
+                // Check if response is a string (JSON) and try to parse it
+                if (typeof response === 'string') {
+                    try {
+                        response = JSON.parse(response);
+                    } catch (e) {
+                        setApiError('Error parsing API response: ' + e.message);
+                        return;
+                    }
+                }
+
+                if (response && response.data && response.data.length > 0) {
+                    // Only show crawlers that can currently run (dependencies satisfied)
+                    const crawlersData = response.data.filter(crawler => crawler.can_run);
+                    setCrawlers(crawlersData);
+
+                    // If no crawlers are selected or settings.crawlers is not an array, select defaults by active flag
+                    // This ensures that if active_crawlers is empty (like when it's enabled for the first time),
+                    // only crawlers active by default are added by default
+                    if (!settings.crawlers || !Array.isArray(settings.crawlers) || settings.crawlers.length === 0) {
+                        const defaultCrawlerIds = crawlersData.filter(crawler => crawler.active).map(crawler => crawler.id);
+                        setSelectedCrawlers(defaultCrawlerIds);
+                        updateSetting('crawlers', defaultCrawlerIds);
+                    } else if (Array.isArray(settings.crawlers)) {
+
+                        // Ensure all selected crawlers exist in the allowed crawlers list
+                        const validCrawlerIds = settings.crawlers.filter(id =>
+                            crawlersData.some(crawler => crawler.id === id)
+                        );
+
+                        // If no valid crawlers are selected, select all allowed by default
+                        if (validCrawlerIds.length === 0) {
+                            const allCrawlerIds = crawlersData.map(crawler => crawler.id);
+                            setSelectedCrawlers(allCrawlerIds);
+                            updateSetting('crawlers', allCrawlerIds);
+                        } else {
+                            setSelectedCrawlers(validCrawlerIds);
+                        }
+                    }
+                } else {
+                    setApiError('Invalid API response structure or empty crawlers array');
+                }
+            })
+            .catch(error => {
+                setApiError('Error fetching crawlers: ' + (error.message || 'Unknown error'));
+            });
+    };
+
+    // Function to fetch post types from API
+    const fetchPostTypes = () => {
+        // Reset API error
+        setPostTypesApiError(null);
+
+        apiFetch({
+            path: '/simplystatic/v1/post-types',
+            parse: true
+        })
+            .then(response => {
+                // Check if response is a string (JSON) and try to parse it
+                if (typeof response === 'string') {
+                    try {
+                        response = JSON.parse(response);
+                    } catch (e) {
+                        setPostTypesApiError('Error parsing API response: ' + e.message);
+                        return;
+                    }
+                }
+
+                if (response && response.data && response.data.length > 0) {
+                    setPostTypes(response.data);
+                } else {
+                    setPostTypesApiError('Invalid API response structure or empty post types array');
+                }
+            })
+            .catch(error => {
+                setPostTypesApiError('Error fetching post types: ' + (error.message || 'Unknown error'));
+            });
+    };
+
+    // Fetch plugins
+    const fetchPlugins = () => {
+        setPluginsApiError(null);
+        apiFetch({path: '/simplystatic/v1/active-plugins', parse: true})
+            .then(response => {
+                if (typeof response === 'string') {
+                    response = JSON.parse(response);
+                }
+                const list = Array.isArray(response?.data) ? response.data : [];
+                setPlugins(list);
+                // Initialize selection default to all
+                const saved = Array.isArray(settings.plugins_to_include) ? settings.plugins_to_include : [];
+                const allSlugs = list.map(p => p.slug);
+                const valid = saved.filter(slug => allSlugs.includes(slug));
+                let initial = valid.length > 0 ? valid : allSlugs;
+                // Ensure required plugins are always included.
+                const requiredSlugs = list.filter(p => p.required).map(p => p.slug);
+                requiredSlugs.forEach(slug => {
+                    if (!initial.includes(slug)) {
+                        initial = [...initial, slug];
+                    }
+                });
+                setSelectedPlugins(initial);
+                updateSetting('plugins_to_include', initial);
+            })
+            .catch(error => setPluginsApiError(error?.message || 'Unknown error'));
+    };
+
+    // Fetch themes
+    const fetchThemes = () => {
+        setThemesApiError(null);
+        apiFetch({path: '/simplystatic/v1/active-themes', parse: true})
+            .then(response => {
+                if (typeof response === 'string') {
+                    response = JSON.parse(response);
+                }
+                const list = Array.isArray(response?.data) ? response.data : [];
+                setThemes(list);
+                const saved = Array.isArray(settings.themes_to_include) ? settings.themes_to_include : [];
+                const allSlugs = list.map(t => t.slug);
+                const valid = saved.filter(slug => allSlugs.includes(slug));
+                const initial = valid.length > 0 ? valid : allSlugs;
+                setSelectedThemes(initial);
+                updateSetting('themes_to_include', initial);
+            })
+            .catch(error => setThemesApiError(error?.message || 'Unknown error'));
+    };
+
+    // Fetch crawlers and post types when component mounts
+    // We intentionally use an empty dependency array to ensure this only runs once
+    // when the component mounts, not on every settings change
+    useEffect(() => {
+        fetchCrawlers();
+        fetchPostTypes();
+        fetchPlugins();
+        fetchThemes();
+        // Fetch pages for optional 404 selection
+        apiFetch({path: '/simplystatic/v1/pages'}).then((fetched_pages) => {
+            let pages = fetched_pages || [];
+            // Prepend default option
+            pages.unshift({label: __('No page selected', 'simply-static'), value: 0});
+            setPages(pages);
+        }).catch(() => {
+            setPages([]);
+        });
+    }, []);
+
+    useEffect(() => {
+        if (settings.destination_url_type) {
+            setReplaceType(settings.destination_url_type);
+        }
+
+        if (settings.destination_scheme) {
+            setScheme(settings.destination_scheme);
+        }
+
+        if (settings.destination_host) {
+            setHost(settings.destination_host);
+        }
+
+        if (settings.relative_path) {
+            setPath(settings.relative_path);
+        }
+
+        if (settings.use_forms || settings.use_comments) {
+            setUseForms(true);
+        }
+
+        if (settings.force_replace_url) {
+            setForceURLReplacement(settings.force_replace_url);
+        }
+
+        if (settings.generate_404) {
+            setGenerate404(settings.generate_404);
+        }
+
+        if (settings.add_feeds) {
+            setAddFeeds(settings.add_feeds);
+        }
+
+        if (settings.add_rest_api) {
+            setAddRestApi(settings.add_rest_api);
+        }
+
+        if (settings.smart_crawl) {
+            setEnableEnhancedCrawl(settings.smart_crawl);
+        }
+
+        if (settings.crawlers) {
+            setSelectedCrawlers(settings.crawlers);
+        }
+
+    }, [settings]);
+
+    useEffect(() => {
+        if (!postTypes.length || !Object.keys(settings).length) {
+            return;
+        }
+
+        const allPostTypeIds = postTypes.map(postType => postType.name);
+        const savedPostTypes = Array.isArray(settings.post_types) ? settings.post_types : null;
+        const validPostTypeIds = (savedPostTypes || []).filter(name =>
+            postTypes.some(postType => postType.name === name)
+        );
+        const hasConfiguredPostTypes = !!settings.post_types_configured;
+        const shouldShowDefaultPostTypes = !savedPostTypes || (!hasConfiguredPostTypes && !savedPostTypes.length);
+        const selectedPostTypeIds = shouldShowDefaultPostTypes ? allPostTypeIds : validPostTypeIds;
+
+        setSelectedPostTypes(selectedPostTypeIds);
+
+        if (savedPostTypes && savedPostTypes.length !== validPostTypeIds.length) {
+            updateSetting('post_types', validPostTypeIds);
+            updateSetting('post_types_configured', true);
+        }
+    }, [postTypes, settings.post_types, settings.post_types_configured]);
+
+    return (<div className={"inner-settings"}>
+        <Card>
+            <CardHeader>
+                <b>{__('Replacing URLs', 'simply-static')}</b>
+            </CardHeader>
+            <CardBody>
+                {isStudio() &&
+                    <StudioNotice
+                        heading={__('URL replacement is handled by Studio', 'simply-static')}
+                        cta={null}
+                    >
+                        <p>{__('Studio manages the public URL for this environment automatically, so you do not need to configure replacement URLs manually.', 'simply-static')}</p>
+                    </StudioNotice>
+                }
+                <p>{__('When exporting your static site, any links to your WordPress site will be replaced by one of the following: absolute URLs, relative URLs, or URLs constructed for offline use.', 'simply-static')}</p>
+                <SelectControl
+                    label={__('Replacing URLs', 'simply-static')}
+                    value={replaceType}
+                    __next40pxDefaultSize
+                    __nextHasNoMarginBottom
+                    disabled={isStudio()}
+                    options={[
+                        {label: __('Absolute URLs', 'simply-static'), value: 'absolute'},
+                        {label: __('Relative Path', 'simply-static'), value: 'relative'},
+                        {label: __('Offline Usage', 'simply-static'), value: 'offline'},
+                    ]}
+                    onChange={(type) => {
+                        setReplaceType(type);
+                        updateSetting('destination_url_type', type);
+                    }}
+                />
+                {replaceType === 'absolute' &&
+                    <>
+                        <Flex>
+                            <FlexItem style={{minWidth: "15%", marginTop: "15px"}}>
+                                <SelectControl
+                                    label={__('Scheme', 'simply-static')}
+                                    value={scheme}
+                                    __next40pxDefaultSize
+                                    __nextHasNoMarginBottom
+                                    disabled={isStudio()}
+                                    options={[
+                                        {label: 'https://', value: 'https://'},
+                                        {label: 'http://', value: 'http://'},
+                                        {label: '//', value: '//'},
+                                    ]}
+                                    onChange={(scheme) => {
+                                        setScheme(scheme);
+                                        updateSetting('destination_scheme', scheme);
+                                    }}
+                                />
+                            </FlexItem>
+                            <FlexItem style={{minWidth: "85%"}}>
+                                <TextControl
+                                    label={__('Host', 'simply-static')}
+                                    type={"text"}
+                                    placeholder={"example.com"}
+                                    __next40pxDefaultSize
+                                    __nextHasNoMarginBottom
+                                    disabled={isStudio()}
+                                    value={host}
+                                    onChange={(host) => {
+                                        setHost(host);
+                                        updateSetting('destination_host', host);
+                                    }}
+                                />
+                            </FlexItem>
+                        </Flex>
+                        <p>{__('Convert all URLs for your WordPress site to absolute URLs at the domain specified above.', 'simply-static')}</p>
+                    </>
+                }
+                {replaceType === 'relative' &&
+                    <>
+                        <TextControl
+                            label={__('Path', 'simply-static')}
+                            type={"text"}
+                            placeholder={"/"}
+                            __next40pxDefaultSize
+                            __nextHasNoMarginBottom
+                            disabled={isStudio()}
+                            value={path}
+                            onChange={(path) => {
+                                setPath(path);
+                                updateSetting('relative_path', path);
+                            }}
+                        />
+                        <p>
+                            {__('Convert all URLs for your WordPress site to relative URLs that will work at any domain.', 'simply-static')}<br></br>
+                            {__('Optionally specify a path above if you intend to place the files in a subdirectory.', 'simply-static')}
+                        </p>
+                        <Notice status={"warning"} isDismissible={false}>
+                            <b>{__('Example', 'simply-static')}: </b>
+                            {__('enter /path above if you wanted to serve your files at www.example.com/path/', 'simply-static')}
+                        </Notice>
+                    </>
+                }
+                {replaceType === 'offline' &&
+                    <p>{__('Convert all URLs for your WordPress site so that you can browse the site locally on your own computer without hosting it on a web server.', 'simply-static')}</p>
+                }
+                {!useForms &&
+                    <ToggleControl
+                        label={__('Force URL replacements', 'simply-static')}
+                        __nextHasNoMarginBottom
+                        disabled={isStudio()}
+                        help={
+                            forceURLReplacement
+                                ? __('Replace all occurrences of the WordPress URL with the static URL (includes inline CSS and JS).', 'simply-static')
+                                : __('Replace only occurrences of the WordPress URL that match our tag list.', 'simply-static')
+                        }
+                        checked={forceURLReplacement}
+                        onChange={(value) => {
+                            setForceURLReplacement(value);
+                            updateSetting('force_replace_url', value);
+                        }}
+                    />
+                }
+            </CardBody>
+        </Card>
+        <Spacer margin={5}/>
+        <Card>
+            <CardHeader>
+                <b>{__('Enhanced Crawl', 'simply-static')}</b>
+            </CardHeader>
+            <CardBody>
+                <p>{__('Enhanced Crawl uses native WordPress functions to find all pages and files when running a static export.', 'simply-static')}</p>
+                <ToggleControl
+                    __nextHasNoMarginBottom
+                    label={
+                        <>
+                            {__('Enable Enhanced Crawl', 'simply-static')}
+                        </>
+                    }
+                    help={
+                        enableEnhancedCrawl
+                            ? __('Find pages and files via Enhanced Crawl.', 'simply-static')
+                            : __('Don\'t find pages and files via Enhanced Crawl.', 'simply-static')
+                    }
+                    checked={enableEnhancedCrawl}
+                    onChange={(value) => {
+                        setEnableEnhancedCrawl(value);
+                        updateSetting('smart_crawl', value);
+                    }}
+                />
+
+                {enableEnhancedCrawl && (
+                    <>
+                        <Spacer margin={2}/>
+                        {apiError && (
+                            <>
+                                <Notice status="error" isDismissible={false}>
+                                    {__('Error loading crawlers: ', 'simply-static')} {apiError}
+                                </Notice>
+                                <Spacer margin={2}/>
+                            </>
+                        )}
+                        {crawlers.length > 0 ? (
+                            <>
+                                <FormTokenField
+                                    label={__('Active Crawlers', 'simply-static')}
+                                    __next40pxDefaultSize
+                                    __nextHasNoMarginBottom
+                                    value={selectedCrawlers.map(id => {
+                                        const crawler = crawlers.find(c => c.id === id);
+                                        return crawler ? crawler.name : id;
+                                    })}
+                                    suggestions={crawlers.map(crawler => crawler.name)}
+                                    onChange={(value) => {
+                                        // Convert names to IDs for storage, and only allow known/available crawlers
+                                        const selectedIds = value.map(name => {
+                                            // First try to find an exact match
+                                            let crawler = crawlers.find(c => c.name === name);
+
+                                            // If no exact match, try case-insensitive match
+                                            if (!crawler) {
+                                                crawler = crawlers.find(c =>
+                                                    c.name.toLowerCase() === (name || '').toLowerCase()
+                                                );
+                                            }
+
+                                            // If still no match, check if it's already an ID
+                                            if (!crawler) {
+                                                crawler = crawlers.find(c => c.id === name);
+                                            }
+
+                                            return crawler ? crawler.id : null;
+                                        }).filter(id => !!id && crawlers.some(c => c.id === id));
+                                        setSelectedCrawlers(selectedIds);
+                                        updateSetting('crawlers', selectedIds);
+                                    }}
+                                    help={__('Select which crawlers to activate. If none selected, all crawlers will be active by default.', 'simply-static')}
+                                    tokenizeOnSpace={false}
+                                    __experimentalExpandOnFocus={true}
+                                    __experimentalShowHowTo={false}
+                                    maxSuggestions={100}
+                                    className="horizontal-token-field"
+                                />
+                                <Spacer margin={2}/>
+                                {/* Show post types selection only when Post Type URLs crawler is active */}
+                                {selectedCrawlers.includes('post_type') && (
+                                    <>
+                                        <Spacer margin={2}/>
+                                        {postTypesApiError && (
+                                            <>
+                                                <Notice status="error" isDismissible={false}>
+                                                    {__('Error loading post types: ', 'simply-static')} {postTypesApiError}
+                                                </Notice>
+                                                <Spacer margin={2}/>
+                                            </>
+                                        )}
+                                        {postTypes.length > 0 ? (
+                                            <>
+                                                <FormTokenField
+                                                    label={__('Post Types to Include', 'simply-static')}
+                                                    __next40pxDefaultSize
+                                                    __nextHasNoMarginBottom
+                                                    value={Array.isArray(selectedPostTypes) ? selectedPostTypes.map(name => {
+                                                        const postType = postTypes.find(pt => pt.name === name);
+                                                        return postType ? postType.label : name;
+                                                    }) : []}
+                                                    suggestions={postTypes.map(postType => postType.label)}
+                                                    onChange={(value) => {
+                                                        // Convert labels to names for storage
+                                                        const selectedNames = value.map(label => {
+                                                            // First try to find an exact match
+                                                            let postType = postTypes.find(pt => pt.label === label);
+
+                                                            // If no exact match, try case-insensitive match
+                                                            if (!postType) {
+                                                                postType = postTypes.find(pt =>
+                                                                    pt.label.toLowerCase() === label.toLowerCase()
+                                                                );
+                                                            }
+
+                                                            // If still no match, check if it's already a name
+                                                            if (!postType) {
+                                                                postType = postTypes.find(pt => pt.name === label);
+                                                            }
+
+                                                            return postType ? postType.name : null;
+                                                        }).filter(Boolean);
+                                                        setSelectedPostTypes(selectedNames);
+                                                        updateSetting('post_types', selectedNames);
+                                                        updateSetting('post_types_configured', true);
+                                                    }}
+                                                    help={__('Select which post types to include in the static export. All public post types are selected by default.', 'simply-static')}
+                                                    tokenizeOnSpace={false}
+                                                    __experimentalExpandOnFocus={true}
+                                                    __experimentalShowHowTo={false}
+                                                    maxSuggestions={100}
+                                                    className="horizontal-token-field"
+                                                />
+                                                <Spacer margin={2}/>
+                                            </>
+                                        ) : (
+                                            <p>{__('Loading post types...', 'simply-static')}</p>
+                                        )}
+                                    </>
+                                )}
+                                {selectedCrawlers.includes('plugin_assets') && (
+                                    <>
+                                        {pluginsApiError && (
+                                            <>
+                                                <Notice status="error" isDismissible={false}>
+                                                    {__('Error loading plugins: ', 'simply-static')} {pluginsApiError}
+                                                </Notice>
+                                                <Spacer margin={2}/>
+                                            </>
+                                        )}
+                                        {plugins.length > 0 ? (
+                                            <>
+                                                <FormTokenField
+                                                    label={__('Plugins to Include', 'simply-static')}
+                                                    __next40pxDefaultSize
+                                                    __nextHasNoMarginBottom
+                                                    disabled={!isPro()}
+                                                    value={Array.isArray(selectedPlugins) ? selectedPlugins.map(slug => {
+                                                        const pl = plugins.find(p => p.slug === slug);
+                                                        return pl ? pl.label : slug;
+                                                    }) : []}
+                                                    suggestions={plugins.map(p => p.label)}
+                                                    onChange={(value) => {
+                                                        let selected = value.map(label => {
+                                                            let pl = plugins.find(p => p.label === label) || plugins.find(p => p.label.toLowerCase() === String(label).toLowerCase()) || plugins.find(p => p.slug === label);
+                                                            return pl ? pl.slug : label;
+                                                        });
+                                                        // Re-add required plugins that cannot be removed.
+                                                        const requiredSlugs = plugins.filter(p => p.required).map(p => p.slug);
+                                                        requiredSlugs.forEach(slug => {
+                                                            if (!selected.includes(slug)) {
+                                                                selected = [...selected, slug];
+                                                            }
+                                                        });
+                                                        setSelectedPlugins(selected);
+                                                        updateSetting('plugins_to_include', selected);
+                                                    }}
+                                                    help={__('Select which active plugins to include. All active plugins are included by default; remove tokens to exclude them.', 'simply-static')}
+                                                    tokenizeOnSpace={false}
+                                                    __experimentalExpandOnFocus={true}
+                                                    __experimentalShowHowTo={false}
+                                                    maxSuggestions={100}
+                                                    className="horizontal-token-field"
+                                                />
+                                                {!isPro() && (
+                                                    <ExternalLink
+                                                        style={{marginTop: "5px"}}
+                                                        href="https://simplystatic.com"> {__('Requires Simply Static Pro', 'simply-static')}
+                                                    </ExternalLink>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <p>{__('Loading plugins...', 'simply-static')}</p>
+                                        )}
+                                    </>
+                                )}
+                                {selectedCrawlers.includes('theme_assets') && (
+                                    <>
+                                        {themesApiError && (
+                                            <>
+                                                <Notice status="error" isDismissible={false}>
+                                                    {__('Error loading themes: ', 'simply-static')} {themesApiError}
+                                                </Notice>
+                                                <Spacer margin={2}/>
+                                            </>
+                                        )}
+                                        {themes.length > 0 ? (
+                                            <>
+                                                {isPro() &&
+                                                    <Spacer margin={"5px"}/>
+                                                }
+                                                <FormTokenField
+                                                    label={__('Themes to Include', 'simply-static')}
+                                                    __next40pxDefaultSize
+                                                    __nextHasNoMarginBottom
+                                                    disabled={!isPro()}
+                                                    value={Array.isArray(selectedThemes) ? selectedThemes.map(slug => {
+                                                        const th = themes.find(t => t.slug === slug);
+                                                        return th ? th.label : slug;
+                                                    }) : []}
+                                                    suggestions={themes.map(t => t.label)}
+                                                    onChange={(value) => {
+                                                        const selected = value.map(label => {
+                                                            let th = themes.find(t => t.label === label) || themes.find(t => t.label.toLowerCase() === String(label).toLowerCase()) || themes.find(t => t.slug === label);
+                                                            return th ? th.slug : label;
+                                                        });
+                                                        setSelectedThemes(selected);
+                                                        updateSetting('themes_to_include', selected);
+                                                    }}
+                                                    help={__('Select which theme(s) to include. The active theme and parent (if any) are included by default; remove tokens to exclude them.', 'simply-static')}
+                                                    tokenizeOnSpace={false}
+                                                    __experimentalExpandOnFocus={true}
+                                                    __experimentalShowHowTo={false}
+                                                    maxSuggestions={100}
+                                                    className="horizontal-token-field"
+                                                />
+                                                {!isPro() && (
+                                                    <ExternalLink
+                                                        style={{marginTop: "5px"}}
+                                                        href="https://simplystatic.com"> {__('Requires Simply Static Pro', 'simply-static')}</ExternalLink>
+                                                )}
+                                                <Spacer margin={2}/>
+                                            </>
+                                        ) : (
+                                            <p>{__('Loading themes...', 'simply-static')}</p>
+                                        )}
+                                    </>
+                                )}
+                                <div className="crawler-descriptions">
+                                    {crawlers.map(crawler => (
+                                        <div key={crawler.id} className="crawler-description">
+                                            <Flex>
+                                                <FlexItem className={"crawler-name"}>
+                                                    <strong>{crawler.name}:</strong>
+                                                </FlexItem>
+                                                <FlexItem>
+                                                    {crawler.description}
+                                                </FlexItem>
+                                            </Flex>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            <p>{__('Loading crawlers...', 'simply-static')}</p>
+                        )}
+                    </>
+                )}
+            </CardBody>
+        </Card>
+        <Spacer margin={5}/>
+        <Card>
+            <CardHeader>
+                <b>{__('404', 'simply-static')}</b>
+            </CardHeader>
+            <CardBody>
+                <ToggleControl
+                    __nextHasNoMarginBottom
+                    label={
+                        <>
+                            {__('Generate 404 Page?', 'simply-static')}
+                        </>
+                    }
+                    help={
+                        generate404
+                            ? __('Generate a 404 page based on your theme template.', 'simply-static')
+                            : __('Don\'t generate a 404 page.', 'simply-static')
+                    }
+                    checked={generate404}
+                    onChange={(value) => {
+                        setGenerate404(value);
+                        updateSetting('generate_404', value);
+                    }}
+                />
+
+                {generate404 && (
+                    <>
+                        <SelectControl
+                            label={
+                                <>
+                                    {!(isPro && typeof isPro === 'function' ? isPro() : false) ? (
+                                            <>
+                                                <span style={{position: "relative", bottom: "-15px"}}>
+                                                {__('Custom 404 page (optional)', 'simply-static')}
+                                                </span>
+                                                <ExternalLink href="https://simplystatic.com">
+                                                    {__('Requires Simply Static Pro', 'simply-static')}
+                                                </ExternalLink>
+                                            </>
+                                        ) :
+                                        <>
+                                            {__('Custom 404 page (optional)', 'simply-static')}
+                                        </>
+                                    }
+                                </>
+                            }
+                            value={settings.custom_404_page ?? 0}
+                            __next40pxDefaultSize
+                            __nextHasNoMarginBottom
+                            options={pages}
+                            disabled={!(isPro && typeof isPro === 'function' ? isPro() : false)}
+                            onChange={(pageId) => {
+                                updateSetting('custom_404_page', pageId);
+                            }}
+                            help={__('If selected, Simply Static will use the content of this page for the 404 page instead of the theme default.', 'simply-static')}
+                        />
+                        {(isPro && typeof isPro === 'function' ? isPro() : false) && (
+                            <Button
+                                variant="secondary"
+                                disabled={isRunning}
+                                isBusy={isRunning}
+                                onClick={() => {
+                                    // Trigger 404-only export via REST
+                                    if (isRunning) {
+                                        return;
+                                    }
+                                    setIsRunning(true);
+                                    apiFetch({
+                                        path: '/simplystatic/v1/export-404',
+                                        method: 'POST',
+                                    }).then(resp => {
+                                        try {
+                                            if (resp && resp.success === false && resp.message) {
+                                                alert(resp.message);
+                                            } else {
+                                                // Reload to reflect new status/progress
+                                                window.location.reload();
+                                            }
+                                        } catch (e) {
+                                            // Fallback reload
+                                            window.location.reload();
+                                        }
+                                    }).catch(() => {
+                                        // Reset running flag on error
+                                        setIsRunning(false);
+                                        alert(__('Failed to start 404 push.', 'simply-static'));
+                                    });
+                                }}
+                            >
+                                {__('Push 404 Page', 'simply-static')}
+                            </Button>
+                        )}
+                    </>
+                )}
+            </CardBody>
+        </Card>
+        <Spacer margin={5}/>
+        <Card>
+            <CardHeader>
+                <b>{__('Include', 'simply-static')}</b>
+            </CardHeader>
+            <CardBody>
+                <TextareaControl
+                    label={__('Additional URLs', 'simply-static')}
+                    placeholder={options.home + "/hidden-page/\n/\\/blog\\/.*$/i "}
+                    __nextHasNoMarginBottom
+                    help={__('You can enter full URLs or regex (wrap with / /). Examples: https://example.com/private/ or /\\/blog\\/.*$/i (one per line).', 'simply-static')}
+                    value={settings.additional_urls}
+                    onChange={(value) => {
+                        updateSetting('additional_urls', value);
+                    }}
+                />
+                <TextareaControl
+                    label={__('Additional Files and Directories', 'simply-static')}
+                    placeholder={options.home_path + "additional-directory/\n" + options.home_path + "additional-file.html\n/\\.pdf$/i"}
+                    __nextHasNoMarginBottom
+                    help={__('Enter absolute paths or regex (wrap with / /). Examples: /\\.pdf$/i or /wp-content\\/uploads\\/reports\\/.*/ (one per line).', 'simply-static')}
+                    value={settings.additional_files}
+                    onChange={(value) => {
+                        updateSetting('additional_files', value);
+                    }}
+                />
+                <Button
+                    variant="secondary"
+                    onClick={() => {
+                        try {
+                            navigator.clipboard.writeText(options.home_path);
+                            setHasCopied(true);
+                            setTimeout(() => setHasCopied(false), 1500);
+                        } catch (e) {
+                            console.error('Clipboard copy failed', e);
+                        }
+                    }}
+                >
+                    {hasCopied ? __('Copied home path', 'simply-static') : __('Copy home path', 'simply-static')}
+                </Button>
+                <ToggleControl
+                    __nextHasNoMarginBottom
+                    label={
+                        <>
+                            {__('Include RSS Feeds?', 'simply-static')}
+                        </>
+                    }
+                    help={
+                        addFeeds
+                            ? __('Include feed URLs of all your posts.', 'simply-static')
+                            : __('Don\'t include feed URLs for all your posts.', 'simply-static')
+                    }
+                    checked={addFeeds}
+                    onChange={(value) => {
+                        setAddFeeds(value);
+                        updateSetting('add_feeds', value);
+                    }}
+                />
+                <ToggleControl
+                    __nextHasNoMarginBottom
+                    label={
+                        <>
+                            {__('Include Rest API?', 'simply-static')}
+                        </>
+                    }
+                    help={
+                        addRestApi
+                            ? __('Include all Rest API endpoints as JSON files.', 'simply-static')
+                            : __('Don\'t include Rest API endpoints as JSON files.', 'simply-static')
+                    }
+                    checked={addRestApi}
+                    onChange={(value) => {
+                        setAddRestApi(value);
+                        updateSetting('add_rest_api', value);
+                    }}
+                />
+            </CardBody>
+        </Card>
+        <Spacer margin={5}/>
+        <Card>
+            <CardHeader>
+                <b>{__('Exclude', 'simply-static')}</b>
+            </CardHeader>
+            <CardBody>
+                <TextareaControl
+                    label={__('URLs to exclude', 'simply-static')}
+                    placeholder={"/some-directory/\n.jpg\n/\\.(pdf|zip)$/i\n/\\/private\\/.*/"}
+                    __nextHasNoMarginBottom
+                    help={__('You can enter substrings or regex (wrap with / /). Examples: .jpg or /\\.(pdf|zip)$/i or /\/private\/.*/ (one per line).', 'simply-static')}
+                    value={settings.urls_to_exclude}
+                    onChange={(value) => {
+                        updateSetting('urls_to_exclude', value);
+                    }}
+                />
+            </CardBody>
+        </Card>
+        <Spacer margin={5}/>
+        {settingsSaved &&
+            <>
+                <Animate type="slide-in" options={{origin: 'top'}}>
+                    {() => (
+                        <Notice status="success" isDismissible={false}>
+                            <p>
+                                {__('Settings saved successfully.', 'simply-static')}
+                            </p>
+                        </Notice>
+                    )}
+                </Animate>
+                <Spacer margin={5}/>
+            </>
+        }
+
+        <div className={"save-settings"}>
+            <Button onClick={setSavingSettings}
+                    variant="primary">{__('Save Settings', 'simply-static')}</Button>
+        </div>
+    </div>)
+}
+
+export default GeneralSettings;

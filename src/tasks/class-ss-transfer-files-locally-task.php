@@ -1,0 +1,267 @@
+<?php
+
+namespace Simply_Static;
+
+/**
+ * Class which handles transfer files task.
+ */
+class Transfer_Files_Locally_Task extends Task {
+
+	use canProcessPages;
+
+	use canTransfer;
+
+	/**
+	 * Task name.
+	 *
+	 * @var string
+	 */
+	protected static $task_name = 'transfer_files_locally';
+
+	/**
+	 * Destination Folder.
+	 *
+	 * @var string
+	 */
+	protected $destination_dir = '';
+
+	/**
+	 * Archive Folder.
+	 *
+	 * @var string
+	 */
+	protected $archive_dir = '';
+
+	/**
+	 * Copy a batch of files from the temp dir to the destination dir
+	 *
+	 * @return boolean true if done, false if not done.
+	 */
+	public function perform() {
+		$this->destination_dir = apply_filters( 'ss_local_dir', $this->options->get( 'local_dir' ) );
+		$this->archive_dir     = $this->options->get_archive_dir();
+
+		$create_dir = $this->maybe_create_local_directory();
+
+		if ( ! $create_dir ) {
+			return new \WP_Error(
+				'ss_local_destination_unavailable',
+				__( 'Unable to create the configured local destination directory.', 'simply-static' )
+			);
+		}
+
+		$done = $this->process_pages();
+		if ( is_wp_error( $done ) ) {
+			return $done;
+		}
+
+		if ( $done ) {
+			if ( $this->options->get( 'add_feeds' ) ) {
+				$feed_result = $this->transfer_feed_redirect( $this->destination_dir );
+				if ( is_wp_error( $feed_result ) ) {
+					return $feed_result;
+				}
+			}
+
+			/**
+			 * Allow handlers to transfer any remaining files before we finish the task.
+			 *
+			 * Fires near the end of Local Directory transfer, after the page manifest and feed redirect
+			 * have been copied, but before the task is marked as finished.
+			 *
+			 * @param string               $destination_dir Absolute path to Local Directory destination.
+			 * @param string               $archive_dir     Absolute path to archive (temp) directory.
+			 * @param Transfer_Files_Locally_Task $task     The current task instance.
+			 */
+			do_action( 'ss_before_finish_transferring_files_locally', $this->destination_dir, $this->archive_dir, $this );
+
+			if ( $this->options->get( 'destination_url_type' ) == 'absolute' ) {
+				$destination_url = trailingslashit( $this->options->get_destination_url() );
+				$this->save_status_message(
+					__( 'Destination URL:', 'simply-static' ),
+					'destination_url',
+					array(
+						'url'   => $destination_url,
+						'label' => $destination_url,
+					)
+				);
+			}
+
+			// If this is a 404-only export, ensure the activity/export log reflects a single transferred file.
+			$only_404 = get_option( 'simply-static-404-only' );
+			if ( ! empty( $only_404 ) ) {
+				$this->save_status_message(
+					sprintf(
+						/* translators: 1: number of files transferred, 2: total number of files. */
+						__( 'Transferred %1$d of %2$d files', 'simply-static' ),
+						1,
+						1
+					)
+				);
+			}
+
+			do_action( 'ss_finished_transferring_files_locally', $this->destination_dir );
+
+			self::delete_total_pages();
+		}
+
+		return $done;
+	}
+
+	/**
+	 * Start transfer retries independently from fetch retries.
+	 *
+	 * @return true|\WP_Error
+	 */
+	public function cleanup() {
+		Page::query()->update_all( array( 'fetch_attempts' => 0 ) );
+		self::delete_total_pages();
+	}
+
+	public function maybe_create_local_directory() {
+		if ( ! is_string( $this->destination_dir ) || ! Util::is_path_allowed_by_open_basedir( $this->destination_dir ) ) {
+			Util::debug_log( 'Local destination directory is outside the paths allowed by open_basedir: ' . (string) $this->destination_dir );
+			$this->save_status_message( 'Unable to access destination directory: ' . (string) $this->destination_dir );
+
+			return false;
+		}
+
+		if ( is_dir( $this->destination_dir ) ) {
+			return true;
+		}
+
+		if ( wp_mkdir_p( $this->destination_dir ) === false ) {
+			Util::debug_log( "Cannot create directory: " . $this->destination_dir );
+			$this->save_status_message( 'Unable to create destination directory: ' . $this->destination_dir );
+
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Message to set when processed pages.
+	 *
+	 * @param integer $processed Number of pages processed.
+	 * @param integer $total Number of total pages to process.
+	 *
+	 * @return string
+	 */
+	protected function processed_pages_message( $processed, $total ) {
+		Util::debug_log( '[Transfer] Total Pages:' . $total . '. Processed Pages: ' . $processed );
+		if ( ! $total && 'update' === $this->get_generate_type() ) {
+			return __( 'No new/updated pages to transfer', 'simply-static' );
+		}
+
+		return sprintf(
+			/* translators: 1: number of files transferred, 2: total number of files. */
+			__( 'Transferred %1$d of %2$d files', 'simply-static' ),
+			$processed,
+			$total
+		);
+	}
+
+	/**
+	 * @param Page $static_page Page object.
+	 *
+	 * @return void
+	 */
+	protected function process_page( $static_page ) {
+		$file_path = $this->get_page_file_path( $static_page );
+		$path_info = Util::url_path_info( $file_path );
+		$path      = Util::combine_path( $this->destination_dir, $path_info['dirname'] );
+
+		Util::debug_log( "Trying to transfer: " . $file_path );
+
+		if ( wp_mkdir_p( $path ) === false ) {
+			Util::debug_log( "Cannot create directory: " . $path );
+			throw new \RuntimeException( 'Unable to create destination directory' );
+		}
+
+		chmod( $path, 0755 );
+		$origin_file_path      = Util::combine_path( $this->archive_dir, $file_path );
+		$destination_file_path = Util::combine_path( $this->destination_dir, $file_path );
+
+		if ( ! file_exists( $origin_file_path ) ) {
+			Util::debug_log( "Cannot find file: " . $origin_file_path );
+			throw new \RuntimeException( 'Unable to find file in archive' );
+		}
+
+		if ( ! copy( $origin_file_path, $destination_file_path ) ) {
+			Util::debug_log( "Cannot copy " . $origin_file_path . " to " . $destination_file_path );
+			throw new \RuntimeException( 'Unable to copy file to destination' );
+		}
+
+		$static_page->last_transferred_at = Util::formatted_datetime();
+		$static_page->save();
+		Util::debug_log( 'Successfully transferred: ' . $path );
+
+		do_action( 'simply_static_page_file_transferred', $static_page, $this->destination_dir );
+	}
+
+	/**
+	 * Delete previously generated static files from the local directory.
+	 *
+	 * @param string $local_dir The directory to delete files from.
+	 *
+	 * @param object $options given options.
+	 *
+	 * @return true|\WP_Error True on success, WP_Error otherwise.
+	 */
+	public static function delete_local_directory_static_files( $local_dir, $options ) {
+		if ( ! Util::is_safe_directory_to_delete( $local_dir ) ) {
+			Util::debug_log( 'Refusing to clear unsafe local destination directory: ' . $local_dir );
+			return false;
+		}
+
+		$files = new \RecursiveIteratorIterator( new \RecursiveDirectoryIterator( $local_dir, \RecursiveDirectoryIterator::SKIP_DOTS ), \RecursiveIteratorIterator::CHILD_FIRST );
+
+		foreach ( $files as $fileinfo ) {
+			if ( $fileinfo->isLink() ) {
+				if ( false === unlink( $fileinfo->getPathname() ) ) {
+					return false;
+				}
+			} elseif ( $fileinfo->isDir() ) {
+				if ( false === rmdir( $fileinfo->getRealPath() ) ) {
+					return false;
+				}
+			} else {
+				if ( false === unlink( $fileinfo->getRealPath() ) ) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Transfer the feed redirect page if it exists.
+	 *
+	 * @param string $local_dir Path to local dir.
+	 *
+	 * @return void
+	 */
+	public function transfer_feed_redirect( $local_dir ) {
+		$archive_dir = $this->options->get_archive_dir();
+
+		$file_path             = untrailingslashit( $archive_dir ) . DIRECTORY_SEPARATOR . 'feed' . DIRECTORY_SEPARATOR . 'index.html';
+		$destination_file_path = untrailingslashit( $local_dir ) . DIRECTORY_SEPARATOR . 'feed' . DIRECTORY_SEPARATOR . 'index.html';
+
+		if ( ! file_exists( $file_path ) ) {
+			return true;
+		}
+
+		$destination_feed_dir = dirname( $destination_file_path );
+		if ( ! wp_mkdir_p( $destination_feed_dir ) || ! copy( $file_path, $destination_file_path ) ) {
+			Util::debug_log( 'Unable to transfer feed redirect to local destination: ' . $destination_file_path );
+			return new \WP_Error(
+				'ss_feed_transfer_failed',
+				__( 'Unable to transfer the feed redirect to the local destination.', 'simply-static' )
+			);
+		}
+
+		return true;
+	}
+}

@@ -1,0 +1,708 @@
+import {
+    __experimentalNavigatorButton as NavigatorButton,
+    __experimentalSpacer as Spacer,
+    Animate,
+    Button,
+    Card,
+    CardBody,
+    Dashicon, Notice,
+    SelectControl,
+    Tooltip
+} from "@wordpress/components";
+import {useContext, useEffect, useRef, useState} from "@wordpress/element";
+import {SettingsContext} from "../context/SettingsContext";
+import VersionInfo from "./VersionInfo";
+import GenerateButtons from "./GenerateButtons";
+import EnvironmentSidebar from "./EnvironmentSidebar";
+import apiFetch from "@wordpress/api-fetch";
+import useInterval from "../../hooks/useInterval";
+import {getRollbackConflict} from "../utils/export";
+
+const {__, _n, sprintf} = wp.i18n;
+
+const getSafeArchiveActionMessage = ( message, fallbackMessage ) => {
+    return 'string' === typeof message && message.trim() ? message.trim() : fallbackMessage;
+};
+
+export const parseArchiveActionResponse = ( response, fallbackMessage ) => {
+    let parsed = response;
+
+    if ( 'string' === typeof response ) {
+        try {
+            parsed = JSON.parse( response );
+        } catch ( error ) {
+            throw new Error( fallbackMessage );
+        }
+    }
+
+    if ( !parsed || 'object' !== typeof parsed || Array.isArray( parsed ) ) {
+        throw new Error( fallbackMessage );
+    }
+
+    const status = Number( parsed.status );
+    if ( !Number.isInteger( status ) || status < 200 || status >= 300 ) {
+        throw new Error( getSafeArchiveActionMessage( parsed.message, fallbackMessage ) );
+    }
+
+    return parsed;
+};
+
+export const getArchiveActionErrorMessage = ( error, fallbackMessage ) => {
+    if ( error && error.data ) {
+        const dataMessage = getSafeArchiveActionMessage( error.data.message, '' );
+        if ( dataMessage ) {
+            return dataMessage;
+        }
+    }
+
+    return getSafeArchiveActionMessage( error && error.message, fallbackMessage );
+};
+
+function SidebarSite( props = null ) {
+    const {
+        isRunning,
+        setIsRunning,
+        isResumed,
+        setIsResumed,
+        isPaused,
+        setIsPaused,
+        blogId,
+        settings,
+        updateFromNetwork,
+        getSettings,
+        isPro,
+        canRunIntegration,
+        showMobileNav,
+        setShowMobileNav,
+        isDelayed,
+        snapshotRollback,
+        setSnapshotRollback,
+        isRollbackRunning
+    } = useContext(SettingsContext);
+    const { activeItem, setActiveItem} = props;
+    // UAM enablement follows server-bootstrapped flag; changes require a page reload.
+    const [disabledButton, setDisabledButton] = useState(false);
+    const [selectedCopySite, setSelectedCopySite] = useState('current');
+    const [selectablesSites, setSelectableSites] = useState([]);
+    const [isUpdatingFromNetwork, setIsUpdatingFromNetwork] = useState(false);
+    const [selectedExportType, setSelectedExportType] = useState('export');
+    const [canRunExport, setCanRunExport] = useState(true);
+    const [isResettingLock, setIsResettingLock] = useState(false);
+    const [unpushedChanges, setUnpushedChanges] = useState(0);
+    const hasAutoSelectedExportType = useRef(false);
+    const hasSelectedExportTypeManually = useRef(false);
+    const rollbackMessage = snapshotRollback && snapshotRollback.message ? snapshotRollback.message : __('Rollback in progress. Simply Static export actions are locked until the rollback has finished.', 'simply-static');
+    const rollbackProgress = snapshotRollback && snapshotRollback.progress ? snapshotRollback.progress : {};
+    const rollbackProgressText = rollbackProgress.label
+        ? `${rollbackProgress.label}${rollbackProgress.total ? ` (${rollbackProgress.percent || 0}%, ${rollbackProgress.completed || 0}/${rollbackProgress.total})` : ''}`
+        : rollbackMessage;
+
+
+    const resetExportLock = () => {
+        setIsResettingLock(true);
+        apiFetch({
+            path: '/simplystatic/v1/reset-export-lock',
+            method: 'POST'
+        }).then(() => {
+            setCanRunExport(true);
+		}).catch(() => {
+			setCanRunExport(false);
+		}).finally(() => {
+			setIsResettingLock(false);
+		});
+    }
+
+	const checkIfCanRun = () => {
+		if (!options.is_multisite) {
+			return;
+		}
+            apiFetch({
+                path: '/simplystatic/v1/check-can-run',
+                method: 'GET'
+		}).then(resp => {
+			var json = JSON.parse(resp);
+
+                if (json.can_run) {
+                    setCanRunExport(true);
+                } else {
+                    setCanRunExport(false);
+                }
+            }).catch(() => {});
+	}
+
+	useInterval(() => {
+            checkIfCanRun();
+	}, options.is_multisite && !isRunning ? 100000 : null);
+
+	useEffect(() => {
+		if (options.is_multisite) {
+            checkIfCanRun();
+		}
+	}, []);
+
+    useEffect(() => {
+        setDisabledButton(isRunning || isPaused || isRollbackRunning);
+
+        if (options.selectable_sites && !options.is_network && options.is_multisite) {
+            let sites = options.selectable_sites
+                .slice()
+                .sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); })
+                .map(function (site) {
+                    return {label: `${site.name} (#${site.blog_id})`, value: site.blog_id}
+                });
+
+            sites.unshift({label: __('Use current settings', 'simply-static'), value: 'current'});
+            setSelectableSites(sites);
+        }
+
+    }, [options, isRunning, isPaused, isRollbackRunning]);
+
+    // Fetch unpushed changes count on mount and after each export finishes.
+    useEffect(() => {
+        apiFetch({
+            path: '/simplystatic/v1/unpushed-changes',
+            method: 'GET',
+        }).then(resp => {
+            const json = JSON.parse(resp);
+            const total = json.data ? json.data.total : 0;
+            setUnpushedChanges(total);
+
+            if (!hasAutoSelectedExportType.current && !hasSelectedExportTypeManually.current) {
+                // Auto-select "Export Changes" when there are unpushed changes and Pro is available.
+                if (total > 0 && 'pro' === options.plan && isPro()) {
+                    setSelectedExportType('update');
+                } else {
+                    setSelectedExportType('export');
+                }
+
+                hasAutoSelectedExportType.current = true;
+            }
+        }).catch(() => {
+            setUnpushedChanges(0);
+
+            if (!hasAutoSelectedExportType.current && !hasSelectedExportTypeManually.current) {
+                setSelectedExportType('export');
+                hasAutoSelectedExportType.current = true;
+            }
+        });
+    }, [settings, isRunning]);
+
+    const startExport = () => {
+        if (isRollbackRunning) {
+            alert(rollbackMessage);
+            return;
+        }
+
+        setDisabledButton(true);
+		// Start progress polling immediately. Some local/restricted runtimes keep
+		// the start request open while their inline worker begins processing, so
+		// waiting for this request would hide all intermediate activity updates.
+		setIsRunning(true);
+        setIsResumed(false);
+        setIsPaused(false);
+        const languagePrefix = 'language:';
+        const isLanguageExport = selectedExportType.indexOf(languagePrefix) === 0;
+
+        apiFetch({
+            path: '/simplystatic/v1/start-export',
+            method: 'POST',
+            data: {
+                'blog_id': blogId,
+                'type': isLanguageExport ? 'export' : selectedExportType,
+                'language': isLanguageExport ? selectedExportType.replace(languagePrefix, '') : ''
+            }
+        }).then(resp => {
+            var json = JSON.parse(resp);
+            if (json.status === 500) {
+                alert(json.message);
+                setDisabledButton(false);
+				setIsRunning(false);
+                return;
+			}
+			if (json.status === 409) {
+				const message = json.message || rollbackMessage;
+				const rollbackState = getRollbackConflict(json);
+				if (rollbackState) {
+					setSnapshotRollback({
+						...rollbackState,
+						status: rollbackState,
+						message: message,
+					});
+				}
+				alert(message);
+				setIsRunning(false);
+				setDisabledButton(!!rollbackState || isRunning || isPaused || isRollbackRunning);
+				return;
+            }
+        }).catch(error => {
+			const isConflict = error && error.data && 409 === error.data.status;
+			const rollbackState = isConflict ? getRollbackConflict(error.data) : null;
+			const message = error.message || rollbackMessage;
+
+			if (rollbackState) {
+				setSnapshotRollback({
+					...rollbackState,
+					status: rollbackState,
+					message: message,
+				});
+			}
+
+			alert(message);
+			setIsRunning(false);
+			setDisabledButton(!!rollbackState || isRunning || isPaused || isRollbackRunning);
+		});
+    }
+
+    const runArchiveAction = ( path, onSuccess, fallbackMessage ) => {
+        return apiFetch({
+            path,
+            method: 'POST',
+            data: {
+                'blog_id': blogId,
+            }
+        }).then(resp => {
+            parseArchiveActionResponse( resp, fallbackMessage );
+            onSuccess();
+            return true;
+        }).catch(error => {
+            // Browser alerts display the message as text, so server-provided markup stays inert.
+            alert( getArchiveActionErrorMessage( error, fallbackMessage ) );
+            return false;
+        });
+    };
+
+    const cancelExport = () => {
+        const fallbackMessage = __( 'The export could not be cancelled. Please try again.', 'simply-static' );
+
+        return runArchiveAction( '/simplystatic/v1/cancel-export', () => {
+            setIsResumed(false);
+            setIsPaused(false);
+            setIsRunning(false);
+            setDisabledButton(false);
+        }, fallbackMessage );
+    }
+
+    const pauseExport = () => {
+        const fallbackMessage = __( 'The export could not be paused. Please try again.', 'simply-static' );
+
+        return runArchiveAction( '/simplystatic/v1/pause-export', () => {
+            setIsRunning(false);
+            setIsResumed(false);
+            setIsPaused(true);
+        }, fallbackMessage );
+    }
+
+    const resumeExport = () => {
+        const fallbackMessage = __( 'The export could not be resumed. Please try again.', 'simply-static' );
+
+        return runArchiveAction( '/simplystatic/v1/resume-export', () => {
+            setIsResumed(true);
+            setIsPaused(false);
+            setIsRunning(true);
+        }, fallbackMessage );
+    }
+
+    const runUpdateFromNetwork = (blogId) => {
+        setIsUpdatingFromNetwork(true);
+        const fallbackMessage = __( 'The settings could not be imported. Please try again.', 'simply-static' );
+
+        return Promise.resolve().then(() => {
+            // SettingsContext resolves only after the imported settings have been fetched.
+            return updateFromNetwork(blogId);
+        }).then(() => {
+            window.location.reload();
+            return true;
+        }).catch(error => {
+            alert( getArchiveActionErrorMessage( error, fallbackMessage ) );
+            return false;
+        }).finally(() => {
+            setIsUpdatingFromNetwork(false);
+        });
+    }
+
+    let buildOptions = '';
+    if (Object.keys(options.builds).length) {
+        const builds = Object.keys(options.builds).map((id) => <option key={id} value={id}>{options.builds[id]}</option>);
+
+        // Sort builds alphabetically
+        builds.sort((a, b) => {
+            return a.props.children.localeCompare(b.props.children);
+        });
+
+        buildOptions = <optgroup label={__('Builds', 'simply-static')}>
+            {builds}
+        </optgroup>
+    }
+
+    const getLanguageOptions = () => {
+        const languages = options.languages || options.multilingual_languages || options.available_languages || [];
+        let normalizedLanguages = [];
+
+        if (Array.isArray(languages)) {
+            normalizedLanguages = languages.map((language) => {
+                if ('string' === typeof language) {
+                    return {label: language, value: language};
+                }
+
+                return {
+                    label: language.label || language.name || language.native_name || language.code || language.slug,
+                    value: language.value || language.code || language.slug || language.locale,
+                };
+            });
+        } else {
+            normalizedLanguages = Object.keys(languages).map((code) => {
+                const language = languages[code];
+
+                return {
+                    label: 'string' === typeof language ? language : (language.label || language.name || language.native_name || code),
+                    value: 'string' === typeof language ? code : (language.value || language.code || language.slug || language.locale || code),
+                };
+            });
+        }
+
+        normalizedLanguages = normalizedLanguages.filter((language) => language.label && language.value);
+
+        return normalizedLanguages;
+    }
+
+    const multilingualIntegration = options.integrations && options.integrations.multilingual ? options.integrations.multilingual : {};
+    const canExportLanguages = 'undefined' === typeof options.can_export_languages ? true : options.can_export_languages;
+    const canRunMultilingualExport = canExportLanguages && 'pro' === options.plan && isPro() && canRunIntegration('multilingual') && multilingualIntegration.can_run;
+    const languageOptions = canRunMultilingualExport ? getLanguageOptions() : [];
+
+    let languageSelectOptions = '';
+    if (languageOptions.length) {
+        languageSelectOptions = <optgroup label={__('Languages', 'simply-static')}>
+            {languageOptions.map((language) => {
+                return <option key={language.value} value={`language:${language.value}`}>{language.label}</option>
+            })}
+        </optgroup>
+    }
+
+    useEffect(() => {
+        if (!canRunMultilingualExport && selectedExportType.indexOf('language:') === 0) {
+            setSelectedExportType('export');
+        }
+    }, [canRunMultilingualExport, selectedExportType]);
+
+    // Helper: determine if a route is allowed for current user (UAM). If no list provided, treat as allowed.
+    const isAllowed = (route) => {
+        try {
+            return !options.allowed_pages || options.allowed_pages.includes(route);
+        } catch (e) { return true; }
+    };
+
+    // Section visibility: hide entire card sections when none of their pages are allowed
+    const hasAnyTools = ['/', '/diagnostics'].some(isAllowed);
+    const hasAnySettings = ['/general', '/deployment', '/forms', '/search', '/optimize', '/hide-wp', '/workflow'].some(isAllowed);
+    // Include UAM route in Advanced only as a possible member; if UAM is disabled server-side it won't be in allowed_pages anyway
+    const hasAnyAdvanced = ['/integrations', '/utilities', '/debug', '/uam'].some(isAllowed);
+    const unpushedChangesMessage = sprintf(
+        /* translators: %d: number of changes that have not been pushed. */
+        _n('You have %d unpushed change.', 'You have %d unpushed changes.', unpushedChanges, 'simply-static'),
+        unpushedChanges
+    );
+
+    return <Card className={"plugin-nav"}>
+        <div className={"plugin-logo"}>
+            <img alt={__('Simply Static logo', 'simply-static')}
+                 src={options.logo}/>
+        </div>
+        <div className={`generate-container ${disabledButton && !isRollbackRunning ? 'generating' : ''} ${isRollbackRunning ? 'rollback-locked' : ''}`}>
+            <SelectControl
+                className={'generate-type'}
+                value={selectedExportType}
+                disabled={disabledButton}
+                __next40pxDefaultSize
+                __nextHasNoMarginBottom
+                onChange={(value) => {
+                    hasSelectedExportTypeManually.current = true;
+                    setSelectedExportType(value);
+                }}
+            >
+                <option value="export">{__('Full Site', 'simply-static')}</option>
+                {'pro' === options.plan && isPro() ?
+                    <option value="update">{__('Changes Only', 'simply-static')}</option>
+                    :
+                    <option disabled
+                            value="update">{__('Changes Only (Requires Simply Static Pro)', 'simply-static')}</option>
+                }
+                {buildOptions}
+                {languageSelectOptions}
+            </SelectControl>
+            {canRunExport && !isRollbackRunning &&
+                <GenerateButtons
+                    canGenerate={!disabledButton}
+                    startExport={startExport}
+                    cancelExport={cancelExport}
+                    pauseExport={pauseExport}
+                    resumeExport={resumeExport}
+                    isRunning={isRunning}
+                    isPaused={isPaused}
+                    isResumed={isResumed}
+                    isDelayed={isDelayed}
+                    buttonLabel={__('Push', 'simply-static')}
+                />
+            }
+
+            {isRollbackRunning &&
+                <>
+                    <Button
+                        disabled={true}
+                        className={'generate rollback-locked-button'}
+                    >
+                        <Dashicon icon="update"/>
+                        {__('Rollback in progress', 'simply-static')}
+                    </Button>
+                    <Notice status="warning" isDismissible={false} className={"rollback-lock-sidebar-notice"}>
+                        <p>{rollbackProgressText}</p>
+                    </Notice>
+                </>
+            }
+
+            {unpushedChanges > 0 && !isRollbackRunning && !isRunning && !isPaused && ('pro' === options.plan && isPro()) &&
+                <Notice status="info" isDismissible={false} className={"unpushed-changes-notice"}>
+                    <p>{unpushedChangesMessage}</p>
+                </Notice>
+            }
+            {unpushedChanges > 0 && !isRollbackRunning && !isRunning && !isPaused && !('pro' === options.plan && isPro()) &&
+                <Tooltip text={__('Upgrade to Simply Static Pro to push only changes.', 'simply-static')}>
+                    <Notice status="info" isDismissible={false} className={"unpushed-changes-notice"}>
+                        <p>{unpushedChangesMessage}</p>
+                    </Notice>
+                </Tooltip>
+            }
+
+            {!isRollbackRunning && !canRunExport && options.is_multisite && <>
+                <Button
+                    disabled={true}
+                    className={'generate'}
+                >
+                    <Dashicon icon="update"/>
+                    {__('Push', 'simply-static')}
+
+                </Button>
+                <Button
+                    target={'_blank'}
+                    variant={'link'}
+                    href={"https://simplystatic.com/pricing/"}
+                >
+                    { __('A push from another site is running. Upgrade to queue them.', 'simply-static') }
+                </Button>
+                <Button
+                    variant={'link'}
+                    isBusy={isResettingLock}
+                    disabled={isResettingLock}
+                    onClick={resetExportLock}
+                >
+                    { __('Reset push lock', 'simply-static') }
+                </Button>
+            </>}
+        </div>
+        <CardBody>
+            {'pro' === options.plan && isPro() &&
+                <>
+                    {(!options.is_network && canRunIntegration('environments')) &&
+                        <EnvironmentSidebar isRunning={isRunning || isRollbackRunning} getSettings={getSettings}/>
+                    }
+                </>
+            }
+            {!options.is_network && options.is_multisite &&
+                <div className={"import-container"}>
+                    <h4 className={"settings-headline"}> {__('Import', 'simply-static')}</h4>
+                    <SelectControl
+                        value={selectedCopySite}
+                        options={selectablesSites}
+                        help={__('Choose a subsite to import settings from.', 'simply-static')}
+                        __next40pxDefaultSize
+                        __nextHasNoMarginBottom
+                        onChange={(blog_id) => {
+                            setSelectedCopySite(blog_id);
+                        }}
+                    />
+                    {selectedCopySite !== 'current' &&
+                        <Button
+                            isPrimary
+                            isBusy={isUpdatingFromNetwork}
+                            disabled={isUpdatingFromNetwork}
+                            onClick={() => {
+                                runUpdateFromNetwork(selectedCopySite);
+                            }}
+                        >
+                            {__('Import Settings', 'simply-static')}
+                        </Button>
+                    }
+                    {isUpdatingFromNetwork ?
+                        <Animate type="slide-in" options={{origin: 'top'}}>
+                            {() => (
+                                <Notice status="info" isDismissible={false}
+                                        className={"upgrade-network-notice"}>
+                                    <p>
+                                        {__('Importing settings…', 'simply-static')}
+                                    </p>
+                                </Notice>
+                            )}
+                        </Animate>
+                        :
+                        ''
+                    }
+                </div>
+            }
+            {hasAnyTools && <>
+            <h4 className={"settings-headline"}> {__('Tools', 'simply-static')}</h4>
+            {isAllowed('/') && (
+            <NavigatorButton onClick={() => {
+                setActiveItem('/')
+                setShowMobileNav(!showMobileNav);
+            }}
+                             className={activeItem === '/' ? 'is-active-item generate' : 'generate'}
+                             path="/">
+                <Dashicon icon="update"/> {__('Activity Log', 'simply-static')}
+            </NavigatorButton>
+            )}
+            {isAllowed('/diagnostics') && (
+            <NavigatorButton onClick={() => {
+                setActiveItem('/diagnostics')
+                setShowMobileNav(!showMobileNav);
+            }}
+                             className={activeItem === '/diagnostics' ? 'is-active-item' : ''}
+                             path="/diagnostics">
+                <Dashicon icon="bell"/> {__('Diagnostics', 'simply-static')}
+            </NavigatorButton>
+            )}
+            </>}
+        </CardBody>
+        {hasAnySettings && <CardBody>
+            <h4 className={"settings-headline"}> {__('Settings', 'simply-static')}</h4>
+            {isAllowed('/general') && (
+            <NavigatorButton onClick={() => {
+                setActiveItem('/general')
+                setShowMobileNav(!showMobileNav);
+            }}
+                             className={activeItem === '/general' ? 'is-active-item' : ''}
+                             path="/general">
+                <Dashicon icon="admin-generic"/> {__('General', 'simply-static')}
+            </NavigatorButton>
+            )}
+            {!options.is_network && isAllowed('/deployment') && (
+                <NavigatorButton onClick={() => {
+                    setActiveItem('/deployment')
+                    setShowMobileNav(!showMobileNav);
+                }}
+                                 className={activeItem === '/deployment' ? 'is-active-item' : ''}
+                                 path="/deployment">
+                    <Dashicon icon="migrate"/> {__('Deploy', 'simply-static')}
+                </NavigatorButton>
+            )}
+            {!options.is_network &&
+                <>
+                    {isAllowed('/forms') && (
+                    <NavigatorButton onClick={() => {
+                        setActiveItem('/forms')
+                        setShowMobileNav(!showMobileNav);
+                    }}
+                                     className={activeItem === '/forms' ? 'is-active-item' : ''}
+                                     path="/forms">
+                        <Dashicon icon="align-center"/> {__('Forms', 'simply-static')}
+                    </NavigatorButton>
+                    )}
+                    {isAllowed('/search') && (
+                    <NavigatorButton onClick={() => {
+                        setActiveItem('/search')
+                        setShowMobileNav(!showMobileNav);
+                    }}
+                                     className={activeItem === '/search' ? 'is-active-item' : ''}
+                                     path="/search">
+                        <Dashicon icon="search"/> {__('Search', 'simply-static')}
+                    </NavigatorButton>
+                    )}
+                    {isAllowed('/optimize') && (
+                    <NavigatorButton onClick={() => {
+                        setActiveItem('/optimize')
+                        setShowMobileNav(!showMobileNav);
+                    }}
+                                     className={activeItem === '/optimize' ? 'is-active-item' : ''}
+                                     path="/optimize">
+                        <Dashicon icon="dashboard"/> {__('Optimize', 'simply-static')}
+                    </NavigatorButton>
+                    )}
+                    {isAllowed('/hide-wp') && (
+                    <NavigatorButton onClick={() => {
+                        setActiveItem('/hide-wp')
+                        setShowMobileNav(!showMobileNav);
+                    }}
+                                     className={activeItem === '/hide-wp' ? 'is-active-item' : ''}
+                                     path="/hide-wp">
+                        <Dashicon icon="hidden"/> {__('Hide WP', 'simply-static')}
+                    </NavigatorButton>
+                    )}
+                </>
+            }
+        </CardBody>}
+        {hasAnyAdvanced && <CardBody>
+            <h4 className={"settings-headline"}> {__('Advanced', 'simply-static')}</h4>
+            {isAllowed('/integrations') && (
+            <NavigatorButton onClick={() => {
+                setActiveItem('/integrations')
+                setShowMobileNav(!showMobileNav);
+            }}
+                             className={activeItem === '/integrations' ? 'is-active-item' : ''}
+                             path="/integrations">
+                <Dashicon icon="block-default"/> {__('Integrations', 'simply-static')}
+            </NavigatorButton>
+            )}
+            {isAllowed('/workflow') && (
+            <NavigatorButton onClick={() => {
+                setActiveItem('/workflow')
+                setShowMobileNav(!showMobileNav);
+            }}
+                             className={activeItem === '/workflow' ? 'is-active-item' : ''}
+                             path="/workflow">
+                <Dashicon icon="randomize"/> {__('Workflow', 'simply-static')}
+            </NavigatorButton>
+            )}
+            {isAllowed('/utilities') && (
+            <NavigatorButton onClick={() => {
+                setActiveItem('/utilities')
+                setShowMobileNav(!showMobileNav);
+            }}
+                             className={activeItem === '/utilities' ? 'is-active-item' : ''}
+                             path="/utilities">
+                <Dashicon icon="admin-tools"/> {__('Utilities', 'simply-static')}
+            </NavigatorButton>
+            )}
+            {isAllowed('/debug') && (
+            <NavigatorButton onClick={() => {
+                setActiveItem('/debug')
+                setShowMobileNav(!showMobileNav);
+            }}
+                             className={activeItem === '/debug' ? 'is-active-item' : ''}
+                             path="/debug">
+                <Dashicon icon="editor-help"/> {__('Debug', 'simply-static')}
+            </NavigatorButton>
+            )}
+            {options.uam_enabled && isAllowed('/uam') && (
+            <NavigatorButton onClick={() => {
+                setActiveItem('/uam')
+                setShowMobileNav(!showMobileNav);
+            }}
+                             className={activeItem === '/uam' ? 'is-active-item' : ''}
+                             path="/uam">
+                <Dashicon icon="admin-users"/> {__('UAM', 'simply-static')}
+            </NavigatorButton>
+            )}
+        </CardBody>}
+        <CardBody>
+            <h4 className={"settings-headline"}>{__('Learn', 'simply-static')}</h4>
+            <Button href="https://docs.simplystatic.com" target="_blank">
+                <Dashicon icon="admin-links"/> {__('Documentation', 'simply-static')}
+            </Button>
+            <Button href="https://simplystatic.com/tutorials/" target="_blank">
+                <Dashicon icon="edit"/> {__('Tutorials', 'simply-static')}
+            </Button>
+        </CardBody>
+        <VersionInfo/>
+    </Card>
+}
+
+export default SidebarSite;

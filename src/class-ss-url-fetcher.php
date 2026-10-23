@@ -1,0 +1,666 @@
+<?php
+
+namespace Simply_Static;
+
+// Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Simply Static URL fetcher class
+ */
+class Url_Fetcher {
+	/**
+	 * Timeout for fetching URLs
+	 * @var string
+	 */
+	const TIMEOUT = 30;
+
+	/**
+	 * Default User-Agent used for crawling.
+	 * @var string
+	 */
+	const DEFAULT_USER_AGENT = 'Simply-Static';
+
+	/**
+	 * Singleton instance
+	 * @var Simply_Static\Url_Fetcher
+	 */
+	protected static $instance = null;
+
+	/**
+	 * Directory to save the body of the URL to
+	 * @var string
+	 */
+	protected $archive_dir = null;
+
+	/**
+	 * Disable usage of "new"
+	 * @return void
+	 */
+	protected function __construct() {
+	}
+
+	/**
+	 * Disable cloning of the class
+	 * @return void
+	 */
+	protected function __clone() {
+	}
+
+	/**
+	 * Disable unserializing of the class
+	 * @return void
+	 */
+	public function __wakeup() {
+	}
+
+	/**
+	 * Return an instance of Simply_Static\Url_Fetcher
+	 * @return Simply_Static
+	 */
+	public static function instance() {
+		if ( null === self::$instance ) {
+			self::$instance              = new self();
+			self::$instance->archive_dir = Options::instance()->get_archive_dir();
+		}
+
+		return self::$instance;
+	}
+
+	/**
+	 * Fetch the URL and return a \WP_Error if we get one, otherwise a Response class.
+	 *
+	 * @param \Simply_Static\Page $static_page URL to fetch
+	 *
+	 * @return boolean                        Was the fetch successful?
+	 */
+	public function fetch( Page $static_page, $prepare_url = true ) {
+		$original_url = $static_page->url;
+		$url          = $original_url;
+
+		// Single and incremental exports reuse Page records. Start each new fetch
+		// with a clean error state so a successful retry does not keep reporting a
+		// failure from an earlier export or attempt.
+		$static_page->clear_error_message();
+
+		// Windows support.
+		$url = Util::normalize_slashes( $url );
+
+		$static_page->last_checked_at = Util::formatted_datetime();
+
+		// Don't process URLs that don't match the URL of this WordPress installation
+		if ( ! Util::is_local_url( $url ) ) {
+			Util::debug_log( "Not fetching URL because it is not a local URL" );
+			$static_page->http_status_code = null;
+			$message                       = sprintf( __( "An error occurred: %s", 'simply-static' ), __( "Attempted to fetch a remote URL", 'simply-static' ) );
+			$static_page->set_error_message( $message );
+			$static_page->save();
+
+			return false;
+		}
+
+		$temp_filename = wp_tempnam();
+
+		Util::debug_log( "Fetching URL and saving it to: " . $temp_filename );
+
+		// Check if the URL is a local asset (file) that we can copy directly
+		// We do this check before prepare_url to avoid query parameters interfering with extension detection
+		$is_local_asset = Util::is_local_asset_url( $url );
+		$local_file     = null;
+
+		Util::debug_log( "URL: " . $original_url . " - Is local asset: " . ( $is_local_asset ? 'Yes' : 'No' ) );
+
+		if ( $prepare_url ) {
+			$url = $static_page->get_handler()->prepare_url( $url );
+		}
+
+		// Check if the URL is a local asset (file) that we can copy directly
+		if ( $is_local_asset ) {
+			$resolved_path = Util::resolve_local_asset_path( $original_url );
+
+			if ( is_wp_error( $resolved_path ) ) {
+				Util::debug_log( 'Rejected unsafe local asset path: ' . $original_url );
+				$response = $resolved_path;
+			} elseif ( is_string( $resolved_path ) ) {
+				$local_file = $resolved_path;
+				Util::debug_log( "Copying local file directly: " . $local_file );
+
+				// Copy the file to the temporary location
+				if ( copy( $local_file, $temp_filename ) ) {
+					// Create a response-like array to match what remote_get would return
+					$response = array(
+						'response' => array(
+							'code' => 200
+						),
+						'headers'  => array(
+							'content-type' => $this->detect_mime_type( $local_file, $original_url )
+						)
+					);
+				} else {
+					// If copy fails, fall back to remote_get
+					Util::debug_log( "Failed to copy local file, falling back to remote_get" );
+					$response = self::remote_get( Util::get_source_url_from_local_url( $url ), $temp_filename );
+				}
+			} else {
+				// If no safe local file exists, fall back to remote_get.
+				Util::debug_log( "Local file not found, falling back to remote_get" );
+				$response = self::remote_get( Util::get_source_url_from_local_url( $url ), $temp_filename );
+			}
+		} else {
+			// Not a local asset, use remote_get as before
+			$response = self::remote_get( $url, $temp_filename );
+		}
+
+		$filesize = file_exists( $temp_filename ) ? filesize( $temp_filename ) : 0;
+		Util::debug_log( "Filesize: " . $filesize . ' bytes' );
+
+		// Fallback: Sometimes streamed requests create an empty file despite 200 OK.
+		// If we got 200 but the file is empty, try alternative strategies to populate it.
+		if ( ! is_wp_error( $response ) ) {
+			$code = isset( $response['response']['code'] ) ? (int) $response['response']['code'] : 0;
+			if ( $code === 200 && $filesize === 0 ) {
+				Util::debug_log( 'Streamed file is empty after 200 response; attempting fallback to recover content.' );
+				$recovered = false;
+				// Attempt 1: If it is a local asset, try copying directly from disk again.
+				if ( isset( $is_local_asset ) && $is_local_asset && is_string( $local_file ) ) {
+					if ( is_readable( $local_file ) ) {
+						$recovered = copy( $local_file, $temp_filename );
+						if ( $recovered ) {
+							Util::debug_log( 'Recovered by copying local asset from disk.' );
+							$filesize = filesize( $temp_filename );
+						}
+					}
+				}
+					// Attempt 2: Do a non-streamed request and write body manually.
+					if ( ! $recovered ) {
+						$alt_url  = isset( $is_local_asset ) && $is_local_asset ? Util::get_source_url_from_local_url( $url ) : $url;
+						$alt_args = array(
+							'timeout'     => self::TIMEOUT,
+							'user-agent'  => apply_filters( 'ss_crawler_user_agent', self::DEFAULT_USER_AGENT ),
+							'sslverify'   => (bool) apply_filters( 'ss_remote_get_sslverify', Util::should_verify_ssl( $alt_url ), $alt_url ),
+							'redirection' => 0,
+							'blocking'    => true,
+							'decompress'  => true,
+						);
+						$authorization = Util::get_basic_auth_header_for_url( $alt_url );
+						if ( null !== $authorization ) {
+							$alt_args['headers'] = array( 'Authorization' => $authorization );
+						}
+						$alt_resp = wp_remote_get( $alt_url, apply_filters( 'ss_remote_get_args', $alt_args ) );
+					if ( ! is_wp_error( $alt_resp ) ) {
+						$body = wp_remote_retrieve_body( $alt_resp );
+						if ( strlen( $body ) > 0 ) {
+							file_put_contents( $temp_filename, $body );
+							$filesize  = filesize( $temp_filename );
+							$response  = $alt_resp; // use headers from non-streamed response
+							$recovered = true;
+							Util::debug_log( 'Recovered by non-streamed request. Size: ' . $filesize . ' bytes' );
+						}
+					}
+				}
+			}
+		}
+
+		if ( is_wp_error( $response ) ) {
+			Util::debug_log( "We encountered an error when fetching: " . $response->get_error_message() );
+			Util::debug_log( $response );
+			$static_page->http_status_code = null;
+			$message                       = sprintf( __( "An error occurred: %s", 'simply-static' ), $response->get_error_message() );
+			$static_page->set_error_message( $message );
+			$static_page->save();
+			if ( file_exists( $temp_filename ) ) {
+				unlink( $temp_filename );
+			}
+
+			return false;
+		} else {
+			$static_page->http_status_code = isset( $response['response']['code'] ) ? (int) $response['response']['code'] : 0;
+
+			// Check if this is a JavaScript or CSS file based on the URL extension
+			$path_info = Util::url_path_info( $static_page->url );
+			if ( isset( $path_info['extension'] ) && $path_info['extension'] === 'js' ) {
+				// Force the correct MIME type for JavaScript files
+				$static_page->content_type = 'application/javascript';
+			} elseif ( isset( $path_info['extension'] ) && $path_info['extension'] === 'css' ) {
+				// Force the correct MIME type for CSS files
+				$static_page->content_type = 'text/css';
+			} else {
+				// Use the content type from the response headers
+				$static_page->content_type = isset( $response['headers']['content-type'] )
+					? $response['headers']['content-type']
+					: $this->detect_mime_type( $temp_filename, $original_url );
+			}
+
+			$static_page->redirect_url = isset( $response['headers']['location'] ) ? $response['headers']['location'] : null;
+
+			Util::debug_log( "http_status_code: " . $static_page->http_status_code . " | content_type: " . $static_page->content_type );
+
+			$relative_filename = null;
+			if ( $this->can_create_directories_for_page( $static_page ) ) {
+				$relative_filename = $this->create_directories_for_static_page( $static_page );
+			}
+
+			if ( $relative_filename !== null ) {
+				$relative_filename      = apply_filters( 'simply_static_relative_filename', $relative_filename, $static_page );
+				$static_page->file_path = $relative_filename;
+				$file_path              = $this->archive_dir . $relative_filename;
+
+				// Windows support.
+				if ( strpos( $file_path, '\/' ) !== false || strpos( $temp_filename, '\/' ) !== false ) {
+					$file_path     = str_replace( '\/', '/', $file_path );
+					$temp_filename = str_replace( '\/', '/', $temp_filename );
+				}
+
+				Util::debug_log( "Renaming temp file from " . $temp_filename . " to " . $file_path );
+				$renamed = rename( $temp_filename, $file_path );
+
+				if ( ! $renamed ) {
+					Util::debug_log( "Failed to rename temp file. Attempting copy + unlink fallback." );
+					$copied = copy( $temp_filename, $file_path );
+					if ( $copied ) {
+						unlink( $temp_filename );
+						$renamed = true;
+					} else {
+						Util::debug_log( "Failed to copy temp file to destination: " . $file_path );
+						$static_page->set_error_message( 'Failed to save fetched file to archive' );
+						if ( file_exists( $temp_filename ) ) {
+							unlink( $temp_filename );
+						}
+						$static_page->save();
+
+						return false;
+					}
+				}
+
+				if ( $renamed ) {
+					Util::debug_log( "Saved temp file to: " . $file_path );
+					$static_page->get_handler()->after_file_fetch( $this->archive_dir );
+					$this->discard_empty_generated_file( $static_page, $file_path );
+				}
+			} else {
+				Util::debug_log( "We weren't able to establish a filename; deleting temp file" );
+				unlink( $temp_filename );
+			}
+
+			$static_page->save();
+
+			return true;
+		}
+	}
+
+	/**
+	 * Remove a generated file when it is still empty after its page handler ran.
+	 *
+	 * Handlers run first because some integrations intentionally populate a
+	 * fetched placeholder in after_file_fetch(). Files that remain at zero
+	 * bytes have no deployable content and should not enter transfer tasks or
+	 * deploy manifests.
+	 *
+	 * @param Page   $static_page Generated page record.
+	 * @param string $file_path   Absolute path to the generated file.
+	 *
+	 * @return bool Whether an empty file was discarded.
+	 */
+	protected function discard_empty_generated_file( Page $static_page, $file_path ) {
+		if ( ! is_file( $file_path ) ) {
+			return false;
+		}
+
+		clearstatcache( true, $file_path );
+		if ( 0 !== filesize( $file_path ) ) {
+			return false;
+		}
+
+		if ( ! @unlink( $file_path ) && file_exists( $file_path ) ) {
+			$static_page->set_error_message( 'Unable to remove empty generated file' );
+			Util::debug_log( 'Unable to remove empty generated file: ' . $file_path );
+
+			return false;
+		}
+
+		Util::debug_log( 'Discarded empty generated file for URL: ' . $static_page->url );
+		$static_page->file_path        = null;
+		$static_page->content_hash     = null;
+		$static_page->last_modified_at = Util::formatted_datetime();
+
+		return true;
+	}
+
+	/**
+	 * Detect MIME type for a given local file path with multiple fallbacks.
+	 *
+	 * Priority:
+	 * 1) finfo_file (fileinfo extension)
+	 * 2) WordPress wp_check_filetype by extension
+	 * 3) Manual extension map
+	 *
+	 * @param string $file_path Absolute path to the local file
+	 * @param string $url Original URL (used to determine extension when needed)
+	 *
+	 * @return string MIME type
+	 */
+	protected function detect_mime_type( $file_path, $url ) {
+		// 1) Try PHP's fileinfo if available
+		if ( function_exists( '\\finfo_open' ) && function_exists( '\\finfo_file' ) && is_readable( $file_path ) ) {
+			$fi = \finfo_open( FILEINFO_MIME_TYPE );
+
+			if ( $fi ) {
+				$type = \finfo_file( $fi, $file_path );
+				\finfo_close( $fi );
+				if ( is_string( $type ) && $type !== '' ) {
+					return $type;
+				}
+			}
+		}
+
+		// Determine extension from URL or file path
+		$ext       = '';
+		$path_info = Util::url_path_info( $url );
+
+		if ( isset( $path_info['extension'] ) && $path_info['extension'] ) {
+			$ext = strtolower( $path_info['extension'] );
+		} else {
+			$ext = strtolower( pathinfo( $file_path, PATHINFO_EXTENSION ) );
+		}
+
+		// 2) Try WordPress helper (by extension)
+		if ( function_exists( 'wp_check_filetype' ) ) {
+			$checked = wp_check_filetype( 'dummy.' . $ext );
+			if ( ! empty( $checked['type'] ) ) {
+				return $checked['type'];
+			}
+		}
+
+		// 3) Default manual map. This can be extended via the `ss_mime_type_map` filter.
+		$map = array(
+			'js'    => 'application/javascript',
+			'css'   => 'text/css',
+			'json'  => 'application/json',
+			'html'  => 'text/html',
+			'htm'   => 'text/html',
+			'xml'   => 'application/xml',
+			'svg'   => 'image/svg+xml',
+			'png'   => 'image/png',
+			'jpg'   => 'image/jpeg',
+			'jpeg'  => 'image/jpeg',
+			'gif'   => 'image/gif',
+			'webp'  => 'image/webp',
+			'avif'  => 'image/avif',
+			'heic'  => 'image/heic',
+			'tif'   => 'image/tiff',
+			'tiff'  => 'image/tiff',
+			'bmp'   => 'image/bmp',
+			'ico'   => 'image/x-icon',
+			'pdf'   => 'application/pdf',
+			'zip'   => 'application/zip',
+			'gz'    => 'application/gzip',
+			'rar'   => 'application/vnd.rar',
+			'7z'    => 'application/x-7z-compressed',
+			'mp3'   => 'audio/mpeg',
+			'm4a'   => 'audio/mp4',
+			'oga'   => 'audio/ogg',
+			'ogg'   => 'audio/ogg',
+			'wav'   => 'audio/wav',
+			'webm'  => 'video/webm',
+			'mp4'   => 'video/mp4',
+			'm4v'   => 'video/mp4',
+			'mov'   => 'video/quicktime',
+			'ogv'   => 'video/ogg',
+			'woff'  => 'font/woff',
+			'woff2' => 'font/woff2',
+			'ttf'   => 'font/ttf',
+			'otf'   => 'font/otf',
+			'eot'   => 'application/vnd.ms-fontobject',
+		);
+
+		$map = apply_filters( 'ss_mime_type_map', $map, $ext, $file_path, $url );
+
+		if ( $ext && isset( $map[ $ext ] ) ) {
+			return $map[ $ext ];
+		}
+
+		return 'application/octet-stream';
+	}
+
+	/**
+	 * @param Page $static_page
+	 *
+	 * @return boolean
+	 */
+	protected function can_create_directories_for_page( $static_page ) {
+		if ( $static_page->http_status_code == 200 ) {
+			return true;
+		}
+
+		if ( in_array( (int) $static_page->http_status_code, array( 301, 302, 303, 307, 308 ), true ) ) {
+			return false;
+		}
+
+		$page_handler = $static_page->get_handler();
+		if ( $static_page->http_status_code === 404 && $page_handler && is_a( $page_handler, Handler_404::class ) ) {
+			return true;
+		}
+
+		return apply_filters( 'simply_static_can_create_directories_for_page', false, $static_page );
+	}
+
+	/**
+	 * Build the unfiltered relative filename for a static page.
+	 *
+	 * This calculation intentionally has no filesystem side effects so callers
+	 * can compare a stored path with the path the current export rules would
+	 * generate.
+	 *
+	 * @param \Simply_Static\Page $static_page The Simply_Static\Page.
+	 *
+	 * @return string|null The relative file path, or null when no file should be created.
+	 */
+	private function build_relative_filename_for_static_page( $static_page ) {
+		$url_parts = parse_url( $static_page->url );
+		$feed_path = Util::get_static_feed_path( $static_page->url );
+		if ( null !== $feed_path && $static_page->is_type( 'xml' ) ) {
+			return $feed_path;
+		}
+
+		// a domain with no trailing slash has no path, so we're giving it one
+		$path = isset( $url_parts['path'] ) ? $url_parts['path'] : '/';
+
+		$local_path = Util::get_public_path_from_local_url( Util::remove_params_and_fragment( $static_page->url ) );
+		if ( is_string( $local_path ) && '' !== $local_path ) {
+			$path = $local_path;
+		}
+
+		$path_info    = Util::url_path_info( $path );
+		$page_handler = $static_page->get_handler();
+
+		$relative_file_dir = $path_info['dirname'];
+		$relative_file_dir = Util::remove_leading_directory_separator( $relative_file_dir );
+
+		// If there's no extension, create a directory with the filename and place
+		// an index.html/xml file in it unless the page handler represents a file.
+		if (
+			$path_info['extension'] === ''
+			&& ! $static_page->is_binary_file()
+			&& ! $page_handler->should_preserve_extensionless_filename()
+		) {
+			if ( $path_info['filename'] !== '' ) {
+				// the filename would be blank for the root url, in that
+				// instance we don't want to add an extra slash
+				$relative_file_dir .= $path_info['filename'];
+				$relative_file_dir = Util::add_trailing_directory_separator( $relative_file_dir );
+			}
+			$path_info['filename'] = 'index';
+			if ( $static_page->is_type( 'xml' ) ) {
+				$path_info['extension'] = 'xml';
+			} else {
+				$path_info['extension'] = apply_filters( 'ss_default_extension_type', 'html' );
+			}
+		}
+
+		// Prevent query-string URLs from overwriting base paths by placing them in a deterministic subdirectory based on the query string.
+		// Exception: native WordPress search (query parameter `s`) should NOT use a hash subdirectory.
+		// Assets (JS, CSS, fonts) should ALSO NOT use a hash subdirectory, as their query strings are usually just for cache busting.
+		if ( ! empty( $url_parts['query'] ) && ! Util::is_local_asset_url( $static_page->url ) ) {
+			$relative_file_dir = Util::add_trailing_directory_separator( $relative_file_dir );
+			$use_hash_dir      = true;
+			parse_str( (string) $url_parts['query'], $qs_args );
+
+			// Global gate: when search or the Search Results Page feature is disabled, do not create any __qs directories.
+			$use_search       = Options::instance()->get( 'use_search' );
+			$use_results_page = Options::instance()->get( 'use_search_results_page' );
+			if ( null === $use_results_page ) {
+				$use_results_page = true; // default back-compat when search is enabled
+			}
+			$use_results_page = (bool) $use_search && (bool) $use_results_page;
+
+			/**
+			 * Filter whether Simply Static should use the dedicated Search Results Page export (`__qs`) for query-string URLs.
+			 * Returning false will skip creating any `__qs` directory/files for query-string URLs entirely.
+			 *
+			 * @param bool $use_results_page Whether to use the Search Results Page export. Default requires search to be enabled.
+			 * @param array<string,mixed> $qs_args Parsed query-string arguments.
+			 * @param \Simply_Static\Page $static_page The current static page instance.
+			 */
+			$use_results_page = apply_filters( 'ss_use_search_results_page', $use_results_page, $qs_args, $static_page );
+			if ( false === $use_results_page ) {
+				Util::debug_log( '[SS][SEARCH_QS] Skipping __qs/ creation due to search/results page setting being disabled: ' . $static_page->url );
+				return null; // do not create a file for this query-string URL
+			}
+
+			// Exception: native WordPress search (query parameter `s`) should NOT use a hash subdirectory.
+			if ( is_array( $qs_args ) && array_key_exists( 's', $qs_args ) ) {
+				$use_hash_dir = false;
+			}
+			/**
+			 * Filter whether Simply Static should use a hash directory for query-string URLs.
+			 *
+			 * Returning false writes query-string URLs directly under `__qs/` without the hash subdirectory.
+			 *
+			 * @param bool $use_hash_dir Whether to use the hash directory. Default true (except for native search URLs).
+			 * @param array<string,mixed> $qs_args Parsed query-string arguments.
+			 * @param \Simply_Static\Page $static_page The current static page.
+			 */
+			$use_hash_dir = apply_filters( 'simply_static_use_qs_hash_dir', $use_hash_dir, $qs_args, $static_page );
+			if ( $use_hash_dir ) {
+				$qs_hash           = substr( md5( $url_parts['query'] ), 0, 12 );
+				$relative_file_dir .= '__qs/' . $qs_hash . '/';
+			} else {
+				$relative_file_dir .= '__qs/';
+				Util::debug_log( '[SS][SEARCH_QS] Using non-hashed __qs/ directory for URL: ' . $static_page->url );
+			}
+		}
+
+		$path_info         = apply_filters( 'simply_static_page_path_info', $page_handler->get_path_info( $path_info ), $static_page );
+		$relative_file_dir = apply_filters( 'simple_static_page_relative_file_dir', $page_handler->get_relative_dir( $relative_file_dir ), $static_page );
+
+		$sanitized_relative_dir = Util::sanitize_path( (string) urldecode( $relative_file_dir ) );
+		$sanitized_filename     = Util::sanitize_filename( (string) $path_info['filename'] );
+
+		return $sanitized_relative_dir . $sanitized_filename . ( $path_info['extension'] ? '.' . $path_info['extension'] : '' );
+	}
+
+	/**
+	 * Return the final relative filename produced by the current export rules.
+	 *
+	 * @param \Simply_Static\Page $static_page The Simply_Static\Page.
+	 *
+	 * @return string|null The filtered relative file path.
+	 */
+	public function get_expected_file_path_for_static_page( $static_page ) {
+		$relative_filename = $this->build_relative_filename_for_static_page( $static_page );
+
+		if ( null === $relative_filename ) {
+			return null;
+		}
+
+		return apply_filters( 'simply_static_relative_filename', $relative_filename, $static_page );
+	}
+
+	/**
+	 * Given a Static_Page, return a relative filename based on the URL.
+	 *
+	 * This will also create directories as needed so that a file could be
+	 * created at the returned file path.
+	 *
+	 * @param \Simply_Static\Page $static_page The Simply_Static\Page.
+	 *
+	 * @return string|null The unfiltered relative file path.
+	 */
+	public function create_directories_for_static_page( $static_page ) {
+		$relative_filename = $this->build_relative_filename_for_static_page( $static_page );
+		if ( null === $relative_filename ) {
+			return null;
+		}
+
+		$path_info         = Util::url_path_info( $relative_filename );
+		$relative_file_dir = $path_info['dirname'];
+		$create_dir        = wp_mkdir_p( $this->archive_dir . $relative_file_dir );
+
+		if ( $create_dir === false ) {
+			Util::debug_log( "Unable to create temporary directory: " . $this->archive_dir . $relative_file_dir );
+			$static_page->set_error_message( 'Unable to create temporary directory' );
+		} else {
+			Util::debug_log( "New filename for static page: " . $relative_filename );
+
+			// check that file doesn't exist OR exists but is writeable
+			// (generally, we'd expect it to never exist)
+			if ( ! file_exists( $this->archive_dir . $relative_filename ) || is_writable( $this->archive_dir . $relative_filename ) ) {
+				return $relative_filename;
+			} else {
+				Util::debug_log( "File exists and is unwriteable" );
+				$static_page->set_error_message( 'File exists and is unwriteable' );
+			}
+		}
+
+		return null;
+	}
+
+	public static function remote_get( $url, $filename = null ) {
+		$allowed = (bool) apply_filters( 'ss_url_fetcher_allow_request', Util::is_local_origin_url( $url ), $url );
+		if ( ! $allowed ) {
+			return new \WP_Error( 'simply_static_unsafe_url', __( 'Refusing to fetch a URL outside the configured WordPress origin.', 'simply-static' ) );
+		}
+
+		Util::debug_log( "Fetching URL: " . $url );
+
+		/**
+		 * Filter the User-Agent string used by the Simply Static crawler.
+		 *
+		 * Return a different string to override the default Simply Static
+		 * User-Agent.
+		 *
+		 * @param string $user_agent Default User-Agent.
+		 */
+		$user_agent = apply_filters( 'ss_crawler_user_agent', self::DEFAULT_USER_AGENT );
+
+		$args = array(
+			'timeout'     => self::TIMEOUT,
+			'user-agent'  => $user_agent,
+			'sslverify'   => (bool) apply_filters( 'ss_remote_get_sslverify', Util::should_verify_ssl( $url ), $url ),
+			'redirection' => 0, // disable redirection.
+			'blocking'    => true,
+			'decompress'  => true, // ensure WordPress decompresses gzip/deflate responses.
+		);
+
+		$headers = array(
+			'Accept-Encoding' => 'identity', // request uncompressed content to avoid gzip issues with streamed downloads.
+		);
+
+		if ( $filename ) {
+			$args['stream']   = true; // stream body content to a file.
+			$args['filename'] = $filename;
+		}
+
+		$authorization = Util::get_basic_auth_header_for_url( $url );
+		if ( null !== $authorization ) {
+			$headers['Authorization'] = $authorization;
+		}
+
+		$args['headers'] = $headers;
+
+		return wp_remote_get( $url, apply_filters( 'ss_remote_get_args', $args ) );
+	}
+
+}
