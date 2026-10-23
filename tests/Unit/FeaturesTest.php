@@ -356,6 +356,20 @@ final class FeaturesTest extends UnitTestCase {
 		$this->assertSame( 10, $fields['single_auto_export_delay']['default'] );
 	}
 
+	public function test_stale_node_run_state_is_cleared_so_a_crashed_export_cannot_poison_the_next(): void {
+		$this->requireSource( 'src/deploy/class-ss-deploy-runner.php' );
+		$log = tempnam( sys_get_temp_dir(), 'ssl' );
+		$this->configure( array( 'deploy_run' => array( 'pid' => 0, 'log_file' => $log, 'job_file' => '' ), 'process_run' => array( 'pid' => 0, 'log_file' => '', 'job_file' => '' ), 'keep' => 'me' ) );
+
+		\Simply_Static\Deploy_Runner::reset_runs();
+
+		$o = Options::reinstance();
+		$this->assertEmpty( $o->get( 'deploy_run' ) );
+		$this->assertEmpty( $o->get( 'process_run' ) );
+		$this->assertSame( 'me', $o->get( 'keep' ) );
+		$this->assertFileDoesNotExist( $log, 'the stale log file is removed' );
+	}
+
 	public function test_scope_is_partial_for_single_update_and_404_exports(): void {
 		$this->configure( array( 'generate_type' => 'export' ) );
 		$this->assertSame( 'full', Process_Config::scope() );

@@ -40247,7 +40247,7 @@ var sftp = {
       await client.end().catch(() => void 0);
     }
   },
-  async deploy({ changed, deleted, config, log: log2 }) {
+  async deploy({ changed, deleted, config, concurrency, log: log2 }) {
     const client = new import_ssh2_sftp_client.default();
     await client.connect({
       host: config.host,
@@ -40259,15 +40259,12 @@ var sftp = {
     });
     try {
       const root = config.folder.replace(/\/+$/, "") || "/";
-      const made = /* @__PURE__ */ new Set();
+      const dirs = /* @__PURE__ */ new Set();
+      for (const f of changed) dirs.add(import_posix.default.dirname(import_posix.default.join(root, f.path)));
+      for (const dir of [...dirs].sort()) await client.mkdir(dir, true);
       let done = 0;
-      for (const f of changed) {
+      await pool(changed, Math.min(concurrency, 8), async (f) => {
         const remote = import_posix.default.join(root, f.path);
-        const dir = import_posix.default.dirname(remote);
-        if (!made.has(dir)) {
-          await client.mkdir(dir, true);
-          made.add(dir);
-        }
         const tmp = `${remote}.part`;
         await client.put(await (0, import_promises7.readFile)(f.abs), tmp);
         await client.rename(tmp, remote).catch(async () => {
@@ -40275,7 +40272,7 @@ var sftp = {
           await client.rename(tmp, remote);
         });
         log2.progress(++done, changed.length, "files");
-      }
+      });
       for (const p of deleted) await client.delete(import_posix.default.join(root, p)).catch(() => void 0);
       return { uploaded: changed.length, deleted: deleted.length, message: `Uploaded to ${config.host}:${root}` };
     } finally {

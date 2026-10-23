@@ -29,6 +29,12 @@ class Deploy_Task extends Task {
 				return $this->build_job( $method );
 			},
 			function ( $event ) {
+				// One database write per file would be thousands of writes: keep to ~1 per second and the final one.
+				static $last = 0;
+				if ( microtime( true ) - $last < 1 && (int) $event['done'] < (int) $event['total'] ) {
+					return;
+				}
+				$last = microtime( true );
 				$this->save_status_message(
 					sprintf(
 						/* translators: 1: done, 2: total, 3: what (files/objects/...) */

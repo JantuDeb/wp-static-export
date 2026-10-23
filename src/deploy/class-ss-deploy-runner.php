@@ -23,13 +23,44 @@ class Deploy_Runner {
 	 * Keep the state directory out of exports: it lives in uploads, which the crawler scans, and the
 	 * files list every deployed path and hash.
 	 */
+	/** Options holding the descriptor of a running Node job between task calls. */
+	const RUN_OPTIONS = array( 'deploy_run', 'process_run' );
+
 	public static function init() {
+		// A hard-killed export (PHP crash, worker restart) leaves its run descriptor behind, and the next
+		// export would mistake it for its own job. Start every export, and end every export, clean.
+		add_action( 'ss_after_setup_task', array( __CLASS__, 'reset_runs' ) );
+		add_action( 'ss_completed', array( __CLASS__, 'reset_runs' ), 6 );
+
 		add_filter(
 			'ss_skip_crawl_uploads_directories',
 			static function ( $dirs ) {
 				return array_merge( (array) $dirs, array( self::STATE_DIR ) );
 			}
 		);
+	}
+
+	/**
+	 * Stop and forget any Node job recorded by an earlier export.
+	 *
+	 * @return void
+	 */
+	public static function reset_runs() {
+		$o       = Options::instance();
+		$changed = false;
+		foreach ( self::RUN_OPTIONS as $key ) {
+			$run = $o->get( $key );
+			if ( ! empty( $run ) ) {
+				if ( is_array( $run ) ) {
+					self::cleanup( $run );
+				}
+				$o->set( $key, null );
+				$changed = true;
+			}
+		}
+		if ( $changed ) {
+			$o->save();
+		}
 	}
 
 	/**

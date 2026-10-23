@@ -1,7 +1,7 @@
 import path from 'node:path/posix';
 import SftpClient from 'ssh2-sftp-client';
 import { readFile } from 'node:fs/promises';
-import { required } from '../util.js';
+import { pool, required } from '../util.js';
 import { DeployError, type Provider } from '../types.js';
 
 export interface SftpConfig {
@@ -43,7 +43,7 @@ export const sftp: Provider<SftpConfig> = {
       await client.end().catch(() => undefined);
     }
   },
-  async deploy({ changed, deleted, config, log }) {
+  async deploy({ changed, deleted, config, concurrency, log }) {
     const client = new SftpClient();
     await client.connect({
       host: config.host,
@@ -55,15 +55,16 @@ export const sftp: Provider<SftpConfig> = {
     });
     try {
       const root = config.folder.replace(/\/+$/, '') || '/';
-      const made = new Set<string>();
+
+      // Create every needed directory once, up front, so uploads can run in parallel without racing on mkdir.
+      const dirs = new Set<string>();
+      for (const f of changed) dirs.add(path.dirname(path.join(root, f.path)));
+      for (const dir of [...dirs].sort()) await client.mkdir(dir, true);
+
+      // The SFTP protocol pipelines requests on one connection, so several uploads in flight are much faster than one.
       let done = 0;
-      for (const f of changed) {
+      await pool(changed, Math.min(concurrency, 8), async (f) => {
         const remote = path.join(root, f.path);
-        const dir = path.dirname(remote);
-        if (!made.has(dir)) {
-          await client.mkdir(dir, true);
-          made.add(dir);
-        }
         // Upload to a temp name then rename so visitors never see a half-written file.
         const tmp = `${remote}.part`;
         await client.put(await readFile(f.abs), tmp);
@@ -72,7 +73,7 @@ export const sftp: Provider<SftpConfig> = {
           await client.rename(tmp, remote);
         });
         log.progress(++done, changed.length, 'files');
-      }
+      });
       for (const p of deleted) await client.delete(path.join(root, p)).catch(() => undefined);
       return { uploaded: changed.length, deleted: deleted.length, message: `Uploaded to ${config.host}:${root}` };
     } finally {
