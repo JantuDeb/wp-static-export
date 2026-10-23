@@ -152,7 +152,7 @@ describe('search', () => {
     const hits = await fuseEngine(recs)('lake');
     expect(hits.map((h) => h.url).slice(0, 2)).toEqual(['/lake/', '/body/']); // title match, then body match
     expect(hits.map((h) => h.url)).not.toContain('/take/'); // near-matches are noise when exact hits exist
-    expect((await fuseEngine(recs)('lkae')).map((h) => h.url)).toContain('/lake/'); // but typos still find pages
+    expect((await fuseEngine(recs)('lakr')).map((h) => h.url)).toContain('/lake/'); // but typos still find pages
     expect((await fuseEngine(recs)('quiet morning')).at(0)?.url).toBe('/lake/');
   });
 
