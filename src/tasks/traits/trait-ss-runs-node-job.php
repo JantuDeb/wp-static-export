@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 /**
  * Starts a Node deployer job on the first call and polls it on later calls.
@@ -74,7 +74,7 @@ trait runsNodeJob {
 		$this->options->set( $option_key, null )->save();
 
 		if ( 0 !== $polled['exit_code'] || null !== $error ) {
-			return new \WP_Error( 'ss_node_job_failed', $error ?: __( 'unknown error', 'simply-static' ) );
+			return new \WP_Error( 'ss_node_job_failed', $error ?: __( 'unknown error', 'wp-static-export' ) );
 		}
 
 		return array(

@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 class Migrate_Settings {
 	/**
@@ -8,7 +8,7 @@ class Migrate_Settings {
 	 *
 	 */
 	public static function migrate() {
-		$options = get_option( 'simply-static' );
+		$options = get_option( 'wp-static-export' );
 		$options = is_array( $options ) ? $options : array();
 
 		if ( isset( $options['debugging_mode'] ) && $options['debugging_mode'] == '1' ) {
@@ -280,9 +280,9 @@ class Migrate_Settings {
 		$options['server_cron'] = false;
 
 		// Set version for upgrade.
-		$options['version'] = SIMPLY_STATIC_VERSION;
+		$options['version'] = WPSE_VERSION;
 
-		update_option( 'simply-static', $options );
+		update_option( 'wp-static-export', $options );
 
 		// Table validation.
 		Page::create_or_update_table();

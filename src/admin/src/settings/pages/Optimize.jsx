@@ -58,7 +58,7 @@ function Optimize() {
     const restoreBackups = () => {
         setShortPixelResetting(true);
         apiFetch({
-            path: '/simplystatic/v1/shortpixel-restore',
+            path: '/wp-static-export/v1/shortpixel-restore',
             method: 'POST',
         }).then(resp => {
             const json = JSON.parse(resp);
@@ -139,24 +139,24 @@ function Optimize() {
             <CardHeader>
                 <Flex>
                     <FlexItem>
-                        <b>{__('Minify & Aggregation', 'simply-static')}</b>
+                        <b>{__('Minify & Aggregation', 'wp-static-export')}</b>
                     </FlexItem>
                     {('free' === options.plan || !isPro()) &&
                         <FlexItem>
-                            <a href="admin.php?page=simply-static-features">{__('Configure in Deploy & Features', 'simply-static')}</a>
+                            <a href="admin.php?page=wp-static-export-features">{__('Configure in Deploy & Features', 'wp-static-export')}</a>
                         </FlexItem>
                     }
                 </Flex>
             </CardHeader>
             <CardBody>
-                <p>{__('Minify and aggregate CSS, JavaScript, and HTML files to reduce file sizes and HTTP requests for faster page loads.', 'simply-static')}</p>
+                <p>{__('Minify and aggregate CSS, JavaScript, and HTML files to reduce file sizes and HTTP requests for faster page loads.', 'wp-static-export')}</p>
                 <ToggleControl
-                    label={__('Enable Minify & Aggregation?', 'simply-static')}
+                    label={__('Enable Minify & Aggregation?', 'wp-static-export')}
                     __nextHasNoMarginBottom
                     help={
                         minifyFiles
-                            ? __('Minify and aggregate files on your static website.', 'simply-static')
-                            : __('Don\'t minify or aggregate files on your static website.', 'simply-static')
+                            ? __('Minify and aggregate files on your static website.', 'wp-static-export')
+                            : __('Don\'t minify or aggregate files on your static website.', 'wp-static-export')
                     }
                     disabled={('free' === options.plan || !isPro())}
                     checked={minifyFiles}
@@ -168,15 +168,15 @@ function Optimize() {
 
                 {minifyFiles &&
                     <>
-                        <h4 style={{marginTop: '16px', marginBottom: '8px'}}>{__('Minify', 'simply-static')}</h4>
+                        <h4 style={{marginTop: '16px', marginBottom: '8px'}}>{__('Minify', 'wp-static-export')}</h4>
 
                         <ToggleControl
-                            label={__('Minify CSS', 'simply-static')}
+                            label={__('Minify CSS', 'wp-static-export')}
                             __nextHasNoMarginBottom
                             help={
                                 minifyCss
-                                    ? __('Minify CSS files.', 'simply-static')
-                                    : __('Don\'t minify CSS files.', 'simply-static')
+                                    ? __('Minify CSS files.', 'wp-static-export')
+                                    : __('Don\'t minify CSS files.', 'wp-static-export')
                             }
                             disabled={isStudio() || 'free' === options.plan || !isPro()}
                             checked={minifyCss}
@@ -187,9 +187,9 @@ function Optimize() {
                         />
                         {minifyCss && <>
                             <TextareaControl
-                                label={__('Exclude Stylesheet URLs', 'simply-static')}
+                                label={__('Exclude Stylesheet URLs', 'wp-static-export')}
                                 __nextHasNoMarginBottom
-                                help={__('Exclude URLs from minification (one per line).', 'simply-static')}
+                                help={__('Exclude URLs from minification (one per line).', 'wp-static-export')}
                                 disabled={isStudio() || 'free' === options.plan || !isPro()}
                                 value={settings.minify_css_exclude}
                                 onChange={(excludes) => {
@@ -199,12 +199,12 @@ function Optimize() {
                         </>}
 
                         <ToggleControl
-                            label={__('Minify JavaScript', 'simply-static')}
+                            label={__('Minify JavaScript', 'wp-static-export')}
                             __nextHasNoMarginBottom
                             help={
                                 minifyJavascript
-                                    ? __('Minify JavaScript files.', 'simply-static')
-                                    : __('Don\'t minify JavaScript files.', 'simply-static')
+                                    ? __('Minify JavaScript files.', 'wp-static-export')
+                                    : __('Don\'t minify JavaScript files.', 'wp-static-export')
                             }
                             disabled={isStudio() || 'free' === options.plan || !isPro()}
                             checked={minifyJavascript}
@@ -215,9 +215,9 @@ function Optimize() {
                         />
                         {minifyJavascript && <>
                             <TextareaControl
-                                label={__('Exclude JavaScript URLs', 'simply-static')}
+                                label={__('Exclude JavaScript URLs', 'wp-static-export')}
                                 __nextHasNoMarginBottom
-                                help={__('Exclude URLs from minification (one per line).', 'simply-static')}
+                                help={__('Exclude URLs from minification (one per line).', 'wp-static-export')}
                                 disabled={isStudio() || 'free' === options.plan || !isPro()}
                                 value={settings.minify_js_exclude}
                                 onChange={(excludes) => {
@@ -227,9 +227,9 @@ function Optimize() {
                         </>}
 
                         <ToggleControl
-                            label={__('Protect jQuery Globals', 'simply-static')}
+                            label={__('Protect jQuery Globals', 'wp-static-export')}
                             __nextHasNoMarginBottom
-                            help={__('Prevent mangling of jQuery, $, and wp global variables during JS minification.', 'simply-static')}
+                            help={__('Prevent mangling of jQuery, $, and wp global variables during JS minification.', 'wp-static-export')}
                             disabled={isStudio() || 'free' === options.plan || !isPro()}
                             checked={cssJsAggregateProtectJquery}
                             onChange={(value) => {
@@ -238,12 +238,12 @@ function Optimize() {
                             }}
                         />
 
-                        <h4 style={{marginTop: '16px', marginBottom: '8px'}}>{__('Aggregate', 'simply-static')}</h4>
+                        <h4 style={{marginTop: '16px', marginBottom: '8px'}}>{__('Aggregate', 'wp-static-export')}</h4>
 
                         <ToggleControl
-                            label={__('Aggregate CSS', 'simply-static')}
+                            label={__('Aggregate CSS', 'wp-static-export')}
                             __nextHasNoMarginBottom
-                            help={__('Combine multiple CSS files into fewer bundles grouped by media attribute and deferral status.', 'simply-static')}
+                            help={__('Combine multiple CSS files into fewer bundles grouped by media attribute and deferral status.', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             checked={cssJsAggregateCss}
                             onChange={(value) => {
@@ -253,9 +253,9 @@ function Optimize() {
                         />
 
                         <ToggleControl
-                            label={__('Aggregate JavaScript', 'simply-static')}
+                            label={__('Aggregate JavaScript', 'wp-static-export')}
                             __nextHasNoMarginBottom
-                            help={__('Combine multiple JS files into fewer bundles grouped by loading attributes (defer, async, delayed) and position (head/body).', 'simply-static')}
+                            help={__('Combine multiple JS files into fewer bundles grouped by loading attributes (defer, async, delayed) and position (head/body).', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             checked={cssJsAggregateJs}
                             onChange={(value) => {
@@ -265,9 +265,9 @@ function Optimize() {
                         />
 
                         <TextareaControl
-                            label={__('Exclude Patterns', 'simply-static')}
+                            label={__('Exclude Patterns', 'wp-static-export')}
                             __nextHasNoMarginBottom
-                            help={__('Glob patterns for files to exclude from aggregation (one per line). Use this for scripts that break when concatenated, such as Google Maps init scripts, payment gateway SDKs, or scripts using document.write().', 'simply-static')}
+                            help={__('Glob patterns for files to exclude from aggregation (one per line). Use this for scripts that break when concatenated, such as Google Maps init scripts, payment gateway SDKs, or scripts using document.write().', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             value={settings.css_js_aggregate_exclude_patterns}
                             placeholder={'*maps*\n*stripe*\n*paypal*'}
@@ -285,24 +285,24 @@ function Optimize() {
             <CardHeader>
                 <Flex>
                     <FlexItem>
-                        <b>{__('Defer & Delay', 'simply-static')}</b>
+                        <b>{__('Defer & Delay', 'wp-static-export')}</b>
                     </FlexItem>
                     {('free' === options.plan || !isPro()) &&
                         <FlexItem>
-                            <a href="admin.php?page=simply-static-features">{__('Configure in Deploy & Features', 'simply-static')}</a>
+                            <a href="admin.php?page=wp-static-export-features">{__('Configure in Deploy & Features', 'wp-static-export')}</a>
                         </FlexItem>
                     }
                 </Flex>
             </CardHeader>
             <CardBody>
-                <p>{__('Eliminate render-blocking CSS and JavaScript resources to improve Lighthouse scores and page load speed.', 'simply-static')}</p>
+                <p>{__('Eliminate render-blocking CSS and JavaScript resources to improve Lighthouse scores and page load speed.', 'wp-static-export')}</p>
                 <ToggleControl
-                    label={__('Enable Defer & Delay?', 'simply-static')}
+                    label={__('Enable Defer & Delay?', 'wp-static-export')}
                     __nextHasNoMarginBottom
                     help={
                         cssOptimize
-                            ? __('Optimize render-blocking resources during static export.', 'simply-static')
-                            : __('Don\'t optimize render-blocking resources.', 'simply-static')
+                            ? __('Optimize render-blocking resources during static export.', 'wp-static-export')
+                            : __('Don\'t optimize render-blocking resources.', 'wp-static-export')
                     }
                     disabled={('free' === options.plan || !isPro())}
                     checked={cssOptimize}
@@ -315,9 +315,9 @@ function Optimize() {
                 {cssOptimize &&
                     <>
                         <ToggleControl
-                            label={__('Defer Non-Critical CSS', 'simply-static')}
+                            label={__('Defer Non-Critical CSS', 'wp-static-export')}
                             __nextHasNoMarginBottom
-                            help={__('Convert non-critical stylesheets to load asynchronously using the media="print" pattern.', 'simply-static')}
+                            help={__('Convert non-critical stylesheets to load asynchronously using the media="print" pattern.', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             checked={cssOptimizeDeferCss}
                             onChange={(value) => {
@@ -328,9 +328,9 @@ function Optimize() {
 
                         {cssOptimizeDeferCss && <>
                             <TextareaControl
-                                label={__('Critical CSS Patterns', 'simply-static')}
+                                label={__('Critical CSS Patterns', 'wp-static-export')}
                                 __nextHasNoMarginBottom
-                                help={__('Glob patterns for stylesheets that must remain render-blocking (one per line). Default: */style.css, */styles.css, */global.css, */theme*.css, */wp-block-*.css', 'simply-static')}
+                                help={__('Glob patterns for stylesheets that must remain render-blocking (one per line). Default: */style.css, */styles.css, */global.css, */theme*.css, */wp-block-*.css', 'wp-static-export')}
                                 disabled={('free' === options.plan || !isPro())}
                                 value={settings.css_optimize_critical_patterns}
                                 placeholder={'*/style.css\n*/styles.css\n*/global.css\n*/theme*.css\n*/wp-block-*.css'}
@@ -341,9 +341,9 @@ function Optimize() {
                         </>}
 
                         <ToggleControl
-                            label={__('Defer Synchronous Scripts', 'simply-static')}
+                            label={__('Defer Synchronous Scripts', 'wp-static-export')}
                             __nextHasNoMarginBottom
-                            help={__('Add the defer attribute to render-blocking scripts. Preserves execution order (safe for jQuery dependencies).', 'simply-static')}
+                            help={__('Add the defer attribute to render-blocking scripts. Preserves execution order (safe for jQuery dependencies).', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             checked={cssOptimizeDeferJs}
                             onChange={(value) => {
@@ -354,9 +354,9 @@ function Optimize() {
 
                         {cssOptimizeDeferJs && <>
                             <TextareaControl
-                                label={__('Defer Exclude Patterns', 'simply-static')}
+                                label={__('Defer Exclude Patterns', 'wp-static-export')}
                                 __nextHasNoMarginBottom
-                                help={__('Additional glob patterns for scripts to exclude from deferral (one per line). Built-in patterns already exclude WordPress core scripts: jQuery, wp-i18n, wp-hooks, wp-url, wp-api-fetch, and wp-api.', 'simply-static')}
+                                help={__('Additional glob patterns for scripts to exclude from deferral (one per line). Built-in patterns already exclude WordPress core scripts: jQuery, wp-i18n, wp-hooks, wp-url, wp-api-fetch, and wp-api.', 'wp-static-export')}
                                 disabled={('free' === options.plan || !isPro())}
                                 value={settings.css_optimize_defer_js_excludes}
                                 placeholder={'*my-critical-script.js*\n*another-script*'}
@@ -367,9 +367,9 @@ function Optimize() {
                         </>}
 
                         <ToggleControl
-                            label={__('Optimize Google Fonts', 'simply-static')}
+                            label={__('Optimize Google Fonts', 'wp-static-export')}
                             __nextHasNoMarginBottom
-                            help={__('Preload Google Fonts stylesheets, inject the Google Fonts preconnect hint, and add display=swap for faster font loading.', 'simply-static')}
+                            help={__('Preload Google Fonts stylesheets, inject the Google Fonts preconnect hint, and add display=swap for faster font loading.', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             checked={cssOptimizeGoogleFonts}
                             onChange={(value) => {
@@ -379,9 +379,9 @@ function Optimize() {
                         />
 
                         <ToggleControl
-                            label={__('Add Preconnect Hints', 'simply-static')}
+                            label={__('Add Preconnect Hints', 'wp-static-export')}
                             __nextHasNoMarginBottom
-                            help={__('Add preconnect resource hints for high-value third-party font, icon, script, and image origins found in exported pages.', 'simply-static')}
+                            help={__('Add preconnect resource hints for high-value third-party font, icon, script, and image origins found in exported pages.', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             checked={cssOptimizePreconnectHints}
                             onChange={(value) => {
@@ -391,9 +391,9 @@ function Optimize() {
                         />
 
                         <ToggleControl
-                            label={__('Delay Non-Critical JavaScript', 'simply-static')}
+                            label={__('Delay Non-Critical JavaScript', 'wp-static-export')}
                             __nextHasNoMarginBottom
-                            help={__('Delay third-party scripts (analytics, tag managers, tracking pixels) until user interaction to reduce Total Blocking Time. Scripts load on first click, scroll, or keypress.', 'simply-static')}
+                            help={__('Delay third-party scripts (analytics, tag managers, tracking pixels) until user interaction to reduce Total Blocking Time. Scripts load on first click, scroll, or keypress.', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             checked={cssOptimizeDelayJs}
                             onChange={(value) => {
@@ -404,9 +404,9 @@ function Optimize() {
 
                         {cssOptimizeDelayJs && <>
                             <TextareaControl
-                                label={__('Additional Delay Patterns', 'simply-static')}
+                                label={__('Additional Delay Patterns', 'wp-static-export')}
                                 __nextHasNoMarginBottom
-                                help={__('Additional glob patterns for scripts to delay (one per line). Built-in patterns already cover Google (Tag Manager, Analytics, Ads, reCAPTCHA), HubSpot, Facebook/Meta Pixel, Hotjar, Clarity, Bing UET, Cloudflare (Insights, Turnstile), CleanTalk, Matomo/Piwik, Plausible, Twitter/X, LinkedIn, Pinterest, Tawk.to, Crisp, LiveChat, Intercom, Drift, Tidio, Segment, Amplitude, Mixpanel, Optimizely, Mouseflow, Lucky Orange, Crazy Egg, FullStory, LogRocket, and Sentry.', 'simply-static')}
+                                help={__('Additional glob patterns for scripts to delay (one per line). Built-in patterns already cover Google (Tag Manager, Analytics, Ads, reCAPTCHA), HubSpot, Facebook/Meta Pixel, Hotjar, Clarity, Bing UET, Cloudflare (Insights, Turnstile), CleanTalk, Matomo/Piwik, Plausible, Twitter/X, LinkedIn, Pinterest, Tawk.to, Crisp, LiveChat, Intercom, Drift, Tidio, Segment, Amplitude, Mixpanel, Optimizely, Mouseflow, Lucky Orange, Crazy Egg, FullStory, LogRocket, and Sentry.', 'wp-static-export')}
                                 disabled={('free' === options.plan || !isPro())}
                                 value={settings.css_optimize_delay_js_patterns}
                                 placeholder={'*example-tracking.com*\n*custom-analytics*'}
@@ -415,9 +415,9 @@ function Optimize() {
                                 }}
                             />
                             <TextareaControl
-                                label={__('Delay Exclude Patterns', 'simply-static')}
+                                label={__('Delay Exclude Patterns', 'wp-static-export')}
                                 __nextHasNoMarginBottom
-                                help={__('Glob patterns for scripts that must run without WP Static Export\'s interaction delay (one per line). Patterns match script URLs, element IDs, and inline script content. You can also add data-ssp-no-delay to a script tag. Exclusions do not override your consent manager.', 'simply-static')}
+                                help={__('Glob patterns for scripts that must run without WP Static Export\'s interaction delay (one per line). Patterns match script URLs, element IDs, and inline script content. You can also add data-ssp-no-delay to a script tag. Exclusions do not override your consent manager.', 'wp-static-export')}
                                 disabled={('free' === options.plan || !isPro())}
                                 value={settings.css_optimize_delay_js_excludes || ''}
                                 placeholder={'*googletagmanager.com*\ngtm-bootstrap'}
@@ -426,13 +426,13 @@ function Optimize() {
                                 }}
                             />
                             <TextControl
-                                label={__('Delay Fallback Timeout (seconds)', 'simply-static')}
+                                label={__('Delay Fallback Timeout (seconds)', 'wp-static-export')}
                                 type="number"
                                 min="0"
                                 max="60"
                                 __next40pxDefaultSize
                                 __nextHasNoMarginBottom
-                                help={__('Release delayed scripts after this many seconds if there is no user interaction. Use 0 to release them immediately.', 'simply-static')}
+                                help={__('Release delayed scripts after this many seconds if there is no user interaction. Use 0 to release them immediately.', 'wp-static-export')}
                                 disabled={('free' === options.plan || !isPro())}
                                 value={settings.css_optimize_delay_js_timeout ?? 10}
                                 onChange={(timeout) => {
@@ -449,23 +449,23 @@ function Optimize() {
             <CardHeader>
                 <Flex>
                     <FlexItem>
-                        <b>{__('Image Optimization', 'simply-static')}</b>
+                        <b>{__('Image Optimization', 'wp-static-export')}</b>
                     </FlexItem>
                     {('free' === options.plan || !isPro()) &&
                         <FlexItem>
-                            <a href="admin.php?page=simply-static-features">{__('Configure in Deploy & Features', 'simply-static')}</a>
+                            <a href="admin.php?page=wp-static-export-features">{__('Configure in Deploy & Features', 'wp-static-export')}</a>
                         </FlexItem>
                     }
                 </Flex>
             </CardHeader>
             <CardBody>
                 <ToggleControl
-                    label={__('Optimize Images with ShortPixel?', 'simply-static')}
+                    label={__('Optimize Images with ShortPixel?', 'wp-static-export')}
                     __nextHasNoMarginBottom
                     help={
                         settings.shortpixel_enabled
-                            ? __('Optimize images with the ShortPixel API.', 'simply-static')
-                            : __('Don\'t optimize images with the ShortPixel API.', 'simply-static')
+                            ? __('Optimize images with the ShortPixel API.', 'wp-static-export')
+                            : __('Don\'t optimize images with the ShortPixel API.', 'wp-static-export')
                     }
                     disabled={isStudio() || 'free' === options.plan || !isPro()}
                     checked={!!settings.shortpixel_enabled}
@@ -476,7 +476,7 @@ function Optimize() {
 
                 {settings.shortpixel_enabled && <>
                     <TextControl
-                        label={__('ShortPixel API Key', 'simply-static')}
+                        label={__('ShortPixel API Key', 'wp-static-export')}
                         type={"password"}
                         __next40pxDefaultSize
                         __nextHasNoMarginBottom
@@ -487,12 +487,12 @@ function Optimize() {
                         }}
                     />
                     <ToggleControl
-                        label={__('Convert to WebP', 'simply-static')}
+                        label={__('Convert to WebP', 'wp-static-export')}
                         __nextHasNoMarginBottom
                         help={
                             settings.shortpixel_webp_enabled
-                                ? __('Convert images to WebP format.', 'simply-static')
-                                : __('Don\'t convert images to WebP format.', 'simply-static')
+                                ? __('Convert images to WebP format.', 'wp-static-export')
+                                : __('Don\'t convert images to WebP format.', 'wp-static-export')
                         }
                         checked={!!settings.shortpixel_webp_enabled}
                         disabled={isStudio() || 'free' === options.plan || !isPro()}
@@ -501,12 +501,12 @@ function Optimize() {
                         }}
                     />
                     <ToggleControl
-                        label={__('Backup the original images?', 'simply-static')}
+                        label={__('Backup the original images?', 'wp-static-export')}
                         __nextHasNoMarginBottom
                         help={
                             settings.shortpixel_backup_enabled
-                                ? __('Back original images.', 'simply-static')
-                                : __('Don\'t backup original images.', 'simply-static')
+                                ? __('Back original images.', 'wp-static-export')
+                                : __('Don\'t backup original images.', 'wp-static-export')
                         }
                         checked={!!settings.shortpixel_backup_enabled}
                         disabled={isStudio() || 'free' === options.plan || !isPro()}
@@ -516,15 +516,15 @@ function Optimize() {
                     />
                     {settings.shortpixel_backup_enabled && <>
                         <Notice status={'warning'} isDismissible={false}>
-                            {__('It will preserve every image which might increase your disk space usage.', 'simply-static')}
+                            {__('It will preserve every image which might increase your disk space usage.', 'wp-static-export')}
                         </Notice>
                         <Spacer padding={1}></Spacer>
                         <Button disabled={isStudio() || shortPixelResetting} onClick={restoreBackups}
                                 variant="secondary">
-                            {!shortPixelResetting && __('Restore Original Images', 'simply-static')}
+                            {!shortPixelResetting && __('Restore Original Images', 'wp-static-export')}
                             {shortPixelResetting && [
                                 <Dashicon icon="update spin"/>,
-                                __('Restoring...', 'simply-static')
+                                __('Restoring...', 'wp-static-export')
                             ]}
                         </Button>
                     </>}
@@ -536,19 +536,19 @@ function Optimize() {
                 <CardHeader>
                     <Flex>
                         <FlexItem>
-                            <b>{__('Critical CSS', 'simply-static')}</b>
+                            <b>{__('Critical CSS', 'wp-static-export')}</b>
                         </FlexItem>
                     </Flex>
                 </CardHeader>
                 <CardBody>
-                    <p>{__('Generate critical above-the-fold CSS to eliminate render-blocking stylesheets and improve page load speed. Critical CSS is generated for the homepage and injected into every page.', 'simply-static')}</p>
+                    <p>{__('Generate critical above-the-fold CSS to eliminate render-blocking stylesheets and improve page load speed. Critical CSS is generated for the homepage and injected into every page.', 'wp-static-export')}</p>
                     <ToggleControl
-                        label={__('Enable Critical CSS Generation?', 'simply-static')}
+                        label={__('Enable Critical CSS Generation?', 'wp-static-export')}
                         __nextHasNoMarginBottom
                         help={
                             criticalCss
-                                ? __('Critical CSS will be generated during static export.', 'simply-static')
-                                : __('Don\'t generate critical CSS.', 'simply-static')
+                                ? __('Critical CSS will be generated during static export.', 'wp-static-export')
+                                : __('Don\'t generate critical CSS.', 'wp-static-export')
                         }
                         disabled={!isStudio()}
                         checked={criticalCss}
@@ -560,9 +560,9 @@ function Optimize() {
 
                     {criticalCss && <>
                         <TextareaControl
-                            label={__('Additional URLs', 'simply-static')}
+                            label={__('Additional URLs', 'wp-static-export')}
                             __nextHasNoMarginBottom
-                            help={__('By default, critical CSS is generated from the homepage only. Add additional page URLs here (one per line) if those pages have significantly different styles.', 'simply-static')}
+                            help={__('By default, critical CSS is generated from the homepage only. Add additional page URLs here (one per line) if those pages have significantly different styles.', 'wp-static-export')}
                             disabled={!isStudio()}
                             value={settings.critical_css_additional_urls}
                             placeholder={'https://example.com/about\nhttps://example.com/contact'}
@@ -571,9 +571,9 @@ function Optimize() {
                             }}
                         />
                         <TextareaControl
-                            label={__('Custom CSS', 'simply-static')}
+                            label={__('Custom CSS', 'wp-static-export')}
                             __nextHasNoMarginBottom
-                            help={__('Add custom CSS that will be appended to the generated critical CSS. Use this to fix minor visual glitches.', 'simply-static')}
+                            help={__('Add custom CSS that will be appended to the generated critical CSS. Use this to fix minor visual glitches.', 'wp-static-export')}
                             disabled={!isStudio()}
                             value={settings.critical_css_custom}
                             placeholder={'.header { position: sticky; top: 0; }'}
@@ -589,23 +589,23 @@ function Optimize() {
             <CardHeader>
                 <Flex>
                     <FlexItem>
-                        <b>{__('Versioning', 'simply-static')}</b>
+                        <b>{__('Versioning', 'wp-static-export')}</b>
                     </FlexItem>
                     {('free' === options.plan || !isPro()) &&
                         <FlexItem>
-                            <a href="admin.php?page=simply-static-features">{__('Configure in Deploy & Features', 'simply-static')}</a>
+                            <a href="admin.php?page=wp-static-export-features">{__('Configure in Deploy & Features', 'wp-static-export')}</a>
                         </FlexItem>
                     }
                 </Flex>
             </CardHeader>
             <CardBody>
                 <ToggleControl
-                    label={__('Version CSS?', 'simply-static')}
+                    label={__('Version CSS?', 'wp-static-export')}
                     __nextHasNoMarginBottom
                     help={
                         versionCss
-                            ? __('Appends a version query string to CSS files.', 'simply-static')
-                            : __('Don\'t append a version query string to CSS files.', 'simply-static')
+                            ? __('Appends a version query string to CSS files.', 'wp-static-export')
+                            : __('Don\'t append a version query string to CSS files.', 'wp-static-export')
                     }
                     disabled={('free' === options.plan || !isPro())}
                     checked={versionCss}
@@ -615,12 +615,12 @@ function Optimize() {
                     }}
                 />
                 <ToggleControl
-                    label={__('Version JavaScript?', 'simply-static')}
+                    label={__('Version JavaScript?', 'wp-static-export')}
                     __nextHasNoMarginBottom
                     help={
                         versionJs
-                            ? __('Appends a version query string to JavaScript files.', 'simply-static')
-                            : __('Don\'t append a version query string to JavaScript files.', 'simply-static')
+                            ? __('Appends a version query string to JavaScript files.', 'wp-static-export')
+                            : __('Don\'t append a version query string to JavaScript files.', 'wp-static-export')
                     }
                     disabled={('free' === options.plan || !isPro())}
                     checked={versionJs}
@@ -638,7 +638,7 @@ function Optimize() {
                     {() => (
                         <Notice status="success" isDismissible={false}>
                             <p>
-                                {__('Settings saved successfully.', 'simply-static')}
+                                {__('Settings saved successfully.', 'wp-static-export')}
                             </p>
                         </Notice>
                     )}
@@ -649,7 +649,7 @@ function Optimize() {
         <div className={"save-settings"}>
             {'pro' === options.plan && isPro() &&
                 <Button onClick={setSavingSettings}
-                        variant="primary">{__('Save Settings', 'simply-static')}</Button>
+                        variant="primary">{__('Save Settings', 'wp-static-export')}</Button>
             }
         </div>
     </div>)

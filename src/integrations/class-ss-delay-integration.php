@@ -1,5 +1,5 @@
 <?php
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 class Delay_Integration extends Integration {
 
@@ -8,14 +8,14 @@ class Delay_Integration extends Integration {
 	protected $always_active = true;
 
 	public function __construct() {
-		$this->name = __( 'Delay', 'simply-static' );
-		$this->description = __( 'Adds a delay to the static site generation.', 'simply-static' );
+		$this->name = __( 'Delay', 'wp-static-export' );
+		$this->description = __( 'Adds a delay to the static site generation.', 'wp-static-export' );
 	}
 
 	/**
 	 * Disabled by default.
 	 *
-	 * Set add_filter( 'simply_static_integration_delay_enabled', true ); to enable it.
+	 * Set add_filter( 'wpse_integration_delay_enabled', true ); to enable it.
 	 *
 	 * @return false
 	 */
@@ -29,9 +29,9 @@ class Delay_Integration extends Integration {
 	 * @return void
 	 */
 	public function run() {
-		add_action( 'ss_after_cleanup', [ $this, 'set_delayed' ] );
-		add_action( 'ss_before_perform_archive_action', [ $this, 'check_delayed' ], 10, 2 );
-		add_filter( 'ss_is_running_statuses', [ $this, 'add_delayed_status' ] );
+		add_action( 'wpse_after_cleanup', [ $this, 'set_delayed' ] );
+		add_action( 'wpse_before_perform_archive_action', [ $this, 'check_delayed' ], 10, 2 );
+		add_filter( 'wpse_is_running_statuses', [ $this, 'add_delayed_status' ] );
 	}
 
 	public function add_delayed_status( $statuses ) {
@@ -68,7 +68,7 @@ class Delay_Integration extends Integration {
 					'You can export again in about %s second',
 					'You can export again in about %s seconds',
 					$left,
-					'simply-static'
+					'wp-static-export'
 				),
 				$left
 			)
@@ -84,7 +84,7 @@ class Delay_Integration extends Integration {
 	 * @return void
 	 */
 	public function set_delayed( $delay = 60 ) {
-		update_option( 'simply_static_delayed_until', time() + intval($delay) );
+		update_option( 'wpse_delayed_until', time() + intval($delay) );
 	}
 
 	/**
@@ -93,12 +93,12 @@ class Delay_Integration extends Integration {
 	 * @return bool
 	 */
 	public function is_delayed() {
-		$delayed = get_option( 'simply_static_delayed_until', null );
+		$delayed = get_option( 'wpse_delayed_until', null );
 
 		return $delayed && $delayed > time();
 	}
 
 	public function get_delayed_time() {
-		return get_option( 'simply_static_delayed_until', null );
+		return get_option( 'wpse_delayed_until', null );
 	}
 }

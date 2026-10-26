@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Support;
+namespace WP_Static_Export\Tests\Support;
 
 use PHPUnit\Framework\TestCase;
 
@@ -12,14 +12,14 @@ abstract class UnitTestCase extends TestCase {
 		parent::setUp();
 		WpTestEnvironment::reset();
 
-		if ( class_exists( '\\Simply_Static\\Options', false ) ) {
-			\Simply_Static\Options::reinstance();
+		if ( class_exists( '\\WP_Static_Export\\Options', false ) ) {
+			\WP_Static_Export\Options::reinstance();
 		}
 	}
 
 	protected function tearDown(): void {
-		if ( class_exists( '\\Simply_Static\\Options', false ) ) {
-			\Simply_Static\Options::reinstance();
+		if ( class_exists( '\\WP_Static_Export\\Options', false ) ) {
+			\WP_Static_Export\Options::reinstance();
 		}
 
 		parent::tearDown();

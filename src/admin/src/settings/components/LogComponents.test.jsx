@@ -351,7 +351,7 @@ describe( 'ExportLog', () => {
 
 	it( 'renders notes inertly and links only safe HTTP URLs', async () => {
 		apiFetch.mockImplementation( ( { path } ) => {
-			if ( path === '/simplystatic/v1/export-type' ) {
+			if ( path === '/wp-static-export/v1/export-type' ) {
 				return Promise.resolve(
 					JSON.stringify( {
 						status: 200,
@@ -400,7 +400,7 @@ describe( 'ExportLog', () => {
 	it( 'uses the newly selected page size in state and in the request', async () => {
 		const exportPaths = [];
 		apiFetch.mockImplementation( ( { path } ) => {
-			if ( path === '/simplystatic/v1/export-type' ) {
+			if ( path === '/wp-static-export/v1/export-type' ) {
 				return Promise.resolve(
 					JSON.stringify( {
 						status: 200,
@@ -438,7 +438,7 @@ describe( 'ExportLog', () => {
 		let resolveOldSearch;
 
 		apiFetch.mockImplementation( ( request ) => {
-			if ( request.path === '/simplystatic/v1/export-type' ) {
+			if ( request.path === '/wp-static-export/v1/export-type' ) {
 				return Promise.resolve(
 					JSON.stringify( {
 						status: 200,

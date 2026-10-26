@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 use Exception;
 use DOMDocument;
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * WP Static Export URL extractor class
  *
  * Note that in addition to extracting URLs this class also makes modifications
- * to the Simply_Static\Url_Response that is passed into it: URLs in the body of
+ * to the WP_Static_Export\Url_Response that is passed into it: URLs in the body of
  * the response are updated to be absolute URLs.
  */
 class Url_Extractor {
@@ -103,13 +103,13 @@ class Url_Extractor {
 
 	/**
 	 * The static page to extract URLs from
-	 * @var \Simply_Static\Page
+	 * @var \WP_Static_Export\Page
 	 */
 	protected $static_page;
 
 	/**
 	 * An instance of the options structure containing all options for this plugin
-	 * @var \Simply_Static\Options
+	 * @var \WP_Static_Export\Options
 	 */
 	protected $options = null;
 
@@ -182,7 +182,7 @@ class Url_Extractor {
 	/**
 	 * Constructor
 	 *
-	 * @param string $static_page Simply_Static\Page to extract URLs from
+	 * @param string $static_page WP_Static_Export\Page to extract URLs from
 	 */
 	public function __construct( $static_page ) {
 		$this->static_page = $static_page;
@@ -213,7 +213,7 @@ class Url_Extractor {
 	/**
 	 * Save a string back to our file (e.g. after having updated URLs)
 	 *
-	 * @param string $static_page Simply_Static\Page to extract URLs from
+	 * @param string $static_page WP_Static_Export\Page to extract URLs from
 	 *
 	 * @return int|false
 	 */
@@ -224,7 +224,7 @@ class Url_Extractor {
 			$content = '';
 		}
 
-		$content = apply_filters( 'simply_static_content_before_save', $content, $this );
+		$content = apply_filters( 'wpse_content_before_save', $content, $this );
 
 		// Guard against filters returning null (e.g. due to PCRE backtrack/recursion limit errors).
 		if ( null === $content ) {
@@ -260,7 +260,7 @@ class Url_Extractor {
 	/**
 	 * Get the Static Page.
 	 *
-	 * @return \Simply_Static\Page|string
+	 * @return \WP_Static_Export\Page|string
 	 */
 	public function get_static_page() {
 		return $this->static_page;
@@ -288,14 +288,14 @@ class Url_Extractor {
 		$register_source_origins     = ! empty( $replacement_source_origins );
 
 		if ( $register_source_origins ) {
-			add_filter( 'ss_local_url_bases', array( $this, 'add_active_source_origin_to_local_url_bases' ) );
+			add_filter( 'wpse_local_url_bases', array( $this, 'add_active_source_origin_to_local_url_bases' ) );
 		}
 
 		try {
 			return $this->extract_and_update_urls_for_source_origins( $replacement_source_origins );
 		} finally {
 			if ( $register_source_origins ) {
-				remove_filter( 'ss_local_url_bases', array( $this, 'add_active_source_origin_to_local_url_bases' ) );
+				remove_filter( 'wpse_local_url_bases', array( $this, 'add_active_source_origin_to_local_url_bases' ) );
 			}
 
 			$this->active_source_origin  = '';
@@ -322,7 +322,7 @@ class Url_Extractor {
 		try {
 			if ( $this->static_page->is_type( 'html' ) ) {
 				$this->save_body( $this->extract_and_replace_urls_in_html() );
-				$body = apply_filters( 'ss_after_replace_urls_in_html', $this->get_body(), $this->static_page );
+				$body = apply_filters( 'wpse_after_replace_urls_in_html', $this->get_body(), $this->static_page );
 				$this->save_body( $body );
 			}
 
@@ -337,16 +337,16 @@ class Url_Extractor {
 			}
 
 			if ( $this->static_page->is_type( 'json' ) ) {
-				// Check if the URL includes 'simply-static/configs'
-				if ( strpos( $this->static_page->file_path, 'simply-static/configs' ) === false ) {
+				// Check if the URL includes 'wp-static-export/configs'
+				if ( strpos( $this->static_page->file_path, 'wp-static-export/configs' ) === false ) {
 					// Proceed to replace the URL.
 					$this->save_body( $this->extract_and_replace_urls_in_json() );
 				}
 			}
 
 			if ( $this->static_page->is_type( 'html' ) || $this->static_page->is_type( 'css' ) || $this->static_page->is_type( 'xml' ) || $this->static_page->is_type( 'json' ) ) {
-				// Check if the URL includes 'simply-static/configs'
-				if ( strpos( $this->static_page->file_path, 'simply-static/configs' ) === false ) {
+				// Check if the URL includes 'wp-static-export/configs'
+				if ( strpos( $this->static_page->file_path, 'wp-static-export/configs' ) === false ) {
 					// Replace encoded URLs.
 					$this->replace_encoded_urls();
 				}
@@ -408,7 +408,7 @@ class Url_Extractor {
 						$absolute_url   = Util::relative_to_absolute_url( $decoded_action, $this->static_page->url );
 						$preserve       = is_string( $absolute_url ) && '' !== $absolute_url && Util::is_local_url( $absolute_url ) && Util::is_url_excluded( $absolute_url );
 						$preserve       = (bool) apply_filters(
-							'simply_static_preserve_form_action',
+							'wpse_preserve_form_action',
 							$preserve,
 							$decoded_action,
 							$absolute_url,
@@ -970,7 +970,7 @@ class Url_Extractor {
 	 * @return mixed|null
 	 */
 	protected function can_preserve_attributes() {
-		return apply_filters( 'ss_extract_html_preserve_attributes', true );
+		return apply_filters( 'wpse_extract_html_preserve_attributes', true );
 	}
 
 	/**
@@ -1453,7 +1453,7 @@ class Url_Extractor {
 	 */
 	private function should_extract_data_attribute_url( $attr_name, $element ) {
 		$excluded_attributes = apply_filters(
-			'ss_data_attributes_without_url_discovery',
+			'wpse_data_attributes_without_url_discovery',
 			array( 'data-permalink' ),
 			$element,
 			$this
@@ -1463,7 +1463,7 @@ class Url_Extractor {
 		$should_extract      = ! in_array( strtolower( $attr_name ), $excluded_attributes, true );
 
 		return (bool) apply_filters(
-			'ss_extract_data_attribute_url',
+			'wpse_extract_data_attribute_url',
 			$should_extract,
 			$attr_name,
 			$element,
@@ -1510,7 +1510,7 @@ class Url_Extractor {
 	public function force_replace_urls() {
 		$response_body = $this->get_body();
 		$response_body = $this->force_replace( $response_body );
-		$response_body = apply_filters( 'simply_static_force_replaced_urls_body', $response_body, $this->static_page );
+		$response_body = apply_filters( 'wpse_force_replaced_urls_body', $response_body, $this->static_page );
 
 		$this->save_body( $response_body );
 	}
@@ -1612,7 +1612,7 @@ class Url_Extractor {
  					// This avoids str_replace substring collisions that would corrupt Cloudinary
  					// transformation parameters like f_auto,q_auto or w_300,h_195,c_scale which
  					// contain commas that must be preserved verbatim inside each URL.
- 					$strict_url_validation_srcset = apply_filters( 'simply_static_strict_url_validation', false );
+ 					$strict_url_validation_srcset = apply_filters( 'wpse_strict_url_validation', false );
  					$updated_entries              = array();
  					foreach ( preg_split( '/,(?:\s*(?=https?:\/\/|\/\/|\/[^\/])|\s+)/', $attribute_value ) as $srcset_entry ) {
  						$srcset_entry = trim( $srcset_entry );
@@ -1644,7 +1644,7 @@ class Url_Extractor {
  				}
  			}
 
-				$strict_url_validation = apply_filters( 'simply_static_strict_url_validation', false );
+				$strict_url_validation = apply_filters( 'wpse_strict_url_validation', false );
 
 				foreach ( $extracted_urls as $extracted_url ) {
 					if ( $strict_url_validation && ! filter_var( $extracted_url, FILTER_VALIDATE_URL ) ) {
@@ -1870,7 +1870,7 @@ class Url_Extractor {
 		$is_current_wordpress_host = Util::is_current_wordpress_host( $host );
 
 		return (bool) apply_filters(
-			'ss_remove_current_wordpress_resource_hint',
+			'wpse_remove_current_wordpress_resource_hint',
 			$is_current_wordpress_host,
 			$url,
 			$rel,
@@ -1890,7 +1890,7 @@ class Url_Extractor {
 	 */
 	private function extract_and_replace_urls_in_html() {
 		$html_string = $this->get_body();
-		$match_tags  = apply_filters( 'ss_match_tags', self::$match_tags );
+		$match_tags  = apply_filters( 'wpse_match_tags', self::$match_tags );
 
 		// Preserve JSON attributes before processing
 		$html_string = $this->preserve_attributes( $html_string );
@@ -2117,7 +2117,7 @@ class Url_Extractor {
 			$this->replace_origin_urls_in_data_attributes( $xpath );
 
 			// handle 'style' tag differently, since we need to parse the content.
-			$parse_inline_style = apply_filters( 'ss_parse_inline_style', true );
+			$parse_inline_style = apply_filters( 'wpse_parse_inline_style', true );
 
 			if ( $parse_inline_style ) {
 				$style_tags = $xpath->query( '//style' );
@@ -2138,13 +2138,13 @@ class Url_Extractor {
 			}
 
 			do_action(
-				'ss_after_extract_and_replace_urls_in_html',
+				'wpse_after_extract_and_replace_urls_in_html',
 				$dom,
 				$this
 			);
 
 			// Further manipulate Dom?
-			$dom = apply_filters( 'ss_dom_before_save', $dom, $this->static_page->url );
+			$dom = apply_filters( 'wpse_dom_before_save', $dom, $this->static_page->url );
 
 			// A filter may serialize the DOM. Run the serialized string through the same
 			// finalization path as DOMDocument::saveHTML() so raw-text content such as CSS
@@ -2239,7 +2239,7 @@ class Url_Extractor {
 		if ( empty( $charset ) ) {
 			$charset = 'UTF-8';
 		}
-		$should_decode_final = apply_filters( 'simply_static_decode_final_html', true, $this );
+		$should_decode_final = apply_filters( 'wpse_decode_final_html', true, $this );
 
 		if ( $should_decode_final ) {
 			// Protect attribute content that must remain entity-encoded during the global decode
@@ -2249,7 +2249,7 @@ class Url_Extractor {
 			$html = $this->restore_attributes( $html );
 		}
 
-		$html = apply_filters( 'ss_html_after_restored_attributes', $html, $this );
+		$html = apply_filters( 'wpse_html_after_restored_attributes', $html, $this );
 
 		// Use regex to double-check <style> attributes for things like @font-face URLs.
 		$origin_host = Util::origin_host();
@@ -2524,7 +2524,7 @@ class Url_Extractor {
 
 		// Pass 3: Fix HTML numeric entities used inside CSS content strings (e.g., content: "&#61710;" from Elementor/EAEL)
 		// Browsers do not decode HTML entities inside CSS. Convert these to proper CSS escapes like \f10e.
-		if ( apply_filters( 'simply_static_fix_css_content_entities', true, $this->static_page, $this ) ) {
+		if ( apply_filters( 'wpse_fix_css_content_entities', true, $this->static_page, $this ) ) {
 			$text = $this->convert_css_content_entities_to_escapes( $text );
 		}
 
@@ -2596,7 +2596,7 @@ class Url_Extractor {
 			$decoded_text = html_entity_decode( $text, ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, $charset );
 		}
 
-		$decoded_text = apply_filters( 'simply_static_decoded_urls_in_script', $decoded_text, $this->static_page, $this );
+		$decoded_text = apply_filters( 'wpse_decoded_urls_in_script', $decoded_text, $this->static_page, $this );
 
 		// Check if this is an importmap script
 		$is_importmap = $this->is_valid_json( $decoded_text ) && strpos( $decoded_text, '"imports"' ) !== false;
@@ -3126,7 +3126,7 @@ class Url_Extractor {
 
 			if ( $should_follow_url ) {
 				$this->extracted_urls[] = apply_filters(
-					'simply_static_extracted_url',
+					'wpse_extracted_url',
 					$queue_url,
 					$url,
 					$this->static_page
@@ -3153,8 +3153,8 @@ class Url_Extractor {
 	 */
 	private function matches_additional_url_regex( $url ) {
 		if ( null === $this->additional_url_regexes ) {
-			$additional_urls = apply_filters( 'ss_setup_task_additional_urls', $this->options->get( 'additional_urls' ) );
-			$additional_urls = apply_filters( 'ss_additional_urls', Util::string_to_array( $additional_urls ) );
+			$additional_urls = apply_filters( 'wpse_setup_task_additional_urls', $this->options->get( 'additional_urls' ) );
+			$additional_urls = apply_filters( 'wpse_additional_urls', Util::string_to_array( $additional_urls ) );
 			$patterns        = Util::parse_patterns( (array) $additional_urls );
 
 			$this->additional_url_regexes = (array) $patterns['regex'];
@@ -3302,7 +3302,7 @@ class Url_Extractor {
 	 */
 	public function convert_url( $url ) {
 
-		$url = apply_filters( 'simply_static_pre_converted_url', $url, $this->static_page, $this );
+		$url = apply_filters( 'wpse_pre_converted_url', $url, $this->static_page, $this );
 
 		if ( $this->options->get( 'destination_url_type' ) == 'absolute' ) {
 			$url = $this->convert_absolute_url( $url );
@@ -3312,9 +3312,9 @@ class Url_Extractor {
 			$url = $this->convert_offline_url( $url );
 		}
 
-		$url = remove_query_arg( 'simply_static_page', $url );
+		$url = remove_query_arg( 'wpse_page', $url );
 
-		return apply_filters( 'simply_static_converted_url', $url, $this->static_page, $this );
+		return apply_filters( 'wpse_converted_url', $url, $this->static_page, $this );
 	}
 
 	/**

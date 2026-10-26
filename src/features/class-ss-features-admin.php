@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -12,8 +12,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Features_Admin {
 
-	const PAGE_SLUG  = 'simply-static-features';
-	const REST_NS    = 'simplystatic-features/v1';
+	const PAGE_SLUG  = 'wp-static-export-features';
+	const REST_NS    = 'wp-static-export-features/v1';
 	const CLEAR_MARK = "\0clear";
 
 	/** @var Features_Admin|null */
@@ -39,14 +39,14 @@ class Features_Admin {
 	 * @return string
 	 */
 	protected function capability() {
-		return apply_filters( 'ss_user_capability', 'manage_options', 'settings' );
+		return apply_filters( 'wpse_user_capability', 'manage_options', 'settings' );
 	}
 
 	public function add_menu() {
 		$suffix = add_submenu_page(
-			'simply-static-generate',
-			__( 'Deploy & Features', 'simply-static' ),
-			__( 'Deploy & Features', 'simply-static' ),
+			'wp-static-export-generate',
+			__( 'Deploy & Features', 'wp-static-export' ),
+			__( 'Deploy & Features', 'wp-static-export' ),
 			$this->capability(),
 			self::PAGE_SLUG,
 			array( $this, 'render' ),
@@ -56,25 +56,25 @@ class Features_Admin {
 	}
 
 	public function render() {
-		echo '<div class="wrap"><h1>' . esc_html__( 'Deploy & Features', 'simply-static' ) . '</h1><div id="ss-features-root"></div></div>';
+		echo '<div class="wrap"><h1>' . esc_html__( 'Deploy & Features', 'wp-static-export' ) . '</h1><div id="ss-features-root"></div></div>';
 	}
 
 	public function enqueue() {
 		$handle = 'ss-features';
 		$rel    = 'deployer/dist/admin/settings.js';
-		$file   = SIMPLY_STATIC_PATH . $rel;
+		$file   = WPSE_PATH . $rel;
 
 		if ( ! is_readable( $file ) ) {
 			add_action(
 				'admin_notices',
 				function () {
-					echo '<div class="notice notice-error"><p>' . esc_html__( 'The settings UI bundle is missing. Run "npm run build" in the deployer folder.', 'simply-static' ) . '</p></div>';
+					echo '<div class="notice notice-error"><p>' . esc_html__( 'The settings UI bundle is missing. Run "npm run build" in the deployer folder.', 'wp-static-export' ) . '</p></div>';
 				}
 			);
 			return;
 		}
 
-		wp_enqueue_script( $handle, SIMPLY_STATIC_URL . '/' . $rel, array(), (string) filemtime( $file ), true );
+		wp_enqueue_script( $handle, WPSE_URL . '/' . $rel, array(), (string) filemtime( $file ), true );
 		wp_localize_script(
 			$handle,
 			'ssFeatures',
@@ -153,7 +153,7 @@ class Features_Admin {
 
 		foreach ( Features_Schema::fields() as $key => $field ) {
 			$value = $options->get( $key );
-			if ( defined( 'SIMPLY_STATIC_' . strtoupper( $key ) ) ) {
+			if ( defined( 'WPSE_' . strtoupper( $key ) ) ) {
 				$locked[ $key ] = true;
 			}
 			if ( ! empty( $field['secret'] ) ) {
@@ -186,7 +186,7 @@ class Features_Admin {
 		$saved  = array();
 
 		foreach ( $posted as $key => $raw ) {
-			if ( ! isset( $fields[ $key ] ) || defined( 'SIMPLY_STATIC_' . strtoupper( $key ) ) ) {
+			if ( ! isset( $fields[ $key ] ) || defined( 'WPSE_' . strtoupper( $key ) ) ) {
 				continue; // Unknown or locked by wp-config.php.
 			}
 			$field = $fields[ $key ];
@@ -207,7 +207,7 @@ class Features_Admin {
 		}
 
 		$o->save();
-		do_action( 'ss_features_settings_saved', $saved );
+		do_action( 'wpse_features_settings_saved', $saved );
 
 		return $this->get_settings();
 	}
@@ -233,7 +233,7 @@ class Features_Admin {
 	public function verify() {
 		$method = Options::instance()->get( 'delivery_method' );
 		if ( ! Deploy_Config::is_deploy_method( $method ) ) {
-			return new \WP_Error( 'ss_verify_not_applicable', __( 'The selected delivery method needs no credentials.', 'simply-static' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'ss_verify_not_applicable', __( 'The selected delivery method needs no credentials.', 'wp-static-export' ), array( 'status' => 400 ) );
 		}
 
 		$result = Deploy_Runner::run_sync(

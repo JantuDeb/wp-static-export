@@ -46,7 +46,7 @@ function Generate() {
                 <FlexItem isBlock={true}>
                     <Card>
                         <CardHeader>
-                            <b>{__('Debugging', 'simply-static')}</b>
+                            <b>{__('Debugging', 'wp-static-export')}</b>
                         </CardHeader>
                         <CardBody>
                             <LogButtons/>
@@ -59,7 +59,7 @@ function Generate() {
             <Spacer margin={5}/>
             <Card>
                 <CardHeader>
-                    <b>{__('Export Log', 'simply-static')}</b>
+                    <b>{__('Export Log', 'wp-static-export')}</b>
                 </CardHeader>
                 <CardBody>
                     <ExportLog/>

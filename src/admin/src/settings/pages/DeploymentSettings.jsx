@@ -41,12 +41,12 @@ function DeploymentSettings() {
     const [testDisabled, setTestDisabled] = useState(false);
     const [testRunning, setTestRunning] = useState(false);
     const [deploymentOptions] = useState([
-        {label: __('ZIP Archive', 'simply-static'), value: 'zip'},
-        {label: __('Local Directory', 'simply-static'), value: 'local'}
+        {label: __('ZIP Archive', 'wp-static-export'), value: 'zip'},
+        {label: __('Local Directory', 'wp-static-export'), value: 'local'}
     ]);
     const configuredElsewhere = deliveryMethod && !['zip', 'local'].includes(deliveryMethod);
     const selectableOptions = configuredElsewhere
-        ? [...deploymentOptions, {label: __('Set in Deploy & Features', 'simply-static') + ' (' + deliveryMethod + ')', value: deliveryMethod}]
+        ? [...deploymentOptions, {label: __('Set in Deploy & Features', 'wp-static-export') + ' (' + deliveryMethod + ')', value: deliveryMethod}]
         : deploymentOptions;
     const canEditDeploymentSettings = !isStudio() || !!options.allow_studio_deployment_settings;
 
@@ -102,10 +102,10 @@ function DeploymentSettings() {
         }
 
         // Get global page selection
-        apiFetch({path: '/simplystatic/v1/pages'}).then((fetched_pages) => {
+        apiFetch({path: '/wp-static-export/v1/pages'}).then((fetched_pages) => {
             let pages = fetched_pages;
 
-            pages.unshift({label: __('No page selected', 'simply-static'), value: 0});
+            pages.unshift({label: __('No page selected', 'wp-static-export'), value: 0});
             setPages(pages);
         });
 
@@ -113,18 +113,18 @@ function DeploymentSettings() {
 
     return (<div className={"inner-settings"}>
         <Notice status="info" isDismissible={false}>
-            <p>{__('GitHub, Netlify, Cloudflare Pages, Amazon S3, BunnyCDN and SFTP are configured under Deploy & Features.', 'simply-static')}{' '}
-                <a href="admin.php?page=simply-static-features">{__('Open Deploy & Features', 'simply-static')}</a></p>
+            <p>{__('GitHub, Netlify, Cloudflare Pages, Amazon S3, BunnyCDN and SFTP are configured under Deploy & Features.', 'wp-static-export')}{' '}
+                <a href="admin.php?page=wp-static-export-features">{__('Open Deploy & Features', 'wp-static-export')}</a></p>
         </Notice>
         <Spacer margin={5}/>
         <Card>
             <CardHeader>
-                <b>{__('Deployment Settings', 'simply-static')}</b>
+                <b>{__('Deployment Settings', 'wp-static-export')}</b>
             </CardHeader>
             <CardBody>
-                <p>{__('Choose from a variety of deployment methods. Depending on your selection we either provide a ZIP file, export to a local directory or send your files to a remote destination.', 'simply-static')}</p>
+                <p>{__('Choose from a variety of deployment methods. Depending on your selection we either provide a ZIP file, export to a local directory or send your files to a remote destination.', 'wp-static-export')}</p>
                 <SelectControl
-                    label={__('Deployment method', 'simply-static')}
+                    label={__('Deployment method', 'wp-static-export')}
                     value={deliveryMethod}
                     options={selectableOptions}
                     __next40pxDefaultSize
@@ -143,11 +143,11 @@ function DeploymentSettings() {
         {deliveryMethod === 'zip' &&
             <Card>
                 <CardHeader>
-                    <b>{__('ZIP', 'simply-static')}</b>
+                    <b>{__('ZIP', 'wp-static-export')}</b>
                 </CardHeader>
                 <CardBody>
                     <p>
-                        {__('Get a download link in the activity log once the static export has finished.', 'simply-static')}
+                        {__('Get a download link in the activity log once the static export has finished.', 'wp-static-export')}
                     </p>
                 </CardBody>
             </Card>
@@ -156,13 +156,13 @@ function DeploymentSettings() {
         {deliveryMethod === 'local' &&
             <Card>
                 <CardHeader>
-                    <b>{__('Local Directory', 'simply-static')}</b>
+                    <b>{__('Local Directory', 'wp-static-export')}</b>
                 </CardHeader>
                 <CardBody>
                     <TextControl
-                        label={__('Path', 'simply-static')}
+                        label={__('Path', 'wp-static-export')}
                         type={"text"}
-                        help={__("This is the directory where your static files will be saved. We will create it automatically on the first export if it doesn't exist.", 'simply-static')}
+                        help={__("This is the directory where your static files will be saved. We will create it automatically on the first export if it doesn't exist.", 'wp-static-export')}
                         placeholder={options.home_path + "public_static/"}
                         __next40pxDefaultSize
                         __nextHasNoMarginBottom
@@ -183,15 +183,15 @@ function DeploymentSettings() {
                             }
                         }}
                     >
-                        {hasCopied ? __('Copied home path', 'simply-static') : __('Copy home path', 'simply-static')}
+                        {hasCopied ? __('Copied home path', 'wp-static-export') : __('Copy home path', 'wp-static-export')}
                     </Button>
                     <ToggleControl
                             __nextHasNoMarginBottom
-                            label={__('Clear Local Directory', 'simply-static')}
+                            label={__('Clear Local Directory', 'wp-static-export')}
                             help={
                                 clearDirectory
-                                    ? __('Clear local directory before running an export.', 'simply-static')
-                                    : __('Don\'t clear local directory before running an export.', 'simply-static')
+                                    ? __('Clear local directory before running an export.', 'wp-static-export')
+                                    : __('Don\'t clear local directory before running an export.', 'wp-static-export')
                             }
                             checked={clearDirectory}
                             onChange={(value) => {
@@ -217,7 +217,7 @@ function DeploymentSettings() {
                     {() => (
                         <Notice status="success" isDismissible={false}>
                             <p>
-                                {__('Settings saved successfully.', 'simply-static')}
+                                {__('Settings saved successfully.', 'wp-static-export')}
                             </p>
                         </Notice>
                     )}
@@ -228,16 +228,16 @@ function DeploymentSettings() {
         <div className={"save-settings"}>
             {canEditDeploymentSettings && <>
                 {'free' !== options.plan || isStudio() ?
-                    <Button onClick={setSavingSettings} variant="primary">{__('Save Settings', 'simply-static')}</Button>
+                    <Button onClick={setSavingSettings} variant="primary">{__('Save Settings', 'wp-static-export')}</Button>
                     :
                     <>
                         {deliveryMethod === 'zip' &&
                             <Button onClick={setSavingSettings}
-                                    variant="primary">{__('Save Settings', 'simply-static')}</Button>
+                                    variant="primary">{__('Save Settings', 'wp-static-export')}</Button>
                         }
                         {deliveryMethod === 'local' &&
                             <Button onClick={setSavingSettings}
-                                    variant="primary">{__('Save Settings', 'simply-static')}</Button>
+                                    variant="primary">{__('Save Settings', 'wp-static-export')}</Button>
                         }
                     </>
                 }
@@ -252,7 +252,7 @@ function DeploymentSettings() {
                     onClick={() => {
                         setTestRunning(true);
                         apiFetch({
-                            path: '/simplystatic/v1/apply-single',
+                            path: '/wp-static-export/v1/apply-single',
                             method: 'POST',
                         }).then(resp => {
                             if (parseInt(resp.status) === 404) {
@@ -263,8 +263,8 @@ function DeploymentSettings() {
 
                         });
                     }}>
-                    {testDisabled && __('Save settings to test', 'simply-static')}
-                    {!testDisabled && __('Test Deployment', 'simply-static')}
+                    {testDisabled && __('Save settings to test', 'wp-static-export')}
+                    {!testDisabled && __('Test Deployment', 'wp-static-export')}
                 </Button>
             }
         </div>

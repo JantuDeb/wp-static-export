@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static\Crawler;
+namespace WP_Static_Export\Crawler;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,8 +24,8 @@ class Plugin_Assets_Crawler extends Crawler {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->name        = __( 'Plugin Assets', 'simply-static' );
-		$this->description = __( 'Detects URLs for assets (CSS, JS, images) used by active plugins.', 'simply-static' );
+		$this->name        = __( 'Plugin Assets', 'wp-static-export' );
+		$this->description = __( 'Detects URLs for assets (CSS, JS, images) used by active plugins.', 'wp-static-export' );
 	}
 
 	/**
@@ -41,10 +41,10 @@ class Plugin_Assets_Crawler extends Crawler {
 		$plugins_dir = WP_PLUGIN_DIR;
 
 		// Get all active plugins (including network-activated on multisite)
-		$active_plugins = \Simply_Static\Util::get_all_active_plugins();
-		$allowed        = (array) \Simply_Static\Options::instance()->get( 'plugins_to_include' );
+		$active_plugins = \WP_Static_Export\Util::get_all_active_plugins();
+		$allowed        = (array) \WP_Static_Export\Options::instance()->get( 'plugins_to_include' );
 		$allowed        = is_array( $allowed ) ? array_filter( array_map( 'strval', $allowed ) ) : [];
-		$allowed        = apply_filters( 'ss_crawlable_plugins', $allowed );
+		$allowed        = apply_filters( 'wpse_crawlable_plugins', $allowed );
 
 		foreach ( $active_plugins as $plugin ) {
 			// If user selected specific plugins, restrict to those (by directory slug)
@@ -102,7 +102,7 @@ class Plugin_Assets_Crawler extends Crawler {
 			'ico',
 			'json'
 		];
-		$skip_dirs  = apply_filters( 'ss_skip_crawl_plugin_directories', [
+		$skip_dirs  = apply_filters( 'wpse_skip_crawl_plugin_directories', [
 			'.git',
 			'node_modules',
 			'vendor/bin',
@@ -117,10 +117,10 @@ class Plugin_Assets_Crawler extends Crawler {
 		] );
 
 		$plugins_url    = plugins_url();
-		$active_plugins = \Simply_Static\Util::get_all_active_plugins();
-		$allowed        = (array) \Simply_Static\Options::instance()->get( 'plugins_to_include' );
+		$active_plugins = \WP_Static_Export\Util::get_all_active_plugins();
+		$allowed        = (array) \WP_Static_Export\Options::instance()->get( 'plugins_to_include' );
 		$allowed        = is_array( $allowed ) ? array_filter( array_map( 'strval', $allowed ) ) : [];
-		$allowed        = apply_filters( 'ss_crawlable_plugins', $allowed );
+		$allowed        = apply_filters( 'wpse_crawlable_plugins', $allowed );
 
 		$directories = array();
 		foreach ( $active_plugins as $plugin ) {
@@ -148,8 +148,8 @@ class Plugin_Assets_Crawler extends Crawler {
 			$directories,
 			$assets_ext,
 			(array) $skip_dirs,
-			'simply_static_plugin_assets_crawler_max_entries_per_batch',
-			'simply_static_plugin_assets_crawler_max_batch_seconds'
+			'wpse_plugin_assets_crawler_max_entries_per_batch',
+			'wpse_plugin_assets_crawler_max_batch_seconds'
 		);
 	}
 
@@ -163,8 +163,8 @@ class Plugin_Assets_Crawler extends Crawler {
 	 */
 	private function scan_directory_for_assets( $dir, $url_base ): array {
 		$urls            = [];
-		$max_entries     = max( 1, min( 100000, (int) apply_filters( 'simply_static_plugin_assets_detection_max_entries', 5000 ) ) );
-		$deadline        = microtime( true ) + max( 0.5, min( 15, (float) apply_filters( 'simply_static_plugin_assets_detection_max_seconds', 5 ) ) );
+		$max_entries     = max( 1, min( 100000, (int) apply_filters( 'wpse_plugin_assets_detection_max_entries', 5000 ) ) );
+		$deadline        = microtime( true ) + max( 0.5, min( 15, (float) apply_filters( 'wpse_plugin_assets_detection_max_seconds', 5 ) ) );
 		$entries_scanned = 0;
 
 		// Asset file extensions to look for
@@ -190,7 +190,7 @@ class Plugin_Assets_Crawler extends Crawler {
 		];
 
 		// Skip these directories
-		$skip_dirs = apply_filters( 'ss_skip_crawl_plugin_directories', [
+		$skip_dirs = apply_filters( 'wpse_skip_crawl_plugin_directories', [
 			'.git',
 			'node_modules',
 			'vendor/bin',
@@ -206,7 +206,7 @@ class Plugin_Assets_Crawler extends Crawler {
 
 		// Check if directory exists
 		if ( ! is_dir( $dir ) ) {
-			\Simply_Static\Util::debug_log( "Directory does not exist: $dir" );
+			\WP_Static_Export\Util::debug_log( "Directory does not exist: $dir" );
 
 			return $urls;
 		}
@@ -219,7 +219,7 @@ class Plugin_Assets_Crawler extends Crawler {
 			);
 
 			// Process files in batches to prevent memory issues
-			$batch_size  = apply_filters( 'simply_static_plugin_assets_batch_size', 500 );
+			$batch_size  = apply_filters( 'wpse_plugin_assets_batch_size', 500 );
 			$file_count  = 0;
 			$batch_count = 0;
 			$file_batch  = [];
@@ -251,9 +251,9 @@ class Plugin_Assets_Crawler extends Crawler {
 				$urls = array_merge( $urls, $this->process_file_batch( $file_batch, $dir, $url_base, $skip_dirs, $asset_extensions ) );
 			}
 
-			\Simply_Static\Util::debug_log( "Found " . count( $urls ) . " asset URLs in $dir" );
+			\WP_Static_Export\Util::debug_log( "Found " . count( $urls ) . " asset URLs in $dir" );
 		} catch ( \Exception $e ) {
-			\Simply_Static\Util::debug_log( "Error scanning directory $dir: " . $e->getMessage() );
+			\WP_Static_Export\Util::debug_log( "Error scanning directory $dir: " . $e->getMessage() );
 		}
 
 		return $urls;
@@ -275,7 +275,7 @@ class Plugin_Assets_Crawler extends Crawler {
 
 		foreach ( $files as $file ) {
 			// Build a safe relative path and evaluate skip rules
-			$relative_path = \Simply_Static\Util::safe_relative_path( $dir, $file->getPathname() );
+			$relative_path = \WP_Static_Export\Util::safe_relative_path( $dir, $file->getPathname() );
 			$should_skip   = false;
 
 			foreach ( $skip_dirs as $skip_dir ) {
@@ -303,7 +303,7 @@ class Plugin_Assets_Crawler extends Crawler {
 			// Check if the file has an asset extension
 			if ( in_array( $extension, $asset_extensions, true ) ) {
 				// Convert the file path to a URL and join safely
-				$url    = \Simply_Static\Util::safe_join_url( $url_base, $relative_path );
+				$url    = \WP_Static_Export\Util::safe_join_url( $url_base, $relative_path );
 				$urls[] = $url;
 			}
 		}

@@ -81,8 +81,8 @@ describe('delete safety', () => {
 describe('ignore', () => {
   it('never deploys files matching the ignore globs and does not record them in state', async () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), 'ig-'));
-    await mkdir(path.join(dir, 'wp-content/uploads/simply-static/deploy-state'), { recursive: true });
-    await wf(path.join(dir, 'wp-content/uploads/simply-static/deploy-state/s3.json'), '{"secret":"paths"}');
+    await mkdir(path.join(dir, 'wp-content/uploads/wp-static-export/deploy-state'), { recursive: true });
+    await wf(path.join(dir, 'wp-content/uploads/wp-static-export/deploy-state/s3.json'), '{"secret":"paths"}');
     await wf(path.join(dir, 'index.html'), 'x');
     const state = path.join(dir, '..', `ig-state-${Date.now()}.json`);
     const puts: string[] = [];
@@ -91,7 +91,7 @@ describe('ignore', () => {
       return new Response('', { status: 200 });
     });
     const r = await runJob(
-      { provider: 'bunny', dir, stateFile: state, ignore: ['*/simply-static/deploy-state/*'], config: { storageKey: 'k', storageZone: 'z' } },
+      { provider: 'bunny', dir, stateFile: state, ignore: ['*/wp-static-export/deploy-state/*'], config: { storageKey: 'k', storageZone: 'z' } },
       { info() {}, warn() {}, progress() {} },
     );
     vi.unstubAllGlobals();

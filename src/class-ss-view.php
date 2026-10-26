@@ -1,5 +1,5 @@
 <?php
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) {
@@ -53,8 +53,8 @@ class View {
 	public function __construct() {
 		// Resolve views from the canonical plugin root instead of inferring the
 		// location from WordPress's standard plugin directory layout.
-		if ( defined( 'SIMPLY_STATIC_PATH' ) ) {
-			$this->path = trailingslashit( SIMPLY_STATIC_PATH ) . self::DIRECTORY;
+		if ( defined( 'WPSE_PATH' ) ) {
+			$this->path = trailingslashit( WPSE_PATH ) . self::DIRECTORY;
 
 			return;
 		}
@@ -71,7 +71,7 @@ class View {
 	/**
 	 * Sets a layout that will be used later in render() method
 	 * @param string $template The template filename, without extension
-	 * @return Simply_Static\View
+	 * @return WP_Static_Export\View
 	 */
 	public function set_layout( $layout ) {
 		$this->layout = trailingslashit( $this->path ) . 'layouts/' . $layout . self::EXTENSION;
@@ -82,7 +82,7 @@ class View {
 	/**
 	 * Sets a template that will be used later in render() method
 	 * @param string $template The template filename, without extension
-	 * @return Simply_Static\View
+	 * @return WP_Static_Export\View
 	 */
 	public function set_template( $template ) {
 		$this->template = trailingslashit( $this->path ) . $template . self::EXTENSION;
@@ -104,7 +104,7 @@ class View {
 	* Updates the view variable identified by $name with the value provided in $value
 	* @param string $name The variable name
 	* @param mixed  $value The variable value
-	* @return Simply_Static\View
+	* @return WP_Static_Export\View
 	*/
 	public function __set( $name, $value ) {
 		$this->variables[ $name ] = $value;
@@ -115,7 +115,7 @@ class View {
 	 * Updates the view variable identified by $name with the value provided in $value
 	 * @param string $name The variable name
 	 * @param mixed $value The variable value
-	 * @return Simply_Static\View
+	 * @return WP_Static_Export\View
 	 */
 	public function assign( $name, $value ) {
 		return $this->__set( $name, $value );
@@ -149,7 +149,7 @@ class View {
 				'invalid_template',
 				sprintf(
 					/* translators: %s: view template path. */
-					__( "Can't find view template: %s", 'simply-static' ),
+					__( "Can't find view template: %s", 'wp-static-export' ),
 					$this->template
 				)
 			);
@@ -162,7 +162,7 @@ class View {
 					'invalid_layout',
 					sprintf(
 						/* translators: %s: view layout path. */
-						__( "Can't find view layout: %s", 'simply-static' ),
+						__( "Can't find view layout: %s", 'wp-static-export' ),
 						$this->layout
 					)
 				);
@@ -179,7 +179,7 @@ class View {
 	/**
 	 * Renders the view script.
 	 *
-	 * @return Simply_Static\View|\WP_Error
+	 * @return WP_Static_Export\View|\WP_Error
 	 */
 	public function render() {
 

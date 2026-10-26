@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 class Yoast_Integration extends Integration {
 
@@ -12,8 +12,8 @@ class Yoast_Integration extends Integration {
 	protected $id = 'yoast';
 
 	public function __construct() {
-		$this->name = __( 'Yoast', 'simply-static' );
-		$this->description = __( 'Automatically includes your XML sitemaps, handles URL replacements in schema.org markup, and creates redirects on your static site for you.', 'simply-static' );
+		$this->name = __( 'Yoast', 'wp-static-export' );
+		$this->description = __( 'Automatically includes your XML sitemaps, handles URL replacements in schema.org markup, and creates redirects on your static site for you.', 'wp-static-export' );
 	}
 
 	/**
@@ -22,11 +22,11 @@ class Yoast_Integration extends Integration {
 	 * @return void
 	 */
 	public function run() {
-		add_action( 'ss_after_setup_task', [ $this, 'register_sitemap_page' ] );
-		add_action( 'ss_after_setup_task', [ $this, 'register_redirections' ] );
-		add_action( 'ss_dom_before_save', [ $this, 'replace_json_schema' ], 10, 2 );
-		add_filter( 'ss_additional_urls', [ $this, 'add_dynamic_robots_url' ] );
-		add_filter( 'ss_additional_files', [ $this, 'maybe_add_text_files' ] );
+		add_action( 'wpse_after_setup_task', [ $this, 'register_sitemap_page' ] );
+		add_action( 'wpse_after_setup_task', [ $this, 'register_redirections' ] );
+		add_action( 'wpse_dom_before_save', [ $this, 'replace_json_schema' ], 10, 2 );
+		add_filter( 'wpse_additional_urls', [ $this, 'add_dynamic_robots_url' ] );
+		add_filter( 'wpse_additional_files', [ $this, 'maybe_add_text_files' ] );
 
   // Allow WP Static Export setting to control sitemap inclusion on Single Export.
   // Register early so that other plugins/themes (default priority 10+) can override via the same filter.
@@ -51,7 +51,7 @@ class Yoast_Integration extends Integration {
 	 * @return bool
 	 */
 	public function maybe_enable_sitemap_single_export( $enabled ) {
-		$settings = get_option( 'simply-static' );
+		$settings = get_option( 'wp-static-export' );
 		if ( is_array( $settings ) && array_key_exists( 'ss_single_export_add_xml_sitemap', $settings ) ) {
 			return (bool) $settings['ss_single_export_add_xml_sitemap'];
 		}
@@ -65,8 +65,8 @@ class Yoast_Integration extends Integration {
 	 */
 	public function register_redirections() {
 		// Only on full or update exports.
-		$use_single = get_option( 'simply-static-use-single' );
-		$use_build  = get_option( 'simply-static-use-build' );
+		$use_single = get_option( 'wp-static-export-use-single' );
+		$use_build  = get_option( 'wp-static-export-use-build' );
 
 		if ( ! empty( $use_build ) || ! empty( $use_single ) ) {
 			return;
@@ -86,9 +86,9 @@ class Yoast_Integration extends Integration {
 
 			$url = home_url( $redirection['origin'] );
 			Util::debug_log( 'Adding Yoast redirection URL to queue: ' . $url );
-			/** @var \Simply_Static\Page $static_page */
+			/** @var \WP_Static_Export\Page $static_page */
 			$static_page = Page::query()->find_or_initialize_by( 'url', $url );
-			$static_page->set_status_message( __( 'Yoast Redirection URL', 'simply-static' ) );
+			$static_page->set_status_message( __( 'Yoast Redirection URL', 'wp-static-export' ) );
 			$static_page->found_on_id = 0;
 			$static_page->save();
 		}
@@ -113,9 +113,9 @@ class Yoast_Integration extends Integration {
 
 		foreach ( $urls as $url ) {
 			Util::debug_log( 'Adding sitemap URL to queue: ' . $url );
-			/** @var \Simply_Static\Page $static_page */
+			/** @var \WP_Static_Export\Page $static_page */
 			$static_page = Page::query()->find_or_initialize_by( 'url', $url );
-			$static_page->set_status_message( __( 'Sitemap URL', 'simply-static' ) );
+			$static_page->set_status_message( __( 'Sitemap URL', 'wp-static-export' ) );
 			$static_page->found_on_id = 0;
 			$static_page->handler     = Yoast_Sitemap_Handler::class;
 			$static_page->save();
@@ -230,9 +230,9 @@ class Yoast_Integration extends Integration {
 		foreach ( $this->extract_sitemap_index_urls( $response ) as $sitemap_url ) {
 			// Add the sitemap URL to the queue.
 			Util::debug_log( 'Adding sitemap URL to queue: ' . $sitemap_url );
-			/** @var \Simply_Static\Page $static_page */
+			/** @var \WP_Static_Export\Page $static_page */
 			$static_page = Page::query()->find_or_initialize_by( 'url', $sitemap_url );
-			$static_page->set_status_message( __( 'Sitemap URL', 'simply-static' ) );
+			$static_page->set_status_message( __( 'Sitemap URL', 'wp-static-export' ) );
 			$static_page->found_on_id = 0;
 			$static_page->handler     = Yoast_Sitemap_Handler::class;
 			$static_page->save();
@@ -252,8 +252,8 @@ class Yoast_Integration extends Integration {
 		$additional_files = is_array( $additional_files ) ? $additional_files : [];
 
 		// Global flags to allow disabling robots.txt and llms.txt entirely.
-		$include_robots = (bool) apply_filters( 'ss_include_robots_txt_in_export', true );
-		$include_llms   = (bool) apply_filters( 'ss_include_llms_txt_in_export', true );
+		$include_robots = (bool) apply_filters( 'wpse_include_robots_txt_in_export', true );
+		$include_llms   = (bool) apply_filters( 'wpse_include_llms_txt_in_export', true );
 
 		$robots_physical = ABSPATH . 'robots.txt';
 		$llms_physical   = ABSPATH . 'llms.txt';

@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 /**
  * WP Background Process
@@ -312,7 +312,7 @@ abstract class Background_Process extends Async_Request {
 		}
 		$args                        = $this->get_post_args();
 		$args['blocking']            = true;
-		$args['body']['simply_static_probe'] = '1';
+		$args['body']['wpse_probe'] = '1';
 		$authorization = Util::get_basic_auth_header_for_url( $url );
 		if ( $authorization ) {
 			$args['headers'] = array( 'Authorization' => $authorization );
@@ -793,7 +793,7 @@ abstract class Background_Process extends Async_Request {
 
 		check_ajax_referer( $this->identifier, 'nonce' );
 
-		if ( ! empty( $_REQUEST['simply_static_probe'] ) ) {
+		if ( ! empty( $_REQUEST['wpse_probe'] ) ) {
 			return $this->maybe_wp_die();
 		}
 
@@ -1077,7 +1077,7 @@ abstract class Background_Process extends Async_Request {
 			: ( defined( 'AUTH_SALT' ) ? AUTH_SALT : ABSPATH );
 		$digest = hash_hmac( 'sha256', implode( '|', $scope ), (string) $salt );
 
-		return 'simply_static_' . substr( $digest, 0, 48 );
+		return 'wpse_' . substr( $digest, 0, 48 );
 	}
 
 	/**

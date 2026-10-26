@@ -7,4 +7,4 @@ require_once __DIR__ . '/Support/WpTestEnvironment.php';
 require_once __DIR__ . '/Support/wordpress-stubs.php';
 require_once __DIR__ . '/Support/UnitTestCase.php';
 
-\Simply_Static\Tests\Support\WpTestEnvironment::reset();
+\WP_Static_Export\Tests\Support\WpTestEnvironment::reset();

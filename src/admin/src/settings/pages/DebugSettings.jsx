@@ -33,7 +33,7 @@ function DebugSettings() {
         setClearingTemp(true);
         setClearNotice(null);
         try {
-            const resp = await apiFetch({path: '/simplystatic/v1/clear-temp-files', method: 'POST'});
+            const resp = await apiFetch({path: '/wp-static-export/v1/clear-temp-files', method: 'POST'});
             let data = resp;
             // Some endpoints in this app return JSON string, some parsed.
             if (typeof resp === 'string') {
@@ -43,13 +43,13 @@ function DebugSettings() {
                 }
             }
             if (data && data.status === 200) {
-                setClearNotice({type: 'success', message: __('Temporary files cleared.', 'simply-static')});
+                setClearNotice({type: 'success', message: __('Temporary files cleared.', 'wp-static-export')});
             } else {
-                const msg = (data && data.message) ? data.message : __('Could not clear temporary files.', 'simply-static');
+                const msg = (data && data.message) ? data.message : __('Could not clear temporary files.', 'wp-static-export');
                 setClearNotice({type: 'error', message: msg});
             }
         } catch (e) {
-            setClearNotice({type: 'error', message: __('Request failed. Please try again.', 'simply-static')});
+            setClearNotice({type: 'error', message: __('Request failed. Please try again.', 'wp-static-export')});
         } finally {
             setClearingTemp(false);
         }
@@ -77,14 +77,14 @@ function DebugSettings() {
     return (<div className={"inner-settings"}>
         <Card>
             <CardHeader>
-                <b>{__('Basic Auth', 'simply-static')}</b>
+                <b>{__('Basic Auth', 'wp-static-export')}</b>
             </CardHeader>
             <CardBody>
                 <p>
-                    {__('If you\'ve secured WordPress with HTTP Basic Auth you need to specify the username and password to use below.', 'simply-static')}
+                    {__('If you\'ve secured WordPress with HTTP Basic Auth you need to specify the username and password to use below.', 'wp-static-export')}
                 </p>
                 <TextControl
-                    label={__('Basic Auth Username', 'simply-static')}
+                    label={__('Basic Auth Username', 'wp-static-export')}
                     autoComplete={"off"}
                     type={"text"}
                     __next40pxDefaultSize
@@ -95,7 +95,7 @@ function DebugSettings() {
                     }}
                 />
                 <TextControl
-                    label={__('Basic Auth Password', 'simply-static')}
+                    label={__('Basic Auth Password', 'wp-static-export')}
                     type={"password"}
                     autoComplete={"off"}
                     __next40pxDefaultSize
@@ -106,17 +106,17 @@ function DebugSettings() {
                     }}
                 />
                 <ToggleControl
-                    label={__('Enable Basic Auth', 'simply-static')}
+                    label={__('Enable Basic Auth', 'wp-static-export')}
                     __nextHasNoMarginBottom
                     help={
                         <>
                             {'free' === options.plan ?
                                 <>
-                                    {__('Automatic Basic Auth setup is not available in this version.', 'simply-static')}
+                                    {__('Automatic Basic Auth setup is not available in this version.', 'wp-static-export')}
                                 </>
                                 :
                                 <>
-                                    {__('Once enabled we will put your entire website behind password protection.', 'simply-static')}
+                                    {__('Once enabled we will put your entire website behind password protection.', 'wp-static-export')}
                                 </>
                             }
                         </>
@@ -131,7 +131,7 @@ function DebugSettings() {
                     settings.http_basic_auth_on &&
                     (!settings.http_basic_auth_username || !settings.http_basic_auth_password) &&
                     <Notice status={"warning"} isDismissible={false}>
-                        {__('Requires Username & Password to work', 'simply-static')}
+                        {__('Requires Username & Password to work', 'wp-static-export')}
                     </Notice>
                 }
             </CardBody>
@@ -139,14 +139,14 @@ function DebugSettings() {
         <Spacer margin={5}/>
         <Card>
             <CardHeader>
-                <b>{__('Temporary Files', 'simply-static')}</b>
+                <b>{__('Temporary Files', 'wp-static-export')}</b>
             </CardHeader>
             <CardBody>
                 <TextControl
-                    label={__('Temporary Files Directory', 'simply-static')}
+                    label={__('Temporary Files Directory', 'wp-static-export')}
                     type={"text"}
                     placeholder={options.temp_files_dir}
-                    help={__('Optionally specify the directory to save your temporary files. This directory must exist and be writable.', 'simply-static')}
+                    help={__('Optionally specify the directory to save your temporary files. This directory must exist and be writable.', 'wp-static-export')}
                     __next40pxDefaultSize
                     __nextHasNoMarginBottom
                     disabled={isStudio()}
@@ -172,20 +172,20 @@ function DebugSettings() {
                     disabled={isStudio() || clearingTemp}
                     isBusy={clearingTemp}
                 >
-                    {clearingTemp ? __('Clearing…', 'simply-static') : __('Clear Temporary Files', 'simply-static')}
+                    {clearingTemp ? __('Clearing…', 'wp-static-export') : __('Clear Temporary Files', 'wp-static-export')}
                 </Button>
             </CardBody>
         </Card>
         <Spacer margin={5}/>
         <Card>
             <CardHeader>
-                <b>{__('Whitelist Plugins', 'simply-static')}</b>
+                <b>{__('Whitelist Plugins', 'wp-static-export')}</b>
             </CardHeader>
             <CardBody>
                 <TextareaControl
-                    label={__('Whitelist plugins in diagnostics', 'simply-static')}
+                    label={__('Whitelist plugins in diagnostics', 'wp-static-export')}
                     placeholder={"autoptimize\nwp-search-with-algolia\nwp-rocket"}
-                    help={__('If you want to exclude certain plugins from the diagnostics check add the plugin slugs here (one per line).', 'simply-static')}
+                    help={__('If you want to exclude certain plugins from the diagnostics check add the plugin slugs here (one per line).', 'wp-static-export')}
                     __nextHasNoMarginBottom
                     value={settings.whitelist_plugins}
                     onChange={(value) => {
@@ -197,13 +197,13 @@ function DebugSettings() {
         <Spacer margin={5}/>
         <Card>
             <CardHeader>
-                <b>{__('Proxy Setup', 'simply-static')}</b>
+                <b>{__('Proxy Setup', 'wp-static-export')}</b>
             </CardHeader>
             <CardBody>
                 <TextControl
-                    label={__('Origin URL', 'simply-static')}
+                    label={__('Origin URL', 'wp-static-export')}
                     type={"url"}
-                    help={__('If the URL of your WordPress installation differs from the public-facing URL (Proxy Setup), add the public URL here.', 'simply-static')}
+                    help={__('If the URL of your WordPress installation differs from the public-facing URL (Proxy Setup), add the public URL here.', 'wp-static-export')}
                     placeholder={options.home}
                     autoComplete={"off"}
                     __next40pxDefaultSize
@@ -219,12 +219,12 @@ function DebugSettings() {
         <Spacer margin={5}/>
         <Card>
             <CardHeader>
-                <b>{__('Debug Log', 'simply-static')}</b>
+                <b>{__('Debug Log', 'wp-static-export')}</b>
             </CardHeader>
             <CardBody>
                 <ToggleControl
-                    label={__('Activate Debug Log', 'simply-static')}
-                    help={__('Enable it to download the debug log from WP Static Export -> Generate.', 'simply-static')}
+                    label={__('Activate Debug Log', 'wp-static-export')}
+                    help={__('Enable it to download the debug log from WP Static Export -> Generate.', 'wp-static-export')}
                     __nextHasNoMarginBottom
                     checked={activateDebugLog}
                     onChange={(value) => {
@@ -237,12 +237,12 @@ function DebugSettings() {
         <Spacer margin={5}/>
         <Card>
             <CardHeader>
-                <b>{__('Cron', 'simply-static')}</b>
+                <b>{__('Cron', 'wp-static-export')}</b>
             </CardHeader>
             <CardBody>
                 <ToggleControl
-                    label={__('Use server-side cron job', 'simply-static')}
-                    help={__('Enable this if you use a server-side cron job instead of the default WP-Cron.', 'simply-static')}
+                    label={__('Use server-side cron job', 'wp-static-export')}
+                    help={__('Enable this if you use a server-side cron job instead of the default WP-Cron.', 'wp-static-export')}
                     __nextHasNoMarginBottom
                     disabled={isStudio()}
                     checked={useServerCron}
@@ -260,7 +260,7 @@ function DebugSettings() {
                     {() => (
                         <Notice status="success" isDismissible={false}>
                             <p>
-                                {__('Settings saved successfully.', 'simply-static')}
+                                {__('Settings saved successfully.', 'wp-static-export')}
                             </p>
                         </Notice>
                     )}
@@ -270,7 +270,7 @@ function DebugSettings() {
         }
         <div className={"save-settings"}>
             <Button onClick={setSavingSettings}
-                    variant="primary">{__('Save Settings', 'simply-static')}</Button>
+                    variant="primary">{__('Save Settings', 'wp-static-export')}</Button>
         </div>
     </div>)
 }

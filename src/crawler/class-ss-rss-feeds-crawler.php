@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static\Crawler;
+namespace WP_Static_Export\Crawler;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -25,8 +25,8 @@ class Rss_Feeds_Crawler extends Crawler {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->name        = __( 'RSS Feeds', 'simply-static' );
-		$this->description = __( 'Detects WordPress RSS feed URLs.', 'simply-static' );
+		$this->name        = __( 'RSS Feeds', 'wp-static-export' );
+		$this->description = __( 'Detects WordPress RSS feed URLs.', 'wp-static-export' );
 	}
 
 	/**
@@ -36,7 +36,7 @@ class Rss_Feeds_Crawler extends Crawler {
 	 * @return boolean
 	 */
 	public function is_active() {
-		$options = \Simply_Static\Options::instance();
+		$options = \WP_Static_Export\Options::instance();
 
 		// Only active if the add_feeds option is enabled
 		if ( ! $options->get( 'add_feeds' ) ) {
@@ -54,9 +54,9 @@ class Rss_Feeds_Crawler extends Crawler {
 	 */
 	public function detect(): array {
 		$feed_urls = [];
-		$max_objects = max( 1, min( 100000, (int) apply_filters( 'simply_static_rss_feed_detection_limit', 1000 ) ) );
+		$max_objects = max( 1, min( 100000, (int) apply_filters( 'wpse_rss_feed_detection_limit', 1000 ) ) );
 
-		$options                 = get_option( 'simply-static' );
+		$options                 = get_option( 'wp-static-export' );
 		$has_post_type_selection = isset( $options['post_types'] ) && is_array( $options['post_types'] ) && ( ! empty( $options['post_types_configured'] ) || ! empty( $options['post_types'] ) );
 		$selected_post_types     = $has_post_type_selection ? $options['post_types'] : [];
 
@@ -129,7 +129,7 @@ class Rss_Feeds_Crawler extends Crawler {
 	 * @return int Number of URLs added by this invocation.
 	 */
 	public function add_urls_to_queue() : int {
-		$options                 = get_option( 'simply-static' );
+		$options                 = get_option( 'wp-static-export' );
 		$has_post_type_selection = isset( $options['post_types'] ) && is_array( $options['post_types'] ) && ( ! empty( $options['post_types_configured'] ) || ! empty( $options['post_types'] ) );
 		$selected_post_types     = $has_post_type_selection ? $options['post_types'] : array();
 		if ( $has_post_type_selection && empty( $selected_post_types ) ) {
@@ -145,11 +145,11 @@ class Rss_Feeds_Crawler extends Crawler {
 			$post_types = array_values( array_intersect( $post_types, $selected_post_types ) );
 		}
 		$signature = hash( 'sha256', serialize( array(
-			'archive_start_time' => \Simply_Static\Options::instance()->get( 'archive_start_time' ),
+			'archive_start_time' => \WP_Static_Export\Options::instance()->get( 'archive_start_time' ),
 			'include_posts'      => $include_post_feeds,
 			'post_types'         => $post_types,
 		) ) );
-		$state = \Simply_Static\Options::instance()->get( 'rss_feeds_crawler_state' );
+		$state = \WP_Static_Export\Options::instance()->get( 'rss_feeds_crawler_state' );
 		if ( ! is_array( $state ) || 1 !== ( $state['version'] ?? null ) || $signature !== ( $state['signature'] ?? null ) || ! in_array( $state['stage'] ?? null, array( 'categories', 'tags', 'authors' ), true ) || ! is_int( $state['offset'] ?? null ) || $state['offset'] < 0 ) {
 			$state = array( 'version' => 1, 'signature' => $signature, 'stage' => 'categories', 'offset' => 0, 'base_added' => false, 'added' => 0, 'scanned' => 0 );
 		}
@@ -182,7 +182,7 @@ class Rss_Feeds_Crawler extends Crawler {
 			return $added_now;
 		}
 
-		$batch_size = max( 1, min( 500, (int) apply_filters( 'simply_static_rss_feeds_crawler_batch_size', 100 ) ) );
+		$batch_size = max( 1, min( 500, (int) apply_filters( 'wpse_rss_feeds_crawler_batch_size', 100 ) ) );
 		$this->complete = true;
 		while ( true ) {
 			$urls = array();

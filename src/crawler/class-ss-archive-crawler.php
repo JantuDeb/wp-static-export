@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static\Crawler;
+namespace WP_Static_Export\Crawler;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -31,8 +31,8 @@ class Archive_Crawler extends Crawler {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->name = __( 'Archive URLs', 'simply-static' );
-		$this->description = __( 'Detects yearly, monthly, and daily archive URLs.', 'simply-static' );
+		$this->name = __( 'Archive URLs', 'wp-static-export' );
+		$this->description = __( 'Detects yearly, monthly, and daily archive URLs.', 'wp-static-export' );
 	}
 
 	/**
@@ -42,7 +42,7 @@ class Archive_Crawler extends Crawler {
 	 */
 	public function detect() : array {
 		$archive_urls = [];
-		$max_archives = max( 1, min( 100000, (int) apply_filters( 'simply_static_archive_detection_limit', 1000 ) ) );
+		$max_archives = max( 1, min( 100000, (int) apply_filters( 'wpse_archive_detection_limit', 1000 ) ) );
 
 		// Get yearly archives
 		$yearly_archives = wp_get_archives(
@@ -102,15 +102,15 @@ class Archive_Crawler extends Crawler {
 		global $wpdb;
 
 		$signature = hash( 'sha256', serialize( array(
-			'archive_start_time' => \Simply_Static\Options::instance()->get( 'archive_start_time' ),
+			'archive_start_time' => \WP_Static_Export\Options::instance()->get( 'archive_start_time' ),
 			'blog_id'            => get_current_blog_id(),
 		) ) );
-		$state = \Simply_Static\Options::instance()->get( 'archive_crawler_state' );
+		$state = \WP_Static_Export\Options::instance()->get( 'archive_crawler_state' );
 		if ( ! is_array( $state ) || 1 !== ( $state['version'] ?? null ) || $signature !== ( $state['signature'] ?? null ) || ! is_int( $state['last_post_id'] ?? null ) || $state['last_post_id'] < 0 ) {
 			$state = array( 'version' => 1, 'signature' => $signature, 'last_post_id' => 0, 'added' => 0, 'scanned' => 0 );
 		}
 
-		$batch_size = max( 1, min( 500, (int) apply_filters( 'simply_static_archive_crawler_batch_size', 100 ) ) );
+		$batch_size = max( 1, min( 500, (int) apply_filters( 'wpse_archive_crawler_batch_size', 100 ) ) );
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT ID, post_date FROM {$wpdb->posts} WHERE post_type = 'post' AND post_status = 'publish' AND ID > %d ORDER BY ID ASC LIMIT %d",

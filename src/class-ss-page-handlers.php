@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) {
@@ -47,16 +47,16 @@ class Page_Handlers {
 	 * @return bool
 	 */
 	protected function is_static_page_request() {
-		return isset( $_GET['simply_static_page'] ) && absint( $_GET['simply_static_page'] ) > 0;
+		return isset( $_GET['wpse_page'] ) && absint( $_GET['wpse_page'] ) > 0;
 	}
 
 	/**
 	 * Get Static Page.
 	 *
-	 * @return \Simply_Static\Page|null
+	 * @return \WP_Static_Export\Page|null
 	 */
 	public function get_static_page() {
-		return Page::query()->find_by( 'id', absint( $_GET['simply_static_page'] ) );
+		return Page::query()->find_by( 'id', absint( $_GET['wpse_page'] ) );
 	}
 
 	/**
@@ -79,7 +79,7 @@ class Page_Handlers {
 
 		$handler->run_hooks();
 
-		do_action( 'simply_static_page_handler_request_after_hooks', $handler );
+		do_action( 'wpse_page_handler_request_after_hooks', $handler );
 
 		$this->remove_page_id_from_request_uri();
 	}
@@ -101,7 +101,7 @@ class Page_Handlers {
 		}
 
 		$_SERVER['REQUEST_URI'] = remove_query_arg(
-			'simply_static_page',
+			'wpse_page',
 			wp_unslash( $_SERVER['REQUEST_URI'] )
 		);
 	}

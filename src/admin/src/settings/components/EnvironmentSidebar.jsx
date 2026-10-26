@@ -33,7 +33,7 @@ export default function EnvironmentSidebar({ getSettings, isRunning }) {
             return;
         }
         apiFetch({
-            path: '/simplystatic/v1/environment',
+            path: '/wp-static-export/v1/environment',
             method: 'GET',
         })
             .then((resp) => {
@@ -63,7 +63,7 @@ export default function EnvironmentSidebar({ getSettings, isRunning }) {
             return;
         }
         apiFetch({
-            path: '/simplystatic/v1/environment',
+            path: '/wp-static-export/v1/environment',
             method: 'DELETE',
             data: { version: selectedEnvironment }
         }).then((resp) => {
@@ -89,7 +89,7 @@ export default function EnvironmentSidebar({ getSettings, isRunning }) {
             return;
         }
         apiFetch({
-            path: '/simplystatic/v1/environment',
+            path: '/wp-static-export/v1/environment',
             method: 'PUT',
             data: { version: version },
         }).then(() => {
@@ -104,7 +104,7 @@ export default function EnvironmentSidebar({ getSettings, isRunning }) {
 
     const currentVersion = () => {
         if ( changingEnvironment ) {
-            return __( 'Changing ...', 'simply-static' );
+            return __( 'Changing ...', 'wp-static-export' );
         }
 
         return selectableEnvironments.filter( (item) => {
@@ -113,9 +113,9 @@ export default function EnvironmentSidebar({ getSettings, isRunning }) {
     }
 
     return (<div className={"environment-container"}>
-        <h4 className={"settings-headline"}> {__('Environment', 'simply-static')}</h4>
+        <h4 className={"settings-headline"}> {__('Environment', 'wp-static-export')}</h4>
         { !showingEnvironmentForm && selectedEnvironment &&
-            <p>{__('Current', 'simply-static')}: <strong>{currentVersion()}</strong></p>
+            <p>{__('Current', 'wp-static-export')}: <strong>{currentVersion()}</strong></p>
         }
         { !showingEnvironmentForm && selectableEnvironments.length > 0 &&
             <>
@@ -133,7 +133,7 @@ export default function EnvironmentSidebar({ getSettings, isRunning }) {
         {
             !showingEnvironmentForm && !isStudioEnvironment &&
             <Button disabled={isRunning || changingEnvironment} variant={"primary"} size={"large"} onClick={() => setShowingEnvironmentForm(true)}>
-                {__('Create an Environment', 'simply-static')}
+                {__('Create an Environment', 'wp-static-export')}
             </Button>
         }
         { showingEnvironmentForm && !isStudioEnvironment && <EnvironmentForm onClose={() => setShowingEnvironmentForm(false)} setSelectedEnvironment={setSelectedEnvironment} setSelectableEnvironments={setSelectableEnvironments} />}

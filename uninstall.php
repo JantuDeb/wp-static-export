@@ -65,7 +65,7 @@ function ss_rrmdir_uninstall( $dir ) {
  * @return void
  */
 function ss_restore_divi_options_uninstall() {
-	$backup = get_option( 'simply_static_divi_performance_options_backup' );
+	$backup = get_option( 'wpse_divi_performance_options_backup' );
 
 	if ( is_array( $backup ) ) {
 		$containers = array( 'et_divi', 'et_pb_options', 'et_core_options', 'et_core_option' );
@@ -97,7 +97,7 @@ function ss_restore_divi_options_uninstall() {
 		}
 	}
 
-	delete_option( 'simply_static_divi_performance_options_backup' );
+	delete_option( 'wpse_divi_performance_options_backup' );
 }
 
 /**
@@ -117,8 +117,8 @@ function ss_delete_runtime_rows_uninstall() {
 		return;
 	}
 
-	$batch_pattern    = $wpdb->esc_like( 'wp_archive_creation_job_batch_' ) . '%';
-	$progress_pattern = $wpdb->esc_like( 'simply_static_' ) . '%' . $wpdb->esc_like( '_total_pages' );
+	$batch_pattern    = $wpdb->esc_like( 'wpse_archive_creation_job_batch_' ) . '%';
+	$progress_pattern = $wpdb->esc_like( 'wpse_' ) . '%' . $wpdb->esc_like( '_total_pages' );
 	$query            = "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s";
 
 	$wpdb->query( $wpdb->prepare( $query, $batch_pattern, $progress_pattern ) );
@@ -201,32 +201,32 @@ function ss_cleanup_site_uninstall( $site_id ) {
 	$network_id = ss_get_site_network_id_uninstall( $site_id );
 
 	if ( function_exists( 'wp_clear_scheduled_hook' ) ) {
-		wp_clear_scheduled_hook( 'simply_static_site_export_cron' );
-		wp_clear_scheduled_hook( 'wp_archive_creation_job_cron' );
+		wp_clear_scheduled_hook( 'wpse_site_export_cron' );
+		wp_clear_scheduled_hook( 'wpse_archive_creation_job_cron' );
 	}
 
 	// Do not create an uploads directory just to remove the plugin's directory.
 	$uploads = wp_upload_dir( null, false );
 	if ( is_array( $uploads ) && ! empty( $uploads['basedir'] ) ) {
-		ss_rrmdir_uninstall( trailingslashit( $uploads['basedir'] ) . 'simply-static' );
+		ss_rrmdir_uninstall( trailingslashit( $uploads['basedir'] ) . 'wp-static-export' );
 	}
 
 	ss_restore_divi_options_uninstall();
 
 	$options = array(
-		'simply-static',
-		'simply_static_zip_files',
-		'simply-static-404-only',
-		'simply-static-use-single',
-		'simply-static-use-build',
-		'simply-static-use-language',
-		'wp_archive_creation_job_status',
-		'simply_static_fetch_urls_total_pages',
-		'simply_static_transfer_files_locally_total_pages',
-		'simply_static_github_deploy_total_pages',
-		'simply_static_aws_deploy_total_pages',
-		'simply_static_sftp_deploy_total_pages',
-		'simply_static_sftp_bulk_deploy_total_pages',
+		'wp-static-export',
+		'wpse_zip_files',
+		'wp-static-export-404-only',
+		'wp-static-export-use-single',
+		'wp-static-export-use-build',
+		'wp-static-export-use-language',
+		'wpse_archive_creation_job_status',
+		'wpse_fetch_urls_total_pages',
+		'wpse_transfer_files_locally_total_pages',
+		'wpse_github_deploy_total_pages',
+		'wpse_aws_deploy_total_pages',
+		'wpse_sftp_deploy_total_pages',
+		'wpse_sftp_bulk_deploy_total_pages',
 	);
 
 	foreach ( $options as $option_name ) {
@@ -237,14 +237,14 @@ function ss_cleanup_site_uninstall( $site_id ) {
 
 	// These values live in network storage but are scoped to one site ID.
 	if ( is_multisite() ) {
-		ss_delete_network_transient_uninstall( $network_id, 'wp_archive_creation_job_process_lock_site_' . $site_id );
-		ss_delete_network_transient_uninstall( $network_id, 'wp_archive_creation_job_loopback_available_site_' . $site_id );
-		ss_delete_network_option_uninstall( $network_id, 'simply-static-' . $site_id );
+		ss_delete_network_transient_uninstall( $network_id, 'wpse_archive_creation_job_process_lock_site_' . $site_id );
+		ss_delete_network_transient_uninstall( $network_id, 'wpse_archive_creation_job_loopback_available_site_' . $site_id );
+		ss_delete_network_option_uninstall( $network_id, 'wp-static-export-' . $site_id );
 	}
 
-	Simply_Static\Page::drop_table();
-	Simply_Static\Deploy_Manifest_Url::drop_table();
-	Simply_Static\Deploy_Manifest::drop_table();
+	WP_Static_Export\Page::drop_table();
+	WP_Static_Export\Deploy_Manifest_Url::drop_table();
+	WP_Static_Export\Deploy_Manifest::drop_table();
 }
 
 /**
@@ -255,8 +255,8 @@ function ss_cleanup_site_uninstall( $site_id ) {
  * @return void
  */
 function ss_cleanup_network_state_uninstall( $network_id = 0 ) {
-	ss_delete_network_transient_uninstall( $network_id, 'wp_archive_creation_job_process_lock' );
-	ss_delete_network_transient_uninstall( $network_id, 'wp_archive_creation_job_loopback_available' );
+	ss_delete_network_transient_uninstall( $network_id, 'wpse_archive_creation_job_process_lock' );
+	ss_delete_network_transient_uninstall( $network_id, 'wpse_archive_creation_job_loopback_available' );
 	ss_delete_network_option_uninstall( $network_id, 'simply-static_multisite_export_running' );
 	ss_delete_network_option_uninstall( $network_id, 'simply-static_blog_exported' );
 }

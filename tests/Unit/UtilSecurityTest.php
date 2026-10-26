@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Options;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
-use Simply_Static\Util;
+use WP_Static_Export\Options;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Util;
 
 final class UtilSecurityTest extends UnitTestCase {
 
@@ -19,7 +19,7 @@ final class UtilSecurityTest extends UnitTestCase {
 		$this->requireSource( 'src/class-ss-util.php' );
 		$this->requireSource( 'src/tasks/traits/trait-ss-can-transfer.php' );
 
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'http_basic_auth_username' => 'crawler',
 			'http_basic_auth_password' => 'correct horse',
 			'origin_url'               => '',
@@ -35,7 +35,7 @@ final class UtilSecurityTest extends UnitTestCase {
 
 	public function test_transfer_paths_are_portable_and_archive_relative(): void {
 		$transfer = new class() {
-			use \Simply_Static\canTransfer;
+			use \WP_Static_Export\canTransfer;
 
 			public function page_file_path( $page ): string {
 				return $this->get_page_file_path( $page );
@@ -126,10 +126,10 @@ final class UtilSecurityTest extends UnitTestCase {
 	 * @preserveGlobalState disabled
 	 */
 	public function test_runtime_basic_auth_constants_survive_an_unrelated_option_save(): void {
-		define( 'SIMPLY_STATIC_HTTP_BASIC_AUTH_USERNAME', 'runtime-crawler' );
-		define( 'SIMPLY_STATIC_HTTP_BASIC_AUTH_PASSWORD', 'runtime-password' );
+		define( 'WPSE_HTTP_BASIC_AUTH_USERNAME', 'runtime-crawler' );
+		define( 'WPSE_HTTP_BASIC_AUTH_PASSWORD', 'runtime-password' );
 
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'delivery_method' => 'zip',
 			'origin_url'      => '',
 		);
@@ -140,22 +140,22 @@ final class UtilSecurityTest extends UnitTestCase {
 			'Basic ' . base64_encode( 'runtime-crawler:runtime-password' ),
 			Util::get_basic_auth_header_for_url( 'https://example.test/page' )
 		);
-		self::assertArrayNotHasKey( 'http_basic_auth_username', WpEnv::$options['simply-static'] );
-		self::assertArrayNotHasKey( 'http_basic_auth_password', WpEnv::$options['simply-static'] );
+		self::assertArrayNotHasKey( 'http_basic_auth_username', WpEnv::$options['wp-static-export'] );
+		self::assertArrayNotHasKey( 'http_basic_auth_password', WpEnv::$options['wp-static-export'] );
 	}
 
 	public function test_empty_credentials_never_create_an_authorization_header(): void {
-		WpEnv::$options['simply-static']['http_basic_auth_username'] = '';
-		WpEnv::$options['simply-static']['http_basic_auth_password'] = '';
+		WpEnv::$options['wp-static-export']['http_basic_auth_username'] = '';
+		WpEnv::$options['wp-static-export']['http_basic_auth_password'] = '';
 		Options::reinstance();
 
 		self::assertNull( Util::get_basic_auth_header_for_url( 'https://example.test/page' ) );
 	}
 
 	public function test_crawl_local_filters_do_not_implicitly_expand_basic_auth_trust(): void {
-		add_filter( 'ss_is_local_origin_url', '__return_true' );
+		add_filter( 'wpse_is_local_origin_url', '__return_true' );
 		add_filter(
-			'ss_local_url_bases',
+			'wpse_local_url_bases',
 			static function ( array $bases ): array {
 				$bases[] = 'https://integration.example.test';
 				return $bases;
@@ -165,7 +165,7 @@ final class UtilSecurityTest extends UnitTestCase {
 		self::assertTrue( Util::is_local_origin_url( 'https://integration.example.test/resource' ) );
 		self::assertNull( Util::get_basic_auth_header_for_url( 'https://integration.example.test/resource' ) );
 
-		add_filter( 'ss_send_basic_auth_to_url', '__return_true' );
+		add_filter( 'wpse_send_basic_auth_to_url', '__return_true' );
 		self::assertSame(
 			'Basic ' . base64_encode( 'crawler:correct horse' ),
 			Util::get_basic_auth_header_for_url( 'https://integration.example.test/resource' )
@@ -174,12 +174,12 @@ final class UtilSecurityTest extends UnitTestCase {
 
 	public function test_absolute_paths_are_converted_only_inside_wordpress_roots(): void {
 		self::assertSame(
-			WP_CONTENT_URL . '/simply-static/export.zip',
-			Util::abs_path_to_url( WP_CONTENT_DIR . '/simply-static/export.zip' )
+			WP_CONTENT_URL . '/wp-static-export/export.zip',
+			Util::abs_path_to_url( WP_CONTENT_DIR . '/wp-static-export/export.zip' )
 		);
 		self::assertSame(
-			WpEnv::$upload_dir['baseurl'] . '/simply-static/temp-files/export.zip',
-			Util::abs_path_to_url( WpEnv::$upload_dir['basedir'] . '/simply-static/temp-files/export.zip' )
+			WpEnv::$upload_dir['baseurl'] . '/wp-static-export/temp-files/export.zip',
+			Util::abs_path_to_url( WpEnv::$upload_dir['basedir'] . '/wp-static-export/temp-files/export.zip' )
 		);
 		self::assertSame(
 			'https://example.test/wp-content-backup/export.zip',
@@ -190,27 +190,27 @@ final class UtilSecurityTest extends UnitTestCase {
 
 	public function test_private_backup_artifacts_are_excluded_from_discovery_and_stale_queues(): void {
 		$key = str_repeat( 'a', 32 );
-		$url = 'https://example.test/wp-content/uploads/simply-static/backup-' . $key . '/studio-backup-2026-04-10.zip';
+		$url = 'https://example.test/wp-content/uploads/wp-static-export/backup-' . $key . '/studio-backup-2026-04-10.zip';
 
 		self::assertTrue( Util::is_private_backup_path( $url ) );
-		self::assertTrue( Util::is_private_backup_path( '/simply-static/backup-' . strtoupper( $key ) . '/config.json' ) );
+		self::assertTrue( Util::is_private_backup_path( '/wp-static-export/backup-' . strtoupper( $key ) . '/config.json' ) );
 		self::assertTrue( Util::is_url_excluded( $url ) );
 	}
 
 	/**
 	 * @dataProvider publicSimplyStaticPathProvider
 	 */
-	public function test_public_simply_static_uploads_are_not_mistaken_for_private_backups( string $path ): void {
+	public function test_public_wpse_uploads_are_not_mistaken_for_private_backups( string $path ): void {
 		self::assertFalse( Util::is_private_backup_path( $path ) );
 	}
 
 	/** @return array<string,array{string}> */
 	public function publicSimplyStaticPathProvider(): array {
 		return array(
-			'generated config'       => array( '/wp-content/uploads/simply-static/configs/forms.json' ),
-			'legacy archive name'    => array( '/wp-content/uploads/simply-static/studio-backup-2026-04-10.zip' ),
-			'short backup key'       => array( '/wp-content/uploads/simply-static/backup-abc/archive.zip' ),
-			'backup prefix collision' => array( '/wp-content/uploads/simply-static/backup-' . str_repeat( 'a', 32 ) . '-copy/archive.zip' ),
+			'generated config'       => array( '/wp-content/uploads/wp-static-export/configs/forms.json' ),
+			'legacy archive name'    => array( '/wp-content/uploads/wp-static-export/studio-backup-2026-04-10.zip' ),
+			'short backup key'       => array( '/wp-content/uploads/wp-static-export/backup-abc/archive.zip' ),
+			'backup prefix collision' => array( '/wp-content/uploads/wp-static-export/backup-' . str_repeat( 'a', 32 ) . '-copy/archive.zip' ),
 		);
 	}
 
@@ -247,7 +247,7 @@ final class UtilSecurityTest extends UnitTestCase {
 
 	public function test_recursive_deletion_rejects_protected_roots_but_allows_a_dedicated_child(): void {
 		$uploads = WpEnv::$upload_dir['basedir'];
-		$managed = $uploads . '/simply-static/temp-files';
+		$managed = $uploads . '/wp-static-export/temp-files';
 		wp_mkdir_p( $managed . '/nested' );
 		file_put_contents( $managed . '/nested/file.txt', 'content' );
 
@@ -267,7 +267,7 @@ final class UtilSecurityTest extends UnitTestCase {
 	 * @preserveGlobalState disabled
 	 */
 	public function test_temp_directory_ignores_an_imported_path_outside_open_basedir(): void {
-		$upload_root = sys_get_temp_dir() . '/simply-static-open-basedir-' . uniqid( '', true );
+		$upload_root = sys_get_temp_dir() . '/wp-static-export-open-basedir-' . uniqid( '', true );
 		$allowed_paths = sys_get_temp_dir() . PATH_SEPARATOR . dirname( __DIR__, 2 );
 		$previous_restriction = ini_set( 'open_basedir', $allowed_paths );
 		if ( false === $previous_restriction ) {
@@ -278,10 +278,10 @@ final class UtilSecurityTest extends UnitTestCase {
 			'basedir' => $upload_root,
 			'baseurl' => 'https://example.test/wp-content/uploads',
 		);
-		WpEnv::$options['simply-static']['temp_files_dir'] = '/var/www/html/wp-content/uploads/simply-static/temp-files/';
+		WpEnv::$options['wp-static-export']['temp_files_dir'] = '/var/www/html/wp-content/uploads/wp-static-export/temp-files/';
 		Options::reinstance();
 
-		$expected = trailingslashit( $upload_root . '/simply-static/temp-files' );
+		$expected = trailingslashit( $upload_root . '/wp-static-export/temp-files' );
 		self::assertSame( $expected, Util::get_temp_dir() );
 		self::assertDirectoryExists( $expected );
 		self::assertFalse( Util::is_path_allowed_by_open_basedir( '/var/www/html/wp-content/uploads' ) );

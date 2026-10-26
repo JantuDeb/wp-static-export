@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -12,40 +12,40 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Plugin {
 	/** Option used as an atomic gate while an export request is being prepared. */
-	const EXPORT_START_LOCK_OPTION = 'simply-static-export-start-lock';
+	const EXPORT_START_LOCK_OPTION = 'wp-static-export-export-start-lock';
 
 	/**
 	 * The slug of the plugin; used in actions, filters, i18n, table names, etc.
 	 *
 	 * @var string
 	 */
-	const SLUG = 'simply-static';
+	const SLUG = 'wp-static-export';
 
 	/**
 	 * Singleton instance.
 	 *
-	 * @var Simply_Static
+	 * @var WP_Static_Export
 	 */
 	protected static $instance = null;
 
 	/**
 	 * An instance of the options structure containing all options for this plugin
 	 *
-	 * @var Simply_Static\Options
+	 * @var WP_Static_Export\Options
 	 */
 	protected $options = null;
 
 	/**
 	 * View object.
 	 *
-	 * @var \Simply_Static\View
+	 * @var \WP_Static_Export\View
 	 */
 	protected $view = null;
 
 	/**
 	 * Archive creation process
 	 *
-	 * @var \Simply_Static\Archive_Creation_Job
+	 * @var \WP_Static_Export\Archive_Creation_Job
 	 */
 	protected $archive_creation_job = null;
 
@@ -57,12 +57,12 @@ class Plugin {
 	protected $current_page = '';
 
 	/**
-	 * @var null|\Simply_Static\Page_Handlers
+	 * @var null|\WP_Static_Export\Page_Handlers
 	 */
 	protected $page_handlers = null;
 
 	/**
-	 * @var null|\Simply_Static\Integrations
+	 * @var null|\WP_Static_Export\Integrations
 	 */
 	protected $integrations = null;
 
@@ -76,7 +76,7 @@ class Plugin {
 
 	/**
 	 * Return an instance of the WP Static Export plugin
-	 * @return Simply_Static
+	 * @return WP_Static_Export
 	 */
 	public static function instance() {
 		if ( null === self::$instance ) {
@@ -87,33 +87,33 @@ class Plugin {
 			self::$instance->page_handlers = new Page_Handlers();
 
 
-   add_action( 'activated_plugin', array( '\\Simply_Static\\Util', 'maybe_auto_include_activated_plugin' ), 10, 2 );
-   add_action( 'deactivated_plugin', array( '\\Simply_Static\\Util', 'maybe_auto_remove_deactivated_plugin' ), 10, 2 );
-   add_action( 'after_switch_theme', array( '\\Simply_Static\\Util', 'maybe_auto_include_active_theme' ) );
+   add_action( 'activated_plugin', array( '\\WP_Static_Export\\Util', 'maybe_auto_include_activated_plugin' ), 10, 2 );
+   add_action( 'deactivated_plugin', array( '\\WP_Static_Export\\Util', 'maybe_auto_remove_deactivated_plugin' ), 10, 2 );
+   add_action( 'after_switch_theme', array( '\\WP_Static_Export\\Util', 'maybe_auto_include_active_theme' ) );
 
 			// Apply hooks after init to avoid loading issues.
 			add_action( 'init', function () {
 				// Run export via WP-Cron.
-				add_action( 'simply_static_site_export_cron', array( self::$instance, 'run_static_export' ) );
+				add_action( 'wpse_site_export_cron', array( self::$instance, 'run_static_export' ) );
 
 				// Forms, comments, search, multilingual.
 				Deploy_Runner::init();
 				Single_Export::init();
 				Html_Enhancer::init();
 				Multilingual::init();
-				add_action( 'ss_before_finish_transferring_files_locally', array( '\\Simply_Static\\Process_Config', 'transfer_extra_files' ), 10, 2 );
+				add_action( 'wpse_before_finish_transferring_files_locally', array( '\\WP_Static_Export\\Process_Config', 'transfer_extra_files' ), 10, 2 );
 
 				// Filters.
-				add_filter( 'simplystatic.archive_creation_job.task_list', array(
+				add_filter( 'wpse.archive_creation_job.task_list', array(
 					self::$instance,
 					'filter_task_list'
 				), 10, 2 );
 
 				// Maybe clear local directory.
-				add_action( 'ss_after_setup_task', array( self::$instance, 'maybe_clear_directory' ) );
+				add_action( 'wpse_after_setup_task', array( self::$instance, 'maybe_clear_directory' ) );
 
 				// Add quick link to the plugin page.
-				add_filter( 'plugin_action_links_simply-static/simply-static.php', array(
+				add_filter( 'plugin_action_links_simply-static/wp-static-export.php', array(
 					self::$instance,
 					'add_quick_links'
 				) );
@@ -128,7 +128,7 @@ class Plugin {
 				// Set up defaults.
 				self::$instance->options              = Options::instance();
 				self::$instance->view                 = new View();
-				$archive_job_class = apply_filters( 'ss_archive_creation_job_class', '\\Simply_Static\\Archive_Creation_Job' );
+				$archive_job_class = apply_filters( 'wpse_archive_creation_job_class', '\\WP_Static_Export\\Archive_Creation_Job' );
 				self::$instance->archive_creation_job = new $archive_job_class();
 
 				// Set up pagination.
@@ -221,7 +221,7 @@ class Plugin {
 		require_once $path . 'src/tasks/class-ss-process-task.php';
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			require_once $path . 'src/cli/class-ss-cli-command.php';
-			\WP_CLI::add_command( 'simply-static', '\\Simply_Static\\CLI_Command' );
+			\WP_CLI::add_command( 'static-export', '\\WP_Static_Export\\CLI_Command' );
 		}
 		require_once $path . 'src/handlers/class-ss-page-handler.php';
 		require_once $path . 'src/class-ss-query.php';
@@ -242,7 +242,6 @@ class Plugin {
 		require_once $path . 'src/admin/inc/class-ss-admin-dashboard-widget.php';
 		require_once $path . 'src/admin/inc/class-ss-migrate-settings.php';
 		require_once $path . 'src/class-ss-multisite.php';
-		require_once $path . 'src/class-ss-compatibility-api-client.php';
 		require_once $path . 'src/class-ss-plugin-compatibility.php';
 	}
 
@@ -331,7 +330,7 @@ class Plugin {
 
 			// Exit if Basic Auth but no credentials were provided.
 			if ( $basic_auth_on ) {
-				$options         = get_option( 'simply-static' );
+				$options         = get_option( 'wp-static-export' );
 				$options         = is_array( $options ) ? $options : array();
 				$basic_auth_user = isset( $options['http_basic_auth_username'] ) ? $options['http_basic_auth_username'] : '';
 				$basic_auth_pass = isset( $options['http_basic_auth_password'] ) ? $options['http_basic_auth_password'] : '';
@@ -344,7 +343,7 @@ class Plugin {
 				if ( ! $credentials_configured ) {
 					// Reject the export before dispatching background work. Starting and
 					// immediately cancelling left stale queue and archive state behind.
-					$message = __( 'Missing Basic Auth credentials - you need to configure the Basic Auth credentials in WP Static Export -> Settings -> Misc -> Basic Auth to continue the export.', 'simply-static' );
+					$message = __( 'Missing Basic Auth credentials - you need to configure the Basic Auth credentials in WP Static Export -> Settings -> Misc -> Basic Auth to continue the export.', 'wp-static-export' );
 					$this->archive_creation_job->save_status_message( $message, 'error' );
 					return false;
 				}
@@ -367,7 +366,7 @@ class Plugin {
 				}
 			}
 
-			do_action( 'ss_before_static_export', $blog_id, $type );
+			do_action( 'wpse_before_static_export', $blog_id, $type );
 
 			// Clear transients.
 			Util::clear_transients();
@@ -521,7 +520,7 @@ class Plugin {
 	public function get_activity_log( $blog_id = 0 ) {
 		$blog_id = $blog_id ?: get_current_blog_id();
 
-		do_action( 'ss_before_render_activity_log', $blog_id );
+		do_action( 'wpse_before_render_activity_log', $blog_id );
 
 		$log = $this->options->get( 'archive_status_messages' );
 		if ( ! is_array( $log ) ) {
@@ -553,7 +552,7 @@ class Plugin {
 			}
 		}
 
-		do_action( 'ss_after_render_activity_log', $blog_id, $this->get_archive_creation_job() );
+		do_action( 'wpse_after_render_activity_log', $blog_id, $this->get_archive_creation_job() );
 
 		return $log;
 	}
@@ -573,7 +572,7 @@ class Plugin {
 
 		$blog_id = $blog_id ?: get_current_blog_id();
 
-		do_action( 'ss_before_render_export_log', $blog_id, $this->get_archive_creation_job() );
+		do_action( 'wpse_before_render_export_log', $blog_id, $this->get_archive_creation_job() );
 
 		$per_page    = min( 200, max( 1, absint( $per_page ?: 25 ) ) );
 		$current_page = max( 1, absint( $current_page ) );
@@ -599,7 +598,7 @@ class Plugin {
 			);
 		}
 
-		$static_pages = apply_filters( 'ss_total_pages_log', $query->find() );
+		$static_pages = apply_filters( 'wpse_total_pages_log', $query->find() );
 
 		if ( ! empty( $search ) ) {
 			$like               = '%' . $wpdb->esc_like( $search ) . '%';
@@ -615,24 +614,24 @@ class Plugin {
 					$like
 				)
 			);
-			$total_static_pages = apply_filters( 'ss_total_pages', (int) $count_query->count() );
+			$total_static_pages = apply_filters( 'wpse_total_pages', (int) $count_query->count() );
 			$http_status_codes  = Page::get_http_status_codes_summary();
 		} else {
 			if ( ! empty( $scope ) ) {
 				// Count only pages that belong to the current scoped export.
 				$count_query = Page::query();
 				$this->apply_export_log_scope( $count_query, $scope );
-				$total_static_pages = apply_filters( 'ss_total_pages', (int) $count_query->count() );
+				$total_static_pages = apply_filters( 'wpse_total_pages', (int) $count_query->count() );
 				$http_status_codes  = Page::get_http_status_codes_summary();
 			} else {
 				$http_status_codes  = Page::get_http_status_codes_summary();
-				$total_static_pages = apply_filters( 'ss_total_pages', array_sum( array_values( $http_status_codes ) ) );
+				$total_static_pages = apply_filters( 'wpse_total_pages', array_sum( array_values( $http_status_codes ) ) );
 			}
 		}
 
 		$total_pages = ceil( $total_static_pages / $per_page );
 
-		do_action( 'ss_after_render_export_log', $blog_id, $this->get_archive_creation_job() );
+		do_action( 'wpse_after_render_export_log', $blog_id, $this->get_archive_creation_job() );
 
 		$static_pages_formatted = [];
 
@@ -644,7 +643,7 @@ class Plugin {
 				$parent_url  = esc_url( $parent_static_page->url );
 				$label       = sprintf(
 					/* translators: %s: URL on which the exported resource was discovered. */
-					__( 'Found on %s', 'simply-static' ),
+					__( 'Found on %s', 'wp-static-export' ),
 					$display_url
 				);
 				$msg         .= $parent_url
@@ -695,8 +694,8 @@ class Plugin {
 	 * @return array
 	 */
 	private function get_export_log_scope() {
-		$use_single         = get_option( 'simply-static-use-single' );
-		$use_build          = get_option( 'simply-static-use-build' );
+		$use_single         = get_option( 'wp-static-export-use-single' );
+		$use_build          = get_option( 'wp-static-export-use-build' );
 		$generate_type      = $this->options->get( 'generate_type' );
 		$archive_start_time = $this->options->get( 'archive_start_time' );
 
@@ -770,7 +769,7 @@ class Plugin {
 	 */
 	public function filter_task_list( $task_list, $delivery_method ): array {
 		// 404-only export short-circuit
-		$only_404 = get_option( 'simply-static-404-only' );
+		$only_404 = get_option( 'wp-static-export-404-only' );
 		if ( ! empty( $only_404 ) ) {
 			$task_list = [ 'setup' ];
 			// Always include the 404 generator for this mode.
@@ -794,8 +793,8 @@ class Plugin {
 
 		if ( $this->options->get( 'smart_crawl' ) ) {
 			// Only include discover_urls on full exports (exclude update, single, and build exports).
-			$use_single  = get_option( 'simply-static-use-single' );
-			$use_build   = get_option( 'simply-static-use-build' );
+			$use_single  = get_option( 'wp-static-export-use-single' );
+			$use_build   = get_option( 'wp-static-export-use-build' );
 			$export_type = $this->options->get( 'generate_type' );
 			if ( empty( $use_single ) && empty( $use_build ) && 'update' !== $export_type ) {
 				$task_list[] = 'discover_urls';
@@ -834,9 +833,9 @@ class Plugin {
 	 */
 	public function maybe_clear_directory() {
 		// Check the export type.
-		$use_single            = get_option( 'simply-static-use-single' );
-		$use_build             = get_option( 'simply-static-use-build' );
-		$only_404              = get_option( 'simply-static-404-only' );
+		$use_single            = get_option( 'wp-static-export-use-single' );
+		$use_build             = get_option( 'wp-static-export-use-build' );
+		$only_404              = get_option( 'wp-static-export-404-only' );
 		$export_type           = $this->options->get( 'generate_type' ) ?: 'export';
 		$delivery_method       = $this->options->get( 'delivery_method' );
 		$clear_before_export   = $this->options->get( 'clear_directory_before_export' );
@@ -848,7 +847,7 @@ class Plugin {
 			&& 'local' === $delivery_method;
 
 		$clear_local_directory = apply_filters(
-			'ss_clear_local_directory',
+			'wpse_clear_local_directory',
 			$is_full_local_export,
 			$export_type,
 			$use_single,
@@ -859,7 +858,7 @@ class Plugin {
 
 		// Clear out the local directory before copying files.
 		if ( $clear_local_directory ) {
-			$local_dir = apply_filters( 'ss_local_dir', $this->options->get( 'local_dir' ) );
+			$local_dir = apply_filters( 'wpse_local_dir', $this->options->get( 'local_dir' ) );
 
 			// Make sure the directory exists and is not empty.
 			if ( is_string( $local_dir ) && Util::is_path_allowed_by_open_basedir( $local_dir ) && is_dir( $local_dir ) ) {
@@ -890,11 +889,11 @@ class Plugin {
 	 * @return array
 	 */
 	public function add_quick_links( $links ) {
-		$settings_url = esc_url( get_admin_url() . 'admin.php?page=simply-static-settings' );
-		$docs_url     = esc_url( 'https://docs.simplystatic.com' );
+		$settings_url = esc_url( get_admin_url() . 'admin.php?page=wp-static-export-settings' );
+		$docs_url     = esc_url( 'https://github.com/JantuDeb/wp-static-export#readme' );
 
-		$links[] = '<a href="' . $settings_url . '">' . esc_html__( 'Settings', 'simply-static' ) . '</a>';
-		$links[] = '<a target="_blank" href="' . $docs_url . '">' . esc_html__( 'Docs', 'simply-static' ) . '</a>';
+		$links[] = '<a href="' . $settings_url . '">' . esc_html__( 'Settings', 'wp-static-export' ) . '</a>';
+		$links[] = '<a target="_blank" href="' . $docs_url . '">' . esc_html__( 'Docs', 'wp-static-export' ) . '</a>';
 
 		return $links;
 	}

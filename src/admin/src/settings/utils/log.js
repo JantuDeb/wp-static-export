@@ -216,7 +216,7 @@ export function getSafeLogUrl( value ) {
 
 	if ( /^\/(?!\/)/.test( candidate ) ) {
 		try {
-			const localBase = new URL( 'https://simply-static.invalid/' );
+			const localBase = new URL( 'https://wp-static-export.invalid/' );
 			const parsed = new URL( candidate, localBase );
 
 			if ( parsed.origin !== localBase.origin ) {

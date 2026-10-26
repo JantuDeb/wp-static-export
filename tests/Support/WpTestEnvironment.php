@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Support;
+namespace WP_Static_Export\Tests\Support;
 
 final class WpTestEnvironment {
 
@@ -150,7 +150,7 @@ final class WpTestEnvironment {
 		self::$site_url         = 'https://example.test';
 		self::$environment_type = 'production';
 		self::$upload_dir       = array(
-			'basedir' => sys_get_temp_dir() . '/simply-static-tests/uploads',
+			'basedir' => sys_get_temp_dir() . '/wp-static-export-tests/uploads',
 			'baseurl' => 'https://example.test/wp-content/uploads',
 		);
 		self::$errors           = array();
@@ -159,7 +159,7 @@ final class WpTestEnvironment {
 		$_REQUEST               = array();
 		$_COOKIE                = array();
 		$_SERVER                = array();
-		unset( $GLOBALS['simply_static_test_scheduled_hooks'] );
+		unset( $GLOBALS['wpse_test_scheduled_hooks'] );
 	}
 
 	/**

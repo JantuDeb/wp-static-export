@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 class SS_Adminbar_Integration extends Integration {
 
@@ -14,8 +14,8 @@ class SS_Adminbar_Integration extends Integration {
 	protected $active_by_default = true;
 
 	public function __construct() {
-		$this->name        = __( 'Admin Bar (Core)', 'simply-static' );
-		$this->description = __( 'Adds an admin bar integration for WP Static Export to see the current status of static exports.', 'simply-static' );
+		$this->name        = __( 'Admin Bar (Core)', 'wp-static-export' );
+		$this->description = __( 'Adds an admin bar integration for WP Static Export to see the current status of static exports.', 'wp-static-export' );
 		$this->requires_ui_reload = true;
 	}
 
@@ -35,34 +35,34 @@ class SS_Adminbar_Integration extends Integration {
 
 	public function add_admin_bar_item( $admin_bar ) {
 		// Only show for users allowed by UAM for Admin Bar visibility (adminbar context).
-		$cap_adminbar = apply_filters( 'ss_user_capability', 'publish_pages', 'adminbar' );
+		$cap_adminbar = apply_filters( 'wpse_user_capability', 'publish_pages', 'adminbar' );
 		if ( ! current_user_can( $cap_adminbar ) ) {
 			return;
 		}
 		// Get settings page.
-		$generate_settings = esc_url( get_admin_url() . 'admin.php?page=simply-static-generate' );
+		$generate_settings = esc_url( get_admin_url() . 'admin.php?page=wp-static-export-generate' );
 
 		$admin_bar->add_node( [
 			'id'    => 'ss-admin-bar',
-			'title' => '<span class="ab-icon"></span><span class="ab-label">' . esc_html__( 'WP Static Export', 'simply-static' ) . '</span>',
+			'title' => '<span class="ab-icon"></span><span class="ab-label">' . esc_html__( 'WP Static Export', 'wp-static-export' ) . '</span>',
 			'href'  => $generate_settings,
 			'meta'  => [
 				'id'    => 'ss-admin-bar',
-				'title' => __( 'WP Static Export', 'simply-static' ),
+				'title' => __( 'WP Static Export', 'wp-static-export' ),
 			],
 		] );
 
 		// First submenu item: current export progress (Idle/Waiting/Running)
 		try {
 			$job = Plugin::instance()->get_archive_creation_job();
-			$status_prefix = __( 'Status: ', 'simply-static' );
-			$status_label = __( 'Idle', 'simply-static' );
+			$status_prefix = __( 'Status: ', 'wp-static-export' );
+			$status_label = __( 'Idle', 'wp-static-export' );
 			$status_class = 'ss-status-idle';
 			if ( method_exists( $job, 'is_running' ) && $job->is_running() ) {
-				$status_label = __( 'Running', 'simply-static' );
+				$status_label = __( 'Running', 'wp-static-export' );
 				$status_class = 'ss-status-running';
 			} elseif ( method_exists( $job, 'is_paused' ) && $job->is_paused() ) {
-				$status_label = __( 'Waiting', 'simply-static' );
+				$status_label = __( 'Waiting', 'wp-static-export' );
 				$status_class = 'ss-status-waiting';
 			}
 			$admin_bar->add_node( [
@@ -78,25 +78,25 @@ class SS_Adminbar_Integration extends Integration {
 
 		// Add submenu items: Diagnostics and Settings
 		// Diagnostics (respect UAM diagnostics context)
-		$cap_diagnostics = apply_filters( 'ss_user_capability', 'publish_pages', 'diagnostics' );
+		$cap_diagnostics = apply_filters( 'wpse_user_capability', 'publish_pages', 'diagnostics' );
 		if ( current_user_can( $cap_diagnostics ) ) {
 			$admin_bar->add_node( [
 				'id'     => 'ss-admin-bar-diagnostics',
 				'parent' => 'ss-admin-bar',
-				'title'  => __( 'Diagnostics', 'simply-static' ),
-				'href'   => esc_url( get_admin_url() . 'admin.php?page=simply-static-diagnostics' ),
+				'title'  => __( 'Diagnostics', 'wp-static-export' ),
+				'href'   => esc_url( get_admin_url() . 'admin.php?page=wp-static-export-diagnostics' ),
 			] );
 		}
 
 		// Settings (not available in Network Admin and requires manage options)
 		if ( ! is_network_admin() ) {
-			$cap_settings = apply_filters( 'ss_user_capability', 'manage_options', 'settings' );
+			$cap_settings = apply_filters( 'wpse_user_capability', 'manage_options', 'settings' );
 			if ( current_user_can( $cap_settings ) ) {
 				$admin_bar->add_node( [
 					'id'     => 'ss-admin-bar-settings',
 					'parent' => 'ss-admin-bar',
-					'title'  => __( 'Settings', 'simply-static' ),
-					'href'   => esc_url( get_admin_url() . 'admin.php?page=simply-static-settings' ),
+					'title'  => __( 'Settings', 'wp-static-export' ),
+					'href'   => esc_url( get_admin_url() . 'admin.php?page=wp-static-export-settings' ),
 				] );
 			}
 		}
@@ -111,11 +111,11 @@ class SS_Adminbar_Integration extends Integration {
  public function get_export_status() {
         // Validate nonce.
         if ( ! isset( $_POST['security'] ) || ! wp_verify_nonce( $_POST['security'], 'ss-admin-bar-nonce' ) ) {
-            wp_die( esc_html__( 'Security check failed', 'simply-static' ) );
+            wp_die( esc_html__( 'Security check failed', 'wp-static-export' ) );
         }
 
 		// Permission check aligned with admin bar visibility (generate capability)
-		$cap_generate = apply_filters( 'ss_user_capability', 'publish_pages', 'generate' );
+		$cap_generate = apply_filters( 'wpse_user_capability', 'publish_pages', 'generate' );
 		if ( ! current_user_can( $cap_generate ) ) {
 			wp_send_json_error( [ 'status' => 'forbidden' ], 403 );
 		}
@@ -145,7 +145,7 @@ class SS_Adminbar_Integration extends Integration {
 	 * @return boolean
 	 */
 	public function dependency_active() {
-		return class_exists( 'Simply_Static\Plugin' );
+		return class_exists( 'WP_Static_Export\Plugin' );
 	}
 
 	/**
@@ -162,16 +162,16 @@ class SS_Adminbar_Integration extends Integration {
 			return;
 		}
 		// Only output assets for users allowed to see the admin bar integration.
-		$cap_generate = apply_filters( 'ss_user_capability', 'publish_pages', 'generate' );
+		$cap_generate = apply_filters( 'wpse_user_capability', 'publish_pages', 'generate' );
 		if ( ! current_user_can( $cap_generate ) ) {
 			return;
 		}
 		$ajax_url = admin_url( 'admin-ajax.php' );
 		$nonce    = wp_create_nonce( 'ss-admin-bar-nonce' );
-		$running  = esc_js( __( 'Running', 'simply-static' ) );
-		$idle     = esc_js( __( 'Idle', 'simply-static' ) );
-		$waiting  = esc_js( __( 'Waiting', 'simply-static' ) );
-		$status_prefix = esc_js( __( 'Status: ', 'simply-static' ) );
+		$running  = esc_js( __( 'Running', 'wp-static-export' ) );
+		$idle     = esc_js( __( 'Idle', 'wp-static-export' ) );
+		$waiting  = esc_js( __( 'Waiting', 'wp-static-export' ) );
+		$status_prefix = esc_js( __( 'Status: ', 'wp-static-export' ) );
 		?>
 		<style id="ss-admin-bar-inline-css">
 			#wp-admin-bar-ss-admin-bar-status > .ab-item.ss-status-running { color: #46b450 !important; }
@@ -184,7 +184,7 @@ class SS_Adminbar_Integration extends Integration {
 			}
 			#wpadminbar #wp-admin-bar-ss-admin-bar > .ab-item .ab-icon:before {
 				content: "";
-				background-image: url('<?php echo esc_url( SIMPLY_STATIC_URL . '/assets/simply-static-icon.svg' ); ?>');
+				background-image: url('<?php echo esc_url( WPSE_URL . '/assets/wp-static-export-icon.svg' ); ?>');
 				background-repeat: no-repeat;
 				background-position: center center;
 				background-size: 16px 16px;

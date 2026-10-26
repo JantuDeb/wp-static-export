@@ -13,7 +13,7 @@ Prereleases do not deploy to WordPress.org.
 1. Create a GitHub Actions environment named `wordpress.org`.
 2. Add these environment secrets:
    - `SVN_USERNAME`: the case-sensitive WordPress.org username of a committer
-     for the `simply-static` plugin.
+     for the `wp-static-export` plugin.
    - `SVN_PASSWORD`: that account's
      [SVN-specific password](https://developer.wordpress.org/plugins/wordpress-org/how-to-use-subversion/#your-account).
 3. Optionally protect the `wordpress.org` environment with required reviewers.
@@ -36,8 +36,8 @@ email/dashboard confirmation after the SVN deployment.
 
 ## Publish a release
 
-1. Update the version in `simply-static.php` (the plugin header and
-   `SIMPLY_STATIC_VERSION`), `readme.txt` (`Stable tag`), and
+1. Update the version in `wp-static-export.php` (the plugin header and
+   `WPSE_VERSION`), `readme.txt` (`Stable tag`), and
    `src/admin/package.json`.
 2. Commit the generated React build directories.
 3. Create and publish a non-prerelease GitHub release whose tag is the same
@@ -59,7 +59,7 @@ npm run build --prefix src/admin
 npm ci --prefix assets/install-plugins
 npm run build --prefix assets/install-plugins
 ./scripts/build-release.sh
-unzip -l build/release/simply-static.zip
+unzip -l build/release/wp-static-export.zip
 ```
 
 The `.distignore` file is the source of truth for production exclusions. The

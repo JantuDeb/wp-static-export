@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 use Elementor\Widget_Base;
 use Elementor\Controls_Manager;
@@ -30,7 +30,7 @@ class Elementor_Search_Widget extends Widget_Base {
 	 * @return string Widget name.
 	 */
 	public function get_name() {
-		return 'simply-static-search';
+		return 'wp-static-export-search';
 	}
 
 	/**
@@ -44,7 +44,7 @@ class Elementor_Search_Widget extends Widget_Base {
 	 * @return string Widget title.
 	 */
 	public function get_title() {
-		return __( 'Static Search', 'simply-static' );
+		return __( 'Static Search', 'wp-static-export' );
 	}
 
 	/**
@@ -72,7 +72,7 @@ class Elementor_Search_Widget extends Widget_Base {
 	 * @return array Widget categories.
 	 */
 	public function get_categories() {
-		return [ 'simply-static' ];
+		return [ 'wp-static-export' ];
 	}
 
 	/**
@@ -102,7 +102,7 @@ class Elementor_Search_Widget extends Widget_Base {
 		$this->start_controls_section(
 			'content_section',
 			[
-				'label' => __( 'Content', 'simply-static' ),
+				'label' => __( 'Content', 'wp-static-export' ),
 				'tab' => Controls_Manager::TAB_CONTENT,
 			]
 		);
@@ -110,10 +110,10 @@ class Elementor_Search_Widget extends Widget_Base {
 		$this->add_control(
 			'placeholder_text',
 			[
-				'label' => __( 'Placeholder Text', 'simply-static' ),
+				'label' => __( 'Placeholder Text', 'wp-static-export' ),
 				'type' => Controls_Manager::TEXT,
-				'default' => __( 'Search...', 'simply-static' ),
-				'placeholder' => __( 'Enter placeholder text', 'simply-static' ),
+				'default' => __( 'Search...', 'wp-static-export' ),
+				'placeholder' => __( 'Enter placeholder text', 'wp-static-export' ),
 			]
 		);
 
@@ -122,7 +122,7 @@ class Elementor_Search_Widget extends Widget_Base {
 		$this->start_controls_section(
 			'style_section',
 			[
-				'label' => __( 'Style', 'simply-static' ),
+				'label' => __( 'Style', 'wp-static-export' ),
 				'tab' => Controls_Manager::TAB_STYLE,
 			]
 		);
@@ -130,7 +130,7 @@ class Elementor_Search_Widget extends Widget_Base {
 		$this->add_control(
 			'input_width',
 			[
-				'label' => __( 'Input Width', 'simply-static' ),
+				'label' => __( 'Input Width', 'wp-static-export' ),
 				'type' => Controls_Manager::SLIDER,
 				'size_units' => [ 'px', '%' ],
 				'range' => [
@@ -149,7 +149,7 @@ class Elementor_Search_Widget extends Widget_Base {
 					'size' => 100,
 				],
 				'selectors' => [
-					'{{WRAPPER}} .simply-static-search-input' => 'width: {{SIZE}}{{UNIT}};',
+					'{{WRAPPER}} .wp-static-export-search-input' => 'width: {{SIZE}}{{UNIT}};',
 				],
 			]
 		);
@@ -168,7 +168,7 @@ class Elementor_Search_Widget extends Widget_Base {
 	protected function render() {
 		$settings = $this->get_settings_for_display();
 
-		$placeholder_text = ! empty( $settings['placeholder_text'] ) ? $settings['placeholder_text'] : __( 'Search...', 'simply-static' );
+		$placeholder_text = ! empty( $settings['placeholder_text'] ) ? $settings['placeholder_text'] : __( 'Search...', 'wp-static-export' );
         $options          = Options::instance();
 		$search_type      = $options->get('search_type');
 
@@ -189,14 +189,14 @@ class Elementor_Search_Widget extends Widget_Base {
             $form_class = ltrim( $form_class, '.' );
         }
 		?>
-		<div class="simply-static-search-widget">
-			<div class="simply-static-search-wrapper">
+		<div class="wp-static-export-search-widget">
+			<div class="wp-static-export-search-wrapper">
 				<form role="search" method="get" class="search-form <?php echo esc_attr( $form_class ); ?>" action="<?php echo esc_url( home_url( '/' ) ); ?>">
 					<label>
 						<span class="screen-reader-text"><?php echo esc_html( $placeholder_text ); ?></span>
 						<input
 							type="search"
-							class="simply-static-search-input"
+							class="wp-static-export-search-input"
 							placeholder="<?php echo esc_attr( $placeholder_text ); ?>"
 							value="<?php echo get_search_query(); ?>"
 							name="s"
@@ -241,16 +241,16 @@ class Elementor_Search_Widget extends Widget_Base {
 
 		?>
 		<#
-		var placeholder_text = settings.placeholder_text || '<?php echo __( 'Search...', 'simply-static' ); ?>';
+		var placeholder_text = settings.placeholder_text || '<?php echo __( 'Search...', 'wp-static-export' ); ?>';
 		#>
-		<div class="simply-static-search-widget">
-			<div class="simply-static-search-wrapper">
+		<div class="wp-static-export-search-widget">
+			<div class="wp-static-export-search-wrapper">
 				<form role="search" method="get" class="search-form <?php echo esc_attr( $form_class ); ?>" action="<?php echo esc_url( home_url( '/' ) ); ?>">
 					<label>
 						<span class="screen-reader-text">{{ placeholder_text }}</span>
 						<input
 							type="search"
-							class="simply-static-search-input"
+							class="wp-static-export-search-input"
 							placeholder="{{ placeholder_text }}"
 							name="s"
 							title="{{ placeholder_text }}"

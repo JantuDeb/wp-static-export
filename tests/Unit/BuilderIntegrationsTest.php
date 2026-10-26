@@ -6,116 +6,116 @@ namespace {
 	if ( ! function_exists( 'wp_get_theme' ) ) {
 		/** @return mixed */
 		function wp_get_theme() {
-			return isset( $GLOBALS['simply_static_test_theme'] ) ? $GLOBALS['simply_static_test_theme'] : null;
+			return isset( $GLOBALS['wpse_test_theme'] ) ? $GLOBALS['wpse_test_theme'] : null;
 		}
 	}
 
 	if ( ! function_exists( 'get_template' ) ) {
 		function get_template() {
-			return isset( $GLOBALS['simply_static_test_template'] ) ? $GLOBALS['simply_static_test_template'] : '';
+			return isset( $GLOBALS['wpse_test_template'] ) ? $GLOBALS['wpse_test_template'] : '';
 		}
 	}
 
 	if ( ! function_exists( 'get_stylesheet' ) ) {
 		function get_stylesheet() {
-			return isset( $GLOBALS['simply_static_test_stylesheet'] ) ? $GLOBALS['simply_static_test_stylesheet'] : get_template();
+			return isset( $GLOBALS['wpse_test_stylesheet'] ) ? $GLOBALS['wpse_test_stylesheet'] : get_template();
 		}
 	}
 
 	if ( ! function_exists( 'get_stylesheet_directory' ) ) {
 		function get_stylesheet_directory() {
-			return isset( $GLOBALS['simply_static_test_stylesheet_directory'] )
-				? $GLOBALS['simply_static_test_stylesheet_directory']
+			return isset( $GLOBALS['wpse_test_stylesheet_directory'] )
+				? $GLOBALS['wpse_test_stylesheet_directory']
 				: WP_CONTENT_DIR . '/themes/' . get_stylesheet();
 		}
 	}
 
 	if ( ! function_exists( 'get_stylesheet_directory_uri' ) ) {
 		function get_stylesheet_directory_uri() {
-			return isset( $GLOBALS['simply_static_test_stylesheet_directory_uri'] )
-				? $GLOBALS['simply_static_test_stylesheet_directory_uri']
+			return isset( $GLOBALS['wpse_test_stylesheet_directory_uri'] )
+				? $GLOBALS['wpse_test_stylesheet_directory_uri']
 				: WP_CONTENT_URL . '/themes/' . get_stylesheet();
 		}
 	}
 
 	if ( ! function_exists( 'get_template_directory' ) ) {
 		function get_template_directory() {
-			return isset( $GLOBALS['simply_static_test_template_directory'] )
-				? $GLOBALS['simply_static_test_template_directory']
+			return isset( $GLOBALS['wpse_test_template_directory'] )
+				? $GLOBALS['wpse_test_template_directory']
 				: WP_CONTENT_DIR . '/themes/' . get_template();
 		}
 	}
 
 	if ( ! function_exists( 'get_template_directory_uri' ) ) {
 		function get_template_directory_uri() {
-			return isset( $GLOBALS['simply_static_test_template_directory_uri'] )
-				? $GLOBALS['simply_static_test_template_directory_uri']
+			return isset( $GLOBALS['wpse_test_template_directory_uri'] )
+				? $GLOBALS['wpse_test_template_directory_uri']
 				: WP_CONTENT_URL . '/themes/' . get_template();
 		}
 	}
 
-	$simply_static_root = dirname( __DIR__, 2 );
-	require_once $simply_static_root . '/src/class-ss-plugin.php';
-	require_once $simply_static_root . '/src/class-ss-options.php';
-	require_once $simply_static_root . '/src/class-ss-util.php';
-	require_once $simply_static_root . '/src/integrations/class-ss-integration.php';
-	require_once $simply_static_root . '/src/crawler/class-ss-crawler.php';
-	require_once $simply_static_root . '/src/integrations/class-ss-divi-integration.php';
-	require_once $simply_static_root . '/src/crawler/class-ss-divi-crawler.php';
-	require_once $simply_static_root . '/src/crawler/class-ss-theme-assets-crawler.php';
-	require_once $simply_static_root . '/src/integrations/class-ss-elementor-integration.php';
-	require_once $simply_static_root . '/src/crawler/class-ss-elementor-crawler.php';
+	$wpse_root = dirname( __DIR__, 2 );
+	require_once $wpse_root . '/src/class-ss-plugin.php';
+	require_once $wpse_root . '/src/class-ss-options.php';
+	require_once $wpse_root . '/src/class-ss-util.php';
+	require_once $wpse_root . '/src/integrations/class-ss-integration.php';
+	require_once $wpse_root . '/src/crawler/class-ss-crawler.php';
+	require_once $wpse_root . '/src/integrations/class-ss-divi-integration.php';
+	require_once $wpse_root . '/src/crawler/class-ss-divi-crawler.php';
+	require_once $wpse_root . '/src/crawler/class-ss-theme-assets-crawler.php';
+	require_once $wpse_root . '/src/integrations/class-ss-elementor-integration.php';
+	require_once $wpse_root . '/src/crawler/class-ss-elementor-crawler.php';
 }
 
-namespace Simply_Static\Tests\Unit {
+namespace WP_Static_Export\Tests\Unit {
 
-	use Simply_Static\Crawler\Divi_Crawler;
-	use Simply_Static\Crawler\Elementor_Crawler;
-	use Simply_Static\Crawler\Theme_Assets_Crawler;
-	use Simply_Static\Divi_Integration;
-	use Simply_Static\Elementor_Integration;
-	use Simply_Static\Tests\Support\UnitTestCase;
-	use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+	use WP_Static_Export\Crawler\Divi_Crawler;
+	use WP_Static_Export\Crawler\Elementor_Crawler;
+	use WP_Static_Export\Crawler\Theme_Assets_Crawler;
+	use WP_Static_Export\Divi_Integration;
+	use WP_Static_Export\Elementor_Integration;
+	use WP_Static_Export\Tests\Support\UnitTestCase;
+	use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 	final class BuilderIntegrationsTest extends UnitTestCase {
 
 		protected function setUp(): void {
 			parent::setUp();
-			$GLOBALS['simply_static_test_theme']                    = null;
-			$GLOBALS['simply_static_test_template']                 = '';
-			$GLOBALS['simply_static_test_stylesheet']               = '';
-			$GLOBALS['simply_static_test_template_directory']       = WP_CONTENT_DIR . '/themes/Divi';
-			$GLOBALS['simply_static_test_template_directory_uri']   = WP_CONTENT_URL . '/themes/Divi';
-			$GLOBALS['simply_static_test_stylesheet_directory']     = WP_CONTENT_DIR . '/themes/Divi';
-			$GLOBALS['simply_static_test_stylesheet_directory_uri'] = WP_CONTENT_URL . '/themes/Divi';
+			$GLOBALS['wpse_test_theme']                    = null;
+			$GLOBALS['wpse_test_template']                 = '';
+			$GLOBALS['wpse_test_stylesheet']               = '';
+			$GLOBALS['wpse_test_template_directory']       = WP_CONTENT_DIR . '/themes/Divi';
+			$GLOBALS['wpse_test_template_directory_uri']   = WP_CONTENT_URL . '/themes/Divi';
+			$GLOBALS['wpse_test_stylesheet_directory']     = WP_CONTENT_DIR . '/themes/Divi';
+			$GLOBALS['wpse_test_stylesheet_directory_uri'] = WP_CONTENT_URL . '/themes/Divi';
 		}
 
 		protected function tearDown(): void {
 			unset(
-				$GLOBALS['simply_static_test_theme'],
-				$GLOBALS['simply_static_test_template'],
-				$GLOBALS['simply_static_test_stylesheet'],
-				$GLOBALS['simply_static_test_template_directory'],
-				$GLOBALS['simply_static_test_template_directory_uri'],
-				$GLOBALS['simply_static_test_stylesheet_directory'],
-				$GLOBALS['simply_static_test_stylesheet_directory_uri'],
+				$GLOBALS['wpse_test_theme'],
+				$GLOBALS['wpse_test_template'],
+				$GLOBALS['wpse_test_stylesheet'],
+				$GLOBALS['wpse_test_template_directory'],
+				$GLOBALS['wpse_test_template_directory_uri'],
+				$GLOBALS['wpse_test_stylesheet_directory'],
+				$GLOBALS['wpse_test_stylesheet_directory_uri'],
 				$GLOBALS['wpdb']
 			);
 			parent::tearDown();
 		}
 
 		public function test_divi_detection_requires_an_exact_theme_identity(): void {
-			$GLOBALS['simply_static_test_theme'] = new Builder_Test_Theme( 'individual', 'Individual' );
+			$GLOBALS['wpse_test_theme'] = new Builder_Test_Theme( 'individual', 'Individual' );
 
 			self::assertFalse( ( new Divi_Integration() )->dependency_active() );
 			self::assertFalse( ( new Divi_Crawler() )->dependency_active() );
 
-			$GLOBALS['simply_static_test_theme'] = new Builder_Test_Theme( 'custom-theme', 'My Divi Toolkit' );
+			$GLOBALS['wpse_test_theme'] = new Builder_Test_Theme( 'custom-theme', 'My Divi Toolkit' );
 
 			self::assertFalse( ( new Divi_Integration() )->dependency_active() );
 			self::assertFalse( ( new Divi_Crawler() )->dependency_active() );
 
-			$GLOBALS['simply_static_test_theme'] = new Builder_Test_Theme( 'DIVI', 'Divi' );
+			$GLOBALS['wpse_test_theme'] = new Builder_Test_Theme( 'DIVI', 'Divi' );
 
 			self::assertTrue( ( new Divi_Integration() )->dependency_active() );
 			self::assertTrue( ( new Divi_Crawler() )->dependency_active() );
@@ -123,16 +123,16 @@ namespace Simply_Static\Tests\Unit {
 
 		public function test_divi_detection_supports_an_exact_parent_theme(): void {
 			$parent = new Builder_Test_Theme( 'Divi', 'Divi', 'Divi' );
-			$GLOBALS['simply_static_test_theme'] = new Builder_Test_Theme( 'custom-child', 'Custom Child', 'custom-child', $parent );
+			$GLOBALS['wpse_test_theme'] = new Builder_Test_Theme( 'custom-child', 'Custom Child', 'custom-child', $parent );
 
 			self::assertTrue( ( new Divi_Integration() )->dependency_active() );
 			self::assertTrue( ( new Divi_Crawler() )->dependency_active() );
 		}
 
 		public function test_divi_options_are_only_changed_during_an_export_and_then_restored(): void {
-			$GLOBALS['simply_static_test_theme']      = new Builder_Test_Theme( 'Divi', 'Divi', '', null, '4.27.4' );
-			$GLOBALS['simply_static_test_template']   = 'Divi';
-			$GLOBALS['simply_static_test_stylesheet'] = 'Divi';
+			$GLOBALS['wpse_test_theme']      = new Builder_Test_Theme( 'Divi', 'Divi', '', null, '4.27.4' );
+			$GLOBALS['wpse_test_template']   = 'Divi';
+			$GLOBALS['wpse_test_stylesheet'] = 'Divi';
 			$original_divi = array(
 				'minify_combine_js'   => 'on',
 				'enable_dynamic_css'  => true,
@@ -152,7 +152,7 @@ namespace Simply_Static\Tests\Unit {
 			self::assertSame( $original_core, WpEnv::$options['et_core_options'] );
 			self::assertArrayNotHasKey( Divi_Integration::PERFORMANCE_OPTIONS_BACKUP, WpEnv::$options );
 
-			do_action( 'ss_before_static_export', 1, 'export' );
+			do_action( 'wpse_before_static_export', 1, 'export' );
 
 			self::assertSame( 'off', WpEnv::$options['et_divi']['minify_combine_js'] );
 			self::assertFalse( WpEnv::$options['et_divi']['enable_dynamic_css'] );
@@ -181,7 +181,7 @@ namespace Simply_Static\Tests\Unit {
 
 			WpEnv::$options['et_divi']['unrelated_preference'] = 'changed-during-export';
 
-			do_action( 'ss_after_cleanup' );
+			do_action( 'wpse_after_cleanup' );
 
 			$expected_divi = $original_divi;
 			$expected_divi['unrelated_preference'] = 'changed-during-export';
@@ -199,9 +199,9 @@ namespace Simply_Static\Tests\Unit {
 		}
 
 		public function test_divi_five_preserves_dynamic_assets_and_uses_lean_crawler_roots(): void {
-			$GLOBALS['simply_static_test_theme']      = new Builder_Test_Theme( 'Divi', 'Divi', '', null, '5.0.0-public-beta.2' );
-			$GLOBALS['simply_static_test_template']   = 'Divi';
-			$GLOBALS['simply_static_test_stylesheet'] = 'Divi';
+			$GLOBALS['wpse_test_theme']      = new Builder_Test_Theme( 'Divi', 'Divi', '', null, '5.0.0-public-beta.2' );
+			$GLOBALS['wpse_test_template']   = 'Divi';
+			$GLOBALS['wpse_test_stylesheet'] = 'Divi';
 			$original_divi = array(
 				'enable_dynamic_assets' => true,
 				'enable_dynamic_css'    => true,
@@ -211,7 +211,7 @@ namespace Simply_Static\Tests\Unit {
 
 			$integration = new Divi_Integration();
 			$integration->run();
-			do_action( 'ss_before_static_export' );
+			do_action( 'wpse_before_static_export' );
 
 			self::assertSame( $original_divi, WpEnv::$options['et_divi'] );
 			self::assertArrayNotHasKey( Divi_Integration::PERFORMANCE_OPTIONS_BACKUP, WpEnv::$options );
@@ -224,11 +224,11 @@ namespace Simply_Static\Tests\Unit {
 
 		public function test_divi_five_child_theme_keeps_child_assets_but_skips_parent_tree(): void {
 			$parent = new Builder_Test_Theme( 'Divi', 'Divi', 'Divi', null, '5.1.0' );
-			$GLOBALS['simply_static_test_theme']                    = new Builder_Test_Theme( 'Divi', 'Custom Child', 'custom-child', $parent, '1.0.0' );
-			$GLOBALS['simply_static_test_template']                 = 'Divi';
-			$GLOBALS['simply_static_test_stylesheet']               = 'custom-child';
-			$GLOBALS['simply_static_test_stylesheet_directory']     = WP_CONTENT_DIR . '/themes/custom-child';
-			$GLOBALS['simply_static_test_stylesheet_directory_uri'] = WP_CONTENT_URL . '/themes/custom-child';
+			$GLOBALS['wpse_test_theme']                    = new Builder_Test_Theme( 'Divi', 'Custom Child', 'custom-child', $parent, '1.0.0' );
+			$GLOBALS['wpse_test_template']                 = 'Divi';
+			$GLOBALS['wpse_test_stylesheet']               = 'custom-child';
+			$GLOBALS['wpse_test_stylesheet_directory']     = WP_CONTENT_DIR . '/themes/custom-child';
+			$GLOBALS['wpse_test_stylesheet_directory_uri'] = WP_CONTENT_URL . '/themes/custom-child';
 
 			( new Divi_Integration() )->run();
 
@@ -243,9 +243,9 @@ namespace Simply_Static\Tests\Unit {
 		}
 
 		public function test_unknown_divi_version_uses_legacy_fallback(): void {
-			$GLOBALS['simply_static_test_theme']      = new Builder_Test_Theme( 'Divi', 'Divi' );
-			$GLOBALS['simply_static_test_template']   = 'Divi';
-			$GLOBALS['simply_static_test_stylesheet'] = 'Divi';
+			$GLOBALS['wpse_test_theme']      = new Builder_Test_Theme( 'Divi', 'Divi' );
+			$GLOBALS['wpse_test_template']   = 'Divi';
+			$GLOBALS['wpse_test_stylesheet'] = 'Divi';
 
 			self::assertSame(
 				array( WP_CONTENT_DIR . '/et-cache', WP_CONTENT_DIR . '/themes/Divi' ),
@@ -254,14 +254,14 @@ namespace Simply_Static\Tests\Unit {
 		}
 
 		public function test_divi_five_can_opt_into_legacy_fallback(): void {
-			$GLOBALS['simply_static_test_theme']      = new Builder_Test_Theme( 'Divi', 'Divi', '', null, '5.0.0' );
-			$GLOBALS['simply_static_test_template']   = 'Divi';
-			$GLOBALS['simply_static_test_stylesheet'] = 'Divi';
+			$GLOBALS['wpse_test_theme']      = new Builder_Test_Theme( 'Divi', 'Divi', '', null, '5.0.0' );
+			$GLOBALS['wpse_test_template']   = 'Divi';
+			$GLOBALS['wpse_test_stylesheet'] = 'Divi';
 			WpEnv::$options['et_divi'] = array( 'enable_dynamic_assets' => true );
-			add_filter( 'ss_divi_use_legacy_asset_crawl', '__return_true', 10, 2 );
+			add_filter( 'wpse_divi_use_legacy_asset_crawl', '__return_true', 10, 2 );
 
 			( new Divi_Integration() )->run();
-			do_action( 'ss_before_static_export' );
+			do_action( 'wpse_before_static_export' );
 
 			self::assertFalse( WpEnv::$options['et_divi']['enable_dynamic_assets'] );
 			self::assertSame(
@@ -276,12 +276,12 @@ namespace Simply_Static\Tests\Unit {
 
 		/** @dataProvider diviRecoveryHookProvider */
 		public function test_divi_options_are_restored_on_aborted_lifecycles( string $hook ): void {
-			$GLOBALS['simply_static_test_theme'] = new Builder_Test_Theme( 'Divi', 'Divi' );
+			$GLOBALS['wpse_test_theme'] = new Builder_Test_Theme( 'Divi', 'Divi' );
 			WpEnv::$options['et_divi'] = array( 'minify_combine_js' => 'on' );
 			$integration = new Divi_Integration();
 			$integration->run();
 
-			do_action( 'ss_before_static_export' );
+			do_action( 'wpse_before_static_export' );
 			self::assertSame( 'off', WpEnv::$options['et_divi']['minify_combine_js'] );
 			do_action( $hook );
 
@@ -292,9 +292,9 @@ namespace Simply_Static\Tests\Unit {
 		/** @return array<string,array{string}> */
 		public function diviRecoveryHookProvider(): array {
 			return array(
-				'start failure' => array( 'ss_archive_creation_job_start_failed' ),
-				'queue reset'   => array( 'ss_after_background_queue_reset' ),
-				'deactivation'  => array( 'simply_static_deactivated' ),
+				'start failure' => array( 'wpse_archive_creation_job_start_failed' ),
+				'queue reset'   => array( 'wpse_after_background_queue_reset' ),
+				'deactivation'  => array( 'wpse_deactivated' ),
 			);
 		}
 
@@ -354,7 +354,7 @@ namespace Simply_Static\Tests\Unit {
 
 		public function test_elementor_lottie_queries_are_batched_with_a_keyset(): void {
 			add_filter(
-				'simply_static_elementor_meta_batch_size',
+				'wpse_elementor_meta_batch_size',
 				static function () {
 					return 2;
 				}

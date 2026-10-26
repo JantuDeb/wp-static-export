@@ -1,5 +1,5 @@
 <?php
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -132,13 +132,13 @@ class Model {
 	public static function table_name() {
 		global $wpdb;
 
-		return $wpdb->get_blog_prefix() . 'simply_static_' . static::$table_name;
+		return $wpdb->get_blog_prefix() . 'wpse_' . static::$table_name;
 	}
 
 	/**
 	 * Used for finding models matching certain criteria
 	 *
-	 * @return Simply_Static\Query string of query to execute.
+	 * @return WP_Static_Export\Query string of query to execute.
 	 */
 	public static function query() {
 		$query = new Query( get_called_class() );

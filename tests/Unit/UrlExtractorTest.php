@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Options;
-use Simply_Static\Page;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
-use Simply_Static\Url_Extractor;
-use Simply_Static\Url_Fetcher;
-use Simply_Static\Util;
+use WP_Static_Export\Options;
+use WP_Static_Export\Page;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Url_Extractor;
+use WP_Static_Export\Url_Fetcher;
+use WP_Static_Export\Util;
 
 final class UrlExtractorTest extends UnitTestCase {
 
@@ -31,8 +31,8 @@ final class UrlExtractorTest extends UnitTestCase {
 		$this->requireSource( 'src/class-ss-url-fetcher.php' );
 		$this->requireSource( 'src/class-ss-url-extractor.php' );
 
-		$base = WpEnv::$upload_dir['basedir'] . '/simply-static/url-extractor';
-		WpEnv::$options['simply-static'] = array(
+		$base = WpEnv::$upload_dir['basedir'] . '/wp-static-export/url-extractor';
+		WpEnv::$options['wp-static-export'] = array(
 			'temp_files_dir'       => $base,
 			'archive_name'         => 'archive/',
 			'destination_url_type' => 'absolute',
@@ -98,8 +98,8 @@ final class UrlExtractorTest extends UnitTestCase {
 	}
 
 	public function test_smart_crawl_follows_page_links_matching_an_additional_url_regex(): void {
-		WpEnv::$options['simply-static']['smart_crawl'] = true;
-		WpEnv::$options['simply-static']['additional_urls'] = '/\\/faq\\/.*$/i';
+		WpEnv::$options['wp-static-export']['smart_crawl'] = true;
+		WpEnv::$options['wp-static-export']['additional_urls'] = '/\\/faq\\/.*$/i';
 		Options::reinstance();
 
 		$html = '<a href="/faq/">FAQ index</a>'
@@ -115,7 +115,7 @@ final class UrlExtractorTest extends UnitTestCase {
 	}
 
 	public function test_removes_wordpress_rest_discovery_links_when_rest_api_is_not_exported(): void {
-		WpEnv::$options['simply-static']['add_rest_api'] = false;
+		WpEnv::$options['wp-static-export']['add_rest_api'] = false;
 		Options::reinstance();
 
 		$html = '<html><head>'
@@ -139,7 +139,7 @@ final class UrlExtractorTest extends UnitTestCase {
 	}
 
 	public function test_preserves_wordpress_rest_discovery_links_when_rest_api_is_exported(): void {
-		WpEnv::$options['simply-static']['add_rest_api'] = true;
+		WpEnv::$options['wp-static-export']['add_rest_api'] = true;
 		Options::reinstance();
 
 		$html      = '<link rel="https://api.w.org/" href="https://example.test/wp-json/">';
@@ -207,7 +207,7 @@ final class UrlExtractorTest extends UnitTestCase {
 	}
 
 	public function test_feed_discovery_links_target_the_exported_xml_file(): void {
-		WpEnv::$options['simply-static']['add_feeds'] = true;
+		WpEnv::$options['wp-static-export']['add_feeds'] = true;
 		Options::reinstance();
 
 		$html = '<html><head>'
@@ -224,7 +224,7 @@ final class UrlExtractorTest extends UnitTestCase {
 	}
 
 	public function test_disabled_feeds_are_not_advertised(): void {
-		WpEnv::$options['simply-static']['add_feeds'] = false;
+		WpEnv::$options['wp-static-export']['add_feeds'] = false;
 		Options::reinstance();
 
 		$html = '<html><head>'
@@ -238,7 +238,7 @@ final class UrlExtractorTest extends UnitTestCase {
 	}
 
 	public function test_external_feed_discovery_links_are_preserved(): void {
-		WpEnv::$options['simply-static']['add_feeds'] = false;
+		WpEnv::$options['wp-static-export']['add_feeds'] = false;
 		Options::reinstance();
 
 		$html = '<html><head>'
@@ -252,7 +252,7 @@ final class UrlExtractorTest extends UnitTestCase {
 	}
 
 	public function test_plain_permalink_feed_discovery_targets_the_stable_xml_file(): void {
-		WpEnv::$options['simply-static']['add_feeds'] = true;
+		WpEnv::$options['wp-static-export']['add_feeds'] = true;
 		Options::reinstance();
 
 		$html = '<html><head>'
@@ -361,8 +361,8 @@ final class UrlExtractorTest extends UnitTestCase {
 	}
 
 	public function test_preserves_bare_origin_host_for_non_absolute_exports(): void {
-		WpEnv::$options['simply-static']['destination_url_type'] = 'relative';
-		WpEnv::$options['simply-static']['relative_path'] = '/';
+		WpEnv::$options['wp-static-export']['destination_url_type'] = 'relative';
+		WpEnv::$options['wp-static-export']['relative_path'] = '/';
 		Options::reinstance();
 
 		$html = '<script>gtag("set","linker",{"domains":["example.test"]});</script>';
@@ -374,7 +374,7 @@ final class UrlExtractorTest extends UnitTestCase {
 	}
 
 	public function test_restores_comments_when_dom_filter_returns_html_string(): void {
-		add_filter( 'ss_dom_before_save', function ( $dom ) {
+		add_filter( 'wpse_dom_before_save', function ( $dom ) {
 			return $dom instanceof \DOMDocument ? $dom->saveHTML() : $dom;
 		} );
 
@@ -397,7 +397,7 @@ final class UrlExtractorTest extends UnitTestCase {
 	}
 
 	public function test_decodes_css_glyphs_when_dom_filter_returns_html_string(): void {
-		add_filter( 'ss_dom_before_save', function ( $dom ) {
+		add_filter( 'wpse_dom_before_save', function ( $dom ) {
 			return $dom instanceof \DOMDocument ? $dom->saveHTML() : $dom;
 		} );
 
@@ -447,8 +447,8 @@ final class UrlExtractorTest extends UnitTestCase {
 	}
 
 	public function test_relative_and_offline_destination_modes_produce_local_paths(): void {
-		WpEnv::$options['simply-static']['destination_url_type'] = 'relative';
-		WpEnv::$options['simply-static']['relative_path'] = '/';
+		WpEnv::$options['wp-static-export']['destination_url_type'] = 'relative';
+		WpEnv::$options['wp-static-export']['relative_path'] = '/';
 		Options::reinstance();
 		$relative = $this->extractor( 'html', '<a href="https://example.test/target/">target</a>' );
 		self::assertSame( '/target/', $relative->convert_url( 'https://example.test/target/' ) );
@@ -460,12 +460,12 @@ final class UrlExtractorTest extends UnitTestCase {
 		self::assertStringContainsString( 'href="/target/"', $relative->get_body() );
 		self::assertStringNotContainsString( 'href="//target/"', $relative->get_body() );
 
-		WpEnv::$options['simply-static']['relative_path'] = '/docs/';
+		WpEnv::$options['wp-static-export']['relative_path'] = '/docs/';
 		Options::reinstance();
 		$mounted = $this->extractor( 'html', '<a href="https://example.test/target/">target</a>' );
 		self::assertSame( '/docs/target/', $mounted->convert_url( 'https://example.test/target/' ) );
 
-		WpEnv::$options['simply-static']['destination_url_type'] = 'offline';
+		WpEnv::$options['wp-static-export']['destination_url_type'] = 'offline';
 		Options::reinstance();
 		$offline = $this->extractor( 'html', '<a href="/target/">target</a>' );
 		$offline->extract_and_update_urls();
@@ -475,10 +475,10 @@ final class UrlExtractorTest extends UnitTestCase {
 	public function test_relative_exports_preserve_wordpress_install_subdirectory_for_assets(): void {
 		WpEnv::$home_url = 'https://example.test';
 		WpEnv::$site_url = 'https://example.test/wordpress';
-		WpEnv::$options['simply-static']['destination_url_type'] = 'relative';
-		WpEnv::$options['simply-static']['relative_path'] = '/';
-		WpEnv::$options['simply-static']['wp_content_directory'] = 'wp-content';
-		WpEnv::$options['simply-static']['wp_includes_directory'] = 'wp-includes';
+		WpEnv::$options['wp-static-export']['destination_url_type'] = 'relative';
+		WpEnv::$options['wp-static-export']['relative_path'] = '/';
+		WpEnv::$options['wp-static-export']['wp_content_directory'] = 'wp-content';
+		WpEnv::$options['wp-static-export']['wp_includes_directory'] = 'wp-includes';
 		Options::reinstance();
 
 		$content_url  = 'https://example.test/wordpress/wp-content/themes/site/style.css';
@@ -520,8 +520,8 @@ final class UrlExtractorTest extends UnitTestCase {
 	public function test_subdirectory_asset_prefix_composes_with_hide_wordpress_directories(): void {
 		WpEnv::$home_url = 'https://example.test';
 		WpEnv::$site_url = 'https://example.test/wordpress';
-		WpEnv::$options['simply-static']['wp_content_directory'] = 'assets';
-		WpEnv::$options['simply-static']['wp_includes_directory'] = 'core';
+		WpEnv::$options['wp-static-export']['wp_content_directory'] = 'assets';
+		WpEnv::$options['wp-static-export']['wp_includes_directory'] = 'core';
 		Options::reinstance();
 
 		self::assertSame(
@@ -534,8 +534,8 @@ final class UrlExtractorTest extends UnitTestCase {
 		);
 
 		WpEnv::$home_url = 'https://example.test/wordpress';
-		WpEnv::$options['simply-static']['wp_content_directory'] = 'wp-content';
-		WpEnv::$options['simply-static']['wp_includes_directory'] = 'wp-includes';
+		WpEnv::$options['wp-static-export']['wp_content_directory'] = 'wp-content';
+		WpEnv::$options['wp-static-export']['wp_includes_directory'] = 'wp-includes';
 		Options::reinstance();
 
 		self::assertSame(
@@ -767,7 +767,7 @@ final class UrlExtractorTest extends UnitTestCase {
 
 		WpEnv::$home_url = $origin_url;
 		WpEnv::$site_url = $origin_url;
-		WpEnv::$options['simply-static']['destination_host'] = 'www2.kek.jp/accl/sokendai/eng/';
+		WpEnv::$options['wp-static-export']['destination_host'] = 'www2.kek.jp/accl/sokendai/eng/';
 		Options::reinstance();
 
 		$html = '<a href="' . $local_url . '">Local page</a>'
@@ -784,12 +784,12 @@ final class UrlExtractorTest extends UnitTestCase {
 	}
 
 	public function test_preserves_excluded_php_form_actions_during_force_replace(): void {
-		WpEnv::$options['simply-static']['force_replace_url'] = true;
+		WpEnv::$options['wp-static-export']['force_replace_url'] = true;
 		Options::reinstance();
 
 		$endpoint  = 'https://example.test/wp-content/themes/site/download-ics.php';
 		add_filter(
-			'simply_static_content_before_save',
+			'wpse_content_before_save',
 			static function ( $content ) use ( $endpoint ) {
 				return str_replace( $endpoint, 'https://static.example.test/wp-content/themes/site/download-ics.php', $content );
 			},
@@ -825,12 +825,12 @@ final class UrlExtractorTest extends UnitTestCase {
 	}
 
 	public function test_form_action_preservation_can_be_enabled_by_filter(): void {
-		WpEnv::$options['simply-static']['force_replace_url'] = true;
+		WpEnv::$options['wp-static-export']['force_replace_url'] = true;
 		Options::reinstance();
 
 		$endpoint = 'https://example.test/calendar/download';
 		add_filter(
-			'simply_static_preserve_form_action',
+			'wpse_preserve_form_action',
 			static function ( $preserve, $action ) use ( $endpoint ) {
 				return $preserve || $endpoint === $action;
 			},

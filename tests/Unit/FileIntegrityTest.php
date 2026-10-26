@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static {
+namespace WP_Static_Export {
 	if ( ! function_exists( __NAMESPACE__ . '\\copy' ) ) {
 		/**
 		 * Test seam for destination-specific copy failures.
@@ -14,8 +14,8 @@ namespace Simply_Static {
 		 * @return bool
 		 */
 		function copy( $source, $destination, $context = null ) {
-			$operations = isset( $GLOBALS['simply_static_test_file_operations'] )
-				? $GLOBALS['simply_static_test_file_operations']
+			$operations = isset( $GLOBALS['wpse_test_file_operations'] )
+				? $GLOBALS['wpse_test_file_operations']
 				: array();
 
 			if ( isset( $operations['fail_copy_to'] ) && $operations['fail_copy_to'] === $destination ) {
@@ -39,8 +39,8 @@ namespace Simply_Static {
 		 * @return bool
 		 */
 		function rename( $source, $destination, $context = null ) {
-			$operations = isset( $GLOBALS['simply_static_test_file_operations'] )
-				? $GLOBALS['simply_static_test_file_operations']
+			$operations = isset( $GLOBALS['wpse_test_file_operations'] )
+				? $GLOBALS['wpse_test_file_operations']
 				: array();
 
 			if ( isset( $operations['fail_rename_to'] ) && $operations['fail_rename_to'] === $destination ) {
@@ -64,8 +64,8 @@ namespace Simply_Static {
 		function wp_tempnam( $filename = '' ) {
 			$temp_file = \wp_tempnam( $filename );
 
-			if ( isset( $GLOBALS['simply_static_test_file_operations'] ) && is_array( $GLOBALS['simply_static_test_file_operations'] ) ) {
-				$GLOBALS['simply_static_test_file_operations']['temp_files'][] = $temp_file;
+			if ( isset( $GLOBALS['wpse_test_file_operations'] ) && is_array( $GLOBALS['wpse_test_file_operations'] ) ) {
+				$GLOBALS['wpse_test_file_operations']['temp_files'][] = $temp_file;
 			}
 
 			return $temp_file;
@@ -74,33 +74,33 @@ namespace Simply_Static {
 }
 
 namespace {
-	$simply_static_root = dirname( __DIR__, 2 );
-	require_once $simply_static_root . '/src/class-ss-plugin.php';
-	require_once $simply_static_root . '/src/class-ss-options.php';
-	require_once $simply_static_root . '/src/class-ss-phpuri.php';
-	require_once $simply_static_root . '/src/class-ss-util.php';
-	require_once $simply_static_root . '/src/class-ss-query.php';
-	require_once $simply_static_root . '/src/models/class-ss-model.php';
-	require_once $simply_static_root . '/src/models/class-ss-page.php';
-	require_once $simply_static_root . '/src/handlers/class-ss-page-handler.php';
-	require_once $simply_static_root . '/src/class-ss-url-fetcher.php';
-	require_once $simply_static_root . '/src/tasks/class-ss-task.php';
-	require_once $simply_static_root . '/src/tasks/traits/trait-ss-can-process-pages.php';
-	require_once $simply_static_root . '/src/tasks/traits/trait-ss-can-transfer.php';
-	require_once $simply_static_root . '/src/tasks/class-ss-fetch-urls-task.php';
-	require_once $simply_static_root . '/src/tasks/class-ss-transfer-files-locally-task.php';
+	$wpse_root = dirname( __DIR__, 2 );
+	require_once $wpse_root . '/src/class-ss-plugin.php';
+	require_once $wpse_root . '/src/class-ss-options.php';
+	require_once $wpse_root . '/src/class-ss-phpuri.php';
+	require_once $wpse_root . '/src/class-ss-util.php';
+	require_once $wpse_root . '/src/class-ss-query.php';
+	require_once $wpse_root . '/src/models/class-ss-model.php';
+	require_once $wpse_root . '/src/models/class-ss-page.php';
+	require_once $wpse_root . '/src/handlers/class-ss-page-handler.php';
+	require_once $wpse_root . '/src/class-ss-url-fetcher.php';
+	require_once $wpse_root . '/src/tasks/class-ss-task.php';
+	require_once $wpse_root . '/src/tasks/traits/trait-ss-can-process-pages.php';
+	require_once $wpse_root . '/src/tasks/traits/trait-ss-can-transfer.php';
+	require_once $wpse_root . '/src/tasks/class-ss-fetch-urls-task.php';
+	require_once $wpse_root . '/src/tasks/class-ss-transfer-files-locally-task.php';
 }
 
-namespace Simply_Static\Tests\Unit {
+namespace WP_Static_Export\Tests\Unit {
 
-	use Simply_Static\Fetch_Urls_Task;
-	use Simply_Static\Options;
-	use Simply_Static\Page;
-	use Simply_Static\Page_Handler;
-	use Simply_Static\Tests\Support\UnitTestCase;
-	use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
-	use Simply_Static\Transfer_Files_Locally_Task;
-	use Simply_Static\Url_Fetcher;
+	use WP_Static_Export\Fetch_Urls_Task;
+	use WP_Static_Export\Options;
+	use WP_Static_Export\Page;
+	use WP_Static_Export\Page_Handler;
+	use WP_Static_Export\Tests\Support\UnitTestCase;
+	use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
+	use WP_Static_Export\Transfer_Files_Locally_Task;
+	use WP_Static_Export\Url_Fetcher;
 
 	final class FileIntegrityPageHandler extends Page_Handler {
 		/** @var int */
@@ -167,12 +167,12 @@ namespace Simply_Static\Tests\Unit {
 			$token                 = str_replace( '.', '', uniqid( 'file-integrity-', true ) );
 			$this->archive_dir      = sys_get_temp_dir() . '/' . $token . '/archive';
 			$this->destination_dir  = sys_get_temp_dir() . '/' . $token . '/destination';
-			$GLOBALS['simply_static_test_file_operations'] = array( 'temp_files' => array() );
+			$GLOBALS['wpse_test_file_operations'] = array( 'temp_files' => array() );
 
 			wp_mkdir_p( $this->archive_dir );
 			wp_mkdir_p( $this->destination_dir );
 
-			WpEnv::$options['simply-static'] = array(
+			WpEnv::$options['wp-static-export'] = array(
 				'archive_name'               => 'archive',
 				'archive_start_time'         => '2026-07-12 10:00:00',
 				'debugging_mode'             => false,
@@ -193,7 +193,7 @@ namespace Simply_Static\Tests\Unit {
 		protected function tearDown(): void {
 			$this->resetFetcher();
 			$this->removeTree( dirname( $this->archive_dir ) );
-			unset( $GLOBALS['simply_static_test_file_operations'] );
+			unset( $GLOBALS['wpse_test_file_operations'] );
 			parent::tearDown();
 		}
 
@@ -246,8 +246,8 @@ namespace Simply_Static\Tests\Unit {
 				'body'     => 'fetched body',
 			);
 			$destination = $this->archive_dir . '/failed.html';
-			$GLOBALS['simply_static_test_file_operations']['fail_rename_to'] = $destination;
-			$GLOBALS['simply_static_test_file_operations']['fail_copy_to']   = $destination;
+			$GLOBALS['wpse_test_file_operations']['fail_rename_to'] = $destination;
+			$GLOBALS['wpse_test_file_operations']['fail_copy_to']   = $destination;
 			$page = $this->pageFor( 'https://example.test/failed.html' );
 
 			self::assertFalse( $this->fetcher->fetch( $page, false ) );
@@ -256,7 +256,7 @@ namespace Simply_Static\Tests\Unit {
 			self::assertSame( 0, $page->get_handler()->after_fetch_calls );
 			self::assertFileDoesNotExist( $destination );
 
-			$temp_files = $GLOBALS['simply_static_test_file_operations']['temp_files'];
+			$temp_files = $GLOBALS['wpse_test_file_operations']['temp_files'];
 			self::assertCount( 1, $temp_files );
 			self::assertFileDoesNotExist( $temp_files[0] );
 		}
@@ -281,7 +281,7 @@ namespace Simply_Static\Tests\Unit {
 		public function test_unavailable_local_destination_fails_the_transfer_task(): void {
 			$blocker = $this->destination_dir . '/not-a-directory';
 			file_put_contents( $blocker, 'file' );
-			WpEnv::$options['simply-static']['local_dir'] = $blocker . '/child';
+			WpEnv::$options['wp-static-export']['local_dir'] = $blocker . '/child';
 			Options::reinstance();
 
 			$result = ( new Transfer_Files_Locally_Task() )->perform();
@@ -296,7 +296,7 @@ namespace Simply_Static\Tests\Unit {
 			$destination = $this->destination_dir . '/' . $file_path;
 			wp_mkdir_p( dirname( $source ) );
 			file_put_contents( $source, 'copy me' );
-			$GLOBALS['simply_static_test_file_operations']['fail_copy_to'] = $destination;
+			$GLOBALS['wpse_test_file_operations']['fail_copy_to'] = $destination;
 			$page   = $this->transferPage( $file_path );
 			$events = $this->captureTransferEvents();
 			$task   = $this->transferTask();
@@ -364,7 +364,7 @@ namespace Simply_Static\Tests\Unit {
 		private function captureTransferEvents(): \ArrayObject {
 			$events = new \ArrayObject();
 			add_action(
-				'simply_static_page_file_transferred',
+				'wpse_page_file_transferred',
 				static function ( $page, $destination ) use ( $events ) {
 					$events->append( array(
 						'page'        => $page,

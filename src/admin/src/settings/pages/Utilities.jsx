@@ -65,7 +65,7 @@ function Utilities() {
             setActionError(
                 error && error.message
                     ? error.message
-                    : __('The requested action could not be completed.', 'simply-static')
+                    : __('The requested action could not be completed.', 'wp-static-export')
             );
             return false;
         } finally {
@@ -78,13 +78,13 @@ function Utilities() {
         try {
             parsed = JSON.parse(importData);
             if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') {
-                throw new Error(__('Import data must be a JSON object.', 'simply-static'));
+                throw new Error(__('Import data must be a JSON object.', 'wp-static-export'));
             }
         } catch (error) {
             setActionError(
                 error && error.message
                     ? error.message
-                    : __('Enter valid settings JSON before importing.', 'simply-static')
+                    : __('Enter valid settings JSON before importing.', 'wp-static-export')
             );
             return;
         }
@@ -114,7 +114,7 @@ function Utilities() {
         setExportLoading(true);
         setExportError('');
         // Fetch sanitized settings intended for export (excludes site-specific keys)
-        wp.apiFetch({ path: '/simplystatic/v1/settings/export', method: 'GET' })
+        wp.apiFetch({ path: '/wp-static-export/v1/settings/export', method: 'GET' })
             .then((resp) => {
                 try {
                     // Endpoint returns JSON-encoded string (php json_encode). If resp is string, try parse; else use as object
@@ -125,12 +125,12 @@ function Utilities() {
                     const pretty = JSON.stringify(obj || {}, null, 2);
                     setExportJson(pretty);
                 } catch (e) {
-                    setExportError(__('Failed to prepare export JSON.', 'simply-static'));
+                    setExportError(__('Failed to prepare export JSON.', 'wp-static-export'));
                     setExportJson('');
                 }
             })
             .catch(() => {
-                setExportError(__('Failed to fetch export data.', 'simply-static'));
+                setExportError(__('Failed to fetch export data.', 'wp-static-export'));
                 setExportJson('');
             })
             .finally(() => setExportLoading(false));
@@ -146,7 +146,7 @@ function Utilities() {
 			}
             {maintenanceLocked && (
                 <Notice status="warning" isDismissible={false}>
-                    <p>{__('Import, reset, and migration actions are unavailable until the active export or rollback finishes.', 'simply-static')}</p>
+                    <p>{__('Import, reset, and migration actions are unavailable until the active export or rollback finishes.', 'wp-static-export')}</p>
                 </Notice>
             )}
             {actionError && (
@@ -156,19 +156,19 @@ function Utilities() {
             )}
             <Card>
                 <CardHeader>
-                    <b>{__('Export', 'simply-static')}</b>
+                    <b>{__('Export', 'wp-static-export')}</b>
                 </CardHeader>
                 <CardBody>
                     {!isExport ?
                         <p>
                             <Button onClick={startExport}
-                                    variant="primary">{__('Export Settings', 'simply-static')}</Button>
+                                    variant="primary">{__('Export Settings', 'wp-static-export')}</Button>
                         </p>
                         :
                         <>
                             <>
                                 {exportLoading && (
-                                    <p>{__('Preparing export...', 'simply-static')}</p>
+                                    <p>{__('Preparing export...', 'wp-static-export')}</p>
                                 )}
                                 {exportError && (
                                     <Notice status="error" isDismissible={true}>
@@ -200,7 +200,7 @@ function Utilities() {
                                                 onCopy={() => setHasCopied(true)}
                                                 onFinishCopy={() => setHasCopied(false)}
                                             >
-                                                {hasCopied ? __('Copied!', 'simply-static') : __('Copy export data', 'simply-static')}
+                                                {hasCopied ? __('Copied!', 'wp-static-export') : __('Copy export data', 'wp-static-export')}
                                             </ClipboardButton>
                                         </p>
                                     </>
@@ -213,14 +213,14 @@ function Utilities() {
             <Spacer margin={5}/>
             <Card>
                 <CardHeader>
-                    <b>{__('Import', 'simply-static')}</b>
+                    <b>{__('Import', 'wp-static-export')}</b>
                 </CardHeader>
                 <CardBody>
                     <p>
-                        {__('Paste in the JSON string you got from your export to import all settings for the plugin.', 'simply-static')}
+                        {__('Paste in the JSON string you got from your export to import all settings for the plugin.', 'wp-static-export')}
                     </p>
                     <label className="screen-reader-text" htmlFor="ss-import-data">
-                        {__('Settings JSON to import', 'simply-static')}
+                        {__('Settings JSON to import', 'wp-static-export')}
                     </label>
                     <textarea
                         id="ss-import-data"
@@ -233,14 +233,14 @@ function Utilities() {
                         <Button onClick={runImportSettings}
                                 disabled={maintenanceLocked || isBusy || importData.trim() === ''}
                                 isBusy={pendingAction === 'import'}
-                                variant="primary">{__('Import Settings', 'simply-static')}</Button>
+                                variant="primary">{__('Import Settings', 'wp-static-export')}</Button>
                     </p>
                     {isImport ?
                         <Animate type="slide-in" options={{origin: 'top'}}>
                             {() => (
                                 <Notice status="success" isDismissible={false}>
                                     <p>
-                                        {__('Settings imported successfully.', 'simply-static')}
+                                        {__('Settings imported successfully.', 'wp-static-export')}
                                     </p>
                                 </Notice>
                             )}
@@ -253,32 +253,32 @@ function Utilities() {
             <Spacer margin={5}/>
             <Card>
                 <CardHeader>
-                    <b>{__('Reset', 'simply-static')}</b>
+                    <b>{__('Reset', 'wp-static-export')}</b>
                 </CardHeader>
                 <CardBody>
-                    <p>{__('By clicking the "Reset Plugin Settings", you will reset all plugin settings. This can be useful if you want to import a new set of settings or you want a fresh start.', 'simply-static')}</p>
-                    <p>{__('If you click the "Reset Database Table" button instead, you will keep all your settings, and we will only recreate our DB table.', 'simply-static')}</p>
-                    <p>{__('If the background process is stuck and your debug log shows "There is already an export running", use the "Reset Background Queue" button to clear the queue and locks.', 'simply-static')}</p>
+                    <p>{__('By clicking the "Reset Plugin Settings", you will reset all plugin settings. This can be useful if you want to import a new set of settings or you want a fresh start.', 'wp-static-export')}</p>
+                    <p>{__('If you click the "Reset Database Table" button instead, you will keep all your settings, and we will only recreate our DB table.', 'wp-static-export')}</p>
+                    <p>{__('If the background process is stuck and your debug log shows "There is already an export running", use the "Reset Background Queue" button to clear the queue and locks.', 'wp-static-export')}</p>
                     <p>
                         <Button onClick={runResetSettings}
                                 disabled={maintenanceLocked || isBusy}
                                 isBusy={pendingAction === 'reset-settings'}
-                                variant="primary">{__('Reset Plugin Settings', 'simply-static')}</Button>
+                                variant="primary">{__('Reset Plugin Settings', 'wp-static-export')}</Button>
                         <Button onClick={runResetDatabase} className={"reset-db-btn"}
                                 disabled={maintenanceLocked || isBusy}
                                 isBusy={pendingAction === 'reset-database'}
-                                variant="primary">{__('Reset Database Table', 'simply-static')}</Button>
+                                variant="primary">{__('Reset Database Table', 'wp-static-export')}</Button>
                         <Button onClick={runResetBackgroundQueue} className={"reset-bg-btn"}
                                 disabled={isBusy}
                                 isBusy={pendingAction === 'reset-background'}
-                                variant="primary">{__('Reset Background Queue', 'simply-static')}</Button>
+                                variant="primary">{__('Reset Background Queue', 'wp-static-export')}</Button>
                     </p>
                     {isReset ?
                         <Animate type="slide-in" options={{origin: 'top'}}>
                             {() => (
                                 <Notice status="success" isDismissible={false}>
                                     <p>
-                                        {__('Settings reset successfully.', 'simply-static')}
+                                        {__('Settings reset successfully.', 'wp-static-export')}
                                     </p>
                                 </Notice>
                             )}
@@ -291,7 +291,7 @@ function Utilities() {
                             {() => (
                                 <Notice status="success" isDismissible={false}>
                                     <p>
-                                        {__('Database table reset successfully.', 'simply-static')}
+                                        {__('Database table reset successfully.', 'wp-static-export')}
                                     </p>
                                 </Notice>
                             )}
@@ -304,7 +304,7 @@ function Utilities() {
                             {() => (
                                 <Notice status="success" isDismissible={false}>
                                     <p>
-                                        {__('Background queue reset successfully.', 'simply-static')}
+                                        {__('Background queue reset successfully.', 'wp-static-export')}
                                     </p>
                                 </Notice>
                             )}
@@ -317,22 +317,22 @@ function Utilities() {
             <Spacer margin={5}/>
             <Card>
                 <CardHeader>
-                    <b>{__('Migrate Settings', 'simply-static')}</b>
+                    <b>{__('Migrate Settings', 'wp-static-export')}</b>
                 </CardHeader>
                 <CardBody>
-                    <p>{__('Migrate all of your settings to WP Static Export 3.0', 'simply-static')}</p>
+                    <p>{__('Migrate all of your settings to WP Static Export 3.0', 'wp-static-export')}</p>
                     <p>
                         <Button onClick={runMigrateSettings}
                                 disabled={maintenanceLocked || isBusy}
                                 isBusy={pendingAction === 'migrate'}
-                                variant="primary">{__('Migrate settings', 'simply-static')}</Button>
+                                variant="primary">{__('Migrate settings', 'wp-static-export')}</Button>
                     </p>
                     {isMigrate ?
                         <Animate type="slide-in" options={{origin: 'top'}}>
                             {() => (
                                 <Notice status="success" isDismissible={false}>
                                     <p>
-                                        {__('Settings migration completed successfully.', 'simply-static')}
+                                        {__('Settings migration completed successfully.', 'wp-static-export')}
                                     </p>
                                 </Notice>
                             )}

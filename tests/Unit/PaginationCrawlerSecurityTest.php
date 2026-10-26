@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
 use ReflectionMethod;
-use Simply_Static\Crawler\Pagination_Crawler;
-use Simply_Static\Options;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Crawler\Pagination_Crawler;
+use WP_Static_Export\Options;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 final class PaginationCrawlerSecurityTest extends UnitTestCase {
 
@@ -22,7 +22,7 @@ final class PaginationCrawlerSecurityTest extends UnitTestCase {
 	}
 
 	public function test_scans_only_exact_origin_with_tls_redirect_and_body_limits(): void {
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'http_basic_auth_username' => 'crawler',
 			'http_basic_auth_password' => 'secret',
 		);
@@ -74,7 +74,7 @@ final class PaginationCrawlerSecurityTest extends UnitTestCase {
 	}
 
 	public function test_rejects_oversized_and_non_success_responses(): void {
-		add_filter( 'simply_static_pagination_max_response_bytes', static function () {
+		add_filter( 'wpse_pagination_max_response_bytes', static function () {
 			return 1024;
 		} );
 		WpEnv::$remote_response = array(
@@ -94,7 +94,7 @@ final class PaginationCrawlerSecurityTest extends UnitTestCase {
 
 	public function test_custom_page_discovery_enforces_global_url_cap_and_reports_truncation(): void {
 		add_filter(
-			'simply_static_pagination_max_generated_urls',
+			'wpse_pagination_max_generated_urls',
 			static function (): int {
 				return 100;
 			}
@@ -112,10 +112,10 @@ final class PaginationCrawlerSecurityTest extends UnitTestCase {
 
 		self::assertCount( 100, $urls );
 		self::assertSame( 'https://example.test/articles/page/101/', $urls[99] );
-		self::assertContains( 'simply_static_pagination_truncated', WpEnv::$action_log );
+		self::assertContains( 'wpse_pagination_truncated', WpEnv::$action_log );
 		self::assertStringContainsString(
 			'safety limit reached',
-			WpEnv::$options['simply-static']['archive_status_messages']['pagination_warning']['message']
+			WpEnv::$options['wp-static-export']['archive_status_messages']['pagination_warning']['message']
 		);
 	}
 

@@ -72,7 +72,7 @@ function GeneralSettings() {
         setApiError(null);
 
         apiFetch({
-            path: '/simplystatic/v1/crawlers',
+            path: '/wp-static-export/v1/crawlers',
             // Use raw: true to get the raw response
             parse: true
         })
@@ -131,7 +131,7 @@ function GeneralSettings() {
         setPostTypesApiError(null);
 
         apiFetch({
-            path: '/simplystatic/v1/post-types',
+            path: '/wp-static-export/v1/post-types',
             parse: true
         })
             .then(response => {
@@ -159,7 +159,7 @@ function GeneralSettings() {
     // Fetch plugins
     const fetchPlugins = () => {
         setPluginsApiError(null);
-        apiFetch({path: '/simplystatic/v1/active-plugins', parse: true})
+        apiFetch({path: '/wp-static-export/v1/active-plugins', parse: true})
             .then(response => {
                 if (typeof response === 'string') {
                     response = JSON.parse(response);
@@ -187,7 +187,7 @@ function GeneralSettings() {
     // Fetch themes
     const fetchThemes = () => {
         setThemesApiError(null);
-        apiFetch({path: '/simplystatic/v1/active-themes', parse: true})
+        apiFetch({path: '/wp-static-export/v1/active-themes', parse: true})
             .then(response => {
                 if (typeof response === 'string') {
                     response = JSON.parse(response);
@@ -213,10 +213,10 @@ function GeneralSettings() {
         fetchPlugins();
         fetchThemes();
         // Fetch pages for optional 404 selection
-        apiFetch({path: '/simplystatic/v1/pages'}).then((fetched_pages) => {
+        apiFetch({path: '/wp-static-export/v1/pages'}).then((fetched_pages) => {
             let pages = fetched_pages || [];
             // Prepend default option
-            pages.unshift({label: __('No page selected', 'simply-static'), value: 0});
+            pages.unshift({label: __('No page selected', 'wp-static-export'), value: 0});
             setPages(pages);
         }).catch(() => {
             setPages([]);
@@ -295,20 +295,20 @@ function GeneralSettings() {
     return (<div className={"inner-settings"}>
         <Card>
             <CardHeader>
-                <b>{__('Replacing URLs', 'simply-static')}</b>
+                <b>{__('Replacing URLs', 'wp-static-export')}</b>
             </CardHeader>
             <CardBody>
-                <p>{__('When exporting your static site, any links to your WordPress site will be replaced by one of the following: absolute URLs, relative URLs, or URLs constructed for offline use.', 'simply-static')}</p>
+                <p>{__('When exporting your static site, any links to your WordPress site will be replaced by one of the following: absolute URLs, relative URLs, or URLs constructed for offline use.', 'wp-static-export')}</p>
                 <SelectControl
-                    label={__('Replacing URLs', 'simply-static')}
+                    label={__('Replacing URLs', 'wp-static-export')}
                     value={replaceType}
                     __next40pxDefaultSize
                     __nextHasNoMarginBottom
                     disabled={isStudio()}
                     options={[
-                        {label: __('Absolute URLs', 'simply-static'), value: 'absolute'},
-                        {label: __('Relative Path', 'simply-static'), value: 'relative'},
-                        {label: __('Offline Usage', 'simply-static'), value: 'offline'},
+                        {label: __('Absolute URLs', 'wp-static-export'), value: 'absolute'},
+                        {label: __('Relative Path', 'wp-static-export'), value: 'relative'},
+                        {label: __('Offline Usage', 'wp-static-export'), value: 'offline'},
                     ]}
                     onChange={(type) => {
                         setReplaceType(type);
@@ -320,7 +320,7 @@ function GeneralSettings() {
                         <Flex>
                             <FlexItem style={{minWidth: "15%", marginTop: "15px"}}>
                                 <SelectControl
-                                    label={__('Scheme', 'simply-static')}
+                                    label={__('Scheme', 'wp-static-export')}
                                     value={scheme}
                                     __next40pxDefaultSize
                                     __nextHasNoMarginBottom
@@ -338,7 +338,7 @@ function GeneralSettings() {
                             </FlexItem>
                             <FlexItem style={{minWidth: "85%"}}>
                                 <TextControl
-                                    label={__('Host', 'simply-static')}
+                                    label={__('Host', 'wp-static-export')}
                                     type={"text"}
                                     placeholder={"example.com"}
                                     __next40pxDefaultSize
@@ -352,13 +352,13 @@ function GeneralSettings() {
                                 />
                             </FlexItem>
                         </Flex>
-                        <p>{__('Convert all URLs for your WordPress site to absolute URLs at the domain specified above.', 'simply-static')}</p>
+                        <p>{__('Convert all URLs for your WordPress site to absolute URLs at the domain specified above.', 'wp-static-export')}</p>
                     </>
                 }
                 {replaceType === 'relative' &&
                     <>
                         <TextControl
-                            label={__('Path', 'simply-static')}
+                            label={__('Path', 'wp-static-export')}
                             type={"text"}
                             placeholder={"/"}
                             __next40pxDefaultSize
@@ -371,27 +371,27 @@ function GeneralSettings() {
                             }}
                         />
                         <p>
-                            {__('Convert all URLs for your WordPress site to relative URLs that will work at any domain.', 'simply-static')}<br></br>
-                            {__('Optionally specify a path above if you intend to place the files in a subdirectory.', 'simply-static')}
+                            {__('Convert all URLs for your WordPress site to relative URLs that will work at any domain.', 'wp-static-export')}<br></br>
+                            {__('Optionally specify a path above if you intend to place the files in a subdirectory.', 'wp-static-export')}
                         </p>
                         <Notice status={"warning"} isDismissible={false}>
-                            <b>{__('Example', 'simply-static')}: </b>
-                            {__('enter /path above if you wanted to serve your files at www.example.com/path/', 'simply-static')}
+                            <b>{__('Example', 'wp-static-export')}: </b>
+                            {__('enter /path above if you wanted to serve your files at www.example.com/path/', 'wp-static-export')}
                         </Notice>
                     </>
                 }
                 {replaceType === 'offline' &&
-                    <p>{__('Convert all URLs for your WordPress site so that you can browse the site locally on your own computer without hosting it on a web server.', 'simply-static')}</p>
+                    <p>{__('Convert all URLs for your WordPress site so that you can browse the site locally on your own computer without hosting it on a web server.', 'wp-static-export')}</p>
                 }
                 {!useForms &&
                     <ToggleControl
-                        label={__('Force URL replacements', 'simply-static')}
+                        label={__('Force URL replacements', 'wp-static-export')}
                         __nextHasNoMarginBottom
                         disabled={isStudio()}
                         help={
                             forceURLReplacement
-                                ? __('Replace all occurrences of the WordPress URL with the static URL (includes inline CSS and JS).', 'simply-static')
-                                : __('Replace only occurrences of the WordPress URL that match our tag list.', 'simply-static')
+                                ? __('Replace all occurrences of the WordPress URL with the static URL (includes inline CSS and JS).', 'wp-static-export')
+                                : __('Replace only occurrences of the WordPress URL that match our tag list.', 'wp-static-export')
                         }
                         checked={forceURLReplacement}
                         onChange={(value) => {
@@ -405,21 +405,21 @@ function GeneralSettings() {
         <Spacer margin={5}/>
         <Card>
             <CardHeader>
-                <b>{__('Enhanced Crawl', 'simply-static')}</b>
+                <b>{__('Enhanced Crawl', 'wp-static-export')}</b>
             </CardHeader>
             <CardBody>
-                <p>{__('Enhanced Crawl uses native WordPress functions to find all pages and files when running a static export.', 'simply-static')}</p>
+                <p>{__('Enhanced Crawl uses native WordPress functions to find all pages and files when running a static export.', 'wp-static-export')}</p>
                 <ToggleControl
                     __nextHasNoMarginBottom
                     label={
                         <>
-                            {__('Enable Enhanced Crawl', 'simply-static')}
+                            {__('Enable Enhanced Crawl', 'wp-static-export')}
                         </>
                     }
                     help={
                         enableEnhancedCrawl
-                            ? __('Find pages and files via Enhanced Crawl.', 'simply-static')
-                            : __('Don\'t find pages and files via Enhanced Crawl.', 'simply-static')
+                            ? __('Find pages and files via Enhanced Crawl.', 'wp-static-export')
+                            : __('Don\'t find pages and files via Enhanced Crawl.', 'wp-static-export')
                     }
                     checked={enableEnhancedCrawl}
                     onChange={(value) => {
@@ -434,7 +434,7 @@ function GeneralSettings() {
                         {apiError && (
                             <>
                                 <Notice status="error" isDismissible={false}>
-                                    {__('Error loading crawlers: ', 'simply-static')} {apiError}
+                                    {__('Error loading crawlers: ', 'wp-static-export')} {apiError}
                                 </Notice>
                                 <Spacer margin={2}/>
                             </>
@@ -442,7 +442,7 @@ function GeneralSettings() {
                         {crawlers.length > 0 ? (
                             <>
                                 <FormTokenField
-                                    label={__('Active Crawlers', 'simply-static')}
+                                    label={__('Active Crawlers', 'wp-static-export')}
                                     __next40pxDefaultSize
                                     __nextHasNoMarginBottom
                                     value={selectedCrawlers.map(id => {
@@ -473,7 +473,7 @@ function GeneralSettings() {
                                         setSelectedCrawlers(selectedIds);
                                         updateSetting('crawlers', selectedIds);
                                     }}
-                                    help={__('Select which crawlers to activate. If none selected, all crawlers will be active by default.', 'simply-static')}
+                                    help={__('Select which crawlers to activate. If none selected, all crawlers will be active by default.', 'wp-static-export')}
                                     tokenizeOnSpace={false}
                                     __experimentalExpandOnFocus={true}
                                     __experimentalShowHowTo={false}
@@ -488,7 +488,7 @@ function GeneralSettings() {
                                         {postTypesApiError && (
                                             <>
                                                 <Notice status="error" isDismissible={false}>
-                                                    {__('Error loading post types: ', 'simply-static')} {postTypesApiError}
+                                                    {__('Error loading post types: ', 'wp-static-export')} {postTypesApiError}
                                                 </Notice>
                                                 <Spacer margin={2}/>
                                             </>
@@ -496,7 +496,7 @@ function GeneralSettings() {
                                         {postTypes.length > 0 ? (
                                             <>
                                                 <FormTokenField
-                                                    label={__('Post Types to Include', 'simply-static')}
+                                                    label={__('Post Types to Include', 'wp-static-export')}
                                                     __next40pxDefaultSize
                                                     __nextHasNoMarginBottom
                                                     value={Array.isArray(selectedPostTypes) ? selectedPostTypes.map(name => {
@@ -528,7 +528,7 @@ function GeneralSettings() {
                                                         updateSetting('post_types', selectedNames);
                                                         updateSetting('post_types_configured', true);
                                                     }}
-                                                    help={__('Select which post types to include in the static export. All public post types are selected by default.', 'simply-static')}
+                                                    help={__('Select which post types to include in the static export. All public post types are selected by default.', 'wp-static-export')}
                                                     tokenizeOnSpace={false}
                                                     __experimentalExpandOnFocus={true}
                                                     __experimentalShowHowTo={false}
@@ -538,7 +538,7 @@ function GeneralSettings() {
                                                 <Spacer margin={2}/>
                                             </>
                                         ) : (
-                                            <p>{__('Loading post types...', 'simply-static')}</p>
+                                            <p>{__('Loading post types...', 'wp-static-export')}</p>
                                         )}
                                     </>
                                 )}
@@ -547,7 +547,7 @@ function GeneralSettings() {
                                         {pluginsApiError && (
                                             <>
                                                 <Notice status="error" isDismissible={false}>
-                                                    {__('Error loading plugins: ', 'simply-static')} {pluginsApiError}
+                                                    {__('Error loading plugins: ', 'wp-static-export')} {pluginsApiError}
                                                 </Notice>
                                                 <Spacer margin={2}/>
                                             </>
@@ -555,7 +555,7 @@ function GeneralSettings() {
                                         {plugins.length > 0 ? (
                                             <>
                                                 <FormTokenField
-                                                    label={__('Plugins to Include', 'simply-static')}
+                                                    label={__('Plugins to Include', 'wp-static-export')}
                                                     __next40pxDefaultSize
                                                     __nextHasNoMarginBottom
                                                     disabled={!isPro()}
@@ -579,7 +579,7 @@ function GeneralSettings() {
                                                         setSelectedPlugins(selected);
                                                         updateSetting('plugins_to_include', selected);
                                                     }}
-                                                    help={__('Select which active plugins to include. All active plugins are included by default; remove tokens to exclude them.', 'simply-static')}
+                                                    help={__('Select which active plugins to include. All active plugins are included by default; remove tokens to exclude them.', 'wp-static-export')}
                                                     tokenizeOnSpace={false}
                                                     __experimentalExpandOnFocus={true}
                                                     __experimentalShowHowTo={false}
@@ -588,7 +588,7 @@ function GeneralSettings() {
                                                 />
                                             </>
                                         ) : (
-                                            <p>{__('Loading plugins...', 'simply-static')}</p>
+                                            <p>{__('Loading plugins...', 'wp-static-export')}</p>
                                         )}
                                     </>
                                 )}
@@ -597,7 +597,7 @@ function GeneralSettings() {
                                         {themesApiError && (
                                             <>
                                                 <Notice status="error" isDismissible={false}>
-                                                    {__('Error loading themes: ', 'simply-static')} {themesApiError}
+                                                    {__('Error loading themes: ', 'wp-static-export')} {themesApiError}
                                                 </Notice>
                                                 <Spacer margin={2}/>
                                             </>
@@ -608,7 +608,7 @@ function GeneralSettings() {
                                                     <Spacer margin={"5px"}/>
                                                 }
                                                 <FormTokenField
-                                                    label={__('Themes to Include', 'simply-static')}
+                                                    label={__('Themes to Include', 'wp-static-export')}
                                                     __next40pxDefaultSize
                                                     __nextHasNoMarginBottom
                                                     disabled={!isPro()}
@@ -625,7 +625,7 @@ function GeneralSettings() {
                                                         setSelectedThemes(selected);
                                                         updateSetting('themes_to_include', selected);
                                                     }}
-                                                    help={__('Select which theme(s) to include. The active theme and parent (if any) are included by default; remove tokens to exclude them.', 'simply-static')}
+                                                    help={__('Select which theme(s) to include. The active theme and parent (if any) are included by default; remove tokens to exclude them.', 'wp-static-export')}
                                                     tokenizeOnSpace={false}
                                                     __experimentalExpandOnFocus={true}
                                                     __experimentalShowHowTo={false}
@@ -635,7 +635,7 @@ function GeneralSettings() {
                                                 <Spacer margin={2}/>
                                             </>
                                         ) : (
-                                            <p>{__('Loading themes...', 'simply-static')}</p>
+                                            <p>{__('Loading themes...', 'wp-static-export')}</p>
                                         )}
                                     </>
                                 )}
@@ -655,7 +655,7 @@ function GeneralSettings() {
                                 </div>
                             </>
                         ) : (
-                            <p>{__('Loading crawlers...', 'simply-static')}</p>
+                            <p>{__('Loading crawlers...', 'wp-static-export')}</p>
                         )}
                     </>
                 )}
@@ -664,20 +664,20 @@ function GeneralSettings() {
         <Spacer margin={5}/>
         <Card>
             <CardHeader>
-                <b>{__('404', 'simply-static')}</b>
+                <b>{__('404', 'wp-static-export')}</b>
             </CardHeader>
             <CardBody>
                 <ToggleControl
                     __nextHasNoMarginBottom
                     label={
                         <>
-                            {__('Generate 404 Page?', 'simply-static')}
+                            {__('Generate 404 Page?', 'wp-static-export')}
                         </>
                     }
                     help={
                         generate404
-                            ? __('Generate a 404 page based on your theme template.', 'simply-static')
-                            : __('Don\'t generate a 404 page.', 'simply-static')
+                            ? __('Generate a 404 page based on your theme template.', 'wp-static-export')
+                            : __('Don\'t generate a 404 page.', 'wp-static-export')
                     }
                     checked={generate404}
                     onChange={(value) => {
@@ -694,12 +694,12 @@ function GeneralSettings() {
                                     {!(isPro && typeof isPro === 'function' ? isPro() : false) ? (
                                             <>
                                                 <span style={{position: "relative", bottom: "-15px"}}>
-                                                {__('Custom 404 page (optional)', 'simply-static')}
+                                                {__('Custom 404 page (optional)', 'wp-static-export')}
                                                 </span>
                                             </>
                                         ) :
                                         <>
-                                            {__('Custom 404 page (optional)', 'simply-static')}
+                                            {__('Custom 404 page (optional)', 'wp-static-export')}
                                         </>
                                     }
                                 </>
@@ -712,7 +712,7 @@ function GeneralSettings() {
                             onChange={(pageId) => {
                                 updateSetting('custom_404_page', pageId);
                             }}
-                            help={__('If selected, WP Static Export will use the content of this page for the 404 page instead of the theme default.', 'simply-static')}
+                            help={__('If selected, WP Static Export will use the content of this page for the 404 page instead of the theme default.', 'wp-static-export')}
                         />
                         {(isPro && typeof isPro === 'function' ? isPro() : false) && (
                             <Button
@@ -726,7 +726,7 @@ function GeneralSettings() {
                                     }
                                     setIsRunning(true);
                                     apiFetch({
-                                        path: '/simplystatic/v1/export-404',
+                                        path: '/wp-static-export/v1/export-404',
                                         method: 'POST',
                                     }).then(resp => {
                                         try {
@@ -743,11 +743,11 @@ function GeneralSettings() {
                                     }).catch(() => {
                                         // Reset running flag on error
                                         setIsRunning(false);
-                                        alert(__('Failed to start 404 push.', 'simply-static'));
+                                        alert(__('Failed to start 404 push.', 'wp-static-export'));
                                     });
                                 }}
                             >
-                                {__('Push 404 Page', 'simply-static')}
+                                {__('Push 404 Page', 'wp-static-export')}
                             </Button>
                         )}
                     </>
@@ -757,24 +757,24 @@ function GeneralSettings() {
         <Spacer margin={5}/>
         <Card>
             <CardHeader>
-                <b>{__('Include', 'simply-static')}</b>
+                <b>{__('Include', 'wp-static-export')}</b>
             </CardHeader>
             <CardBody>
                 <TextareaControl
-                    label={__('Additional URLs', 'simply-static')}
+                    label={__('Additional URLs', 'wp-static-export')}
                     placeholder={options.home + "/hidden-page/\n/\\/blog\\/.*$/i "}
                     __nextHasNoMarginBottom
-                    help={__('You can enter full URLs or regex (wrap with / /). Examples: https://example.com/private/ or /\\/blog\\/.*$/i (one per line).', 'simply-static')}
+                    help={__('You can enter full URLs or regex (wrap with / /). Examples: https://example.com/private/ or /\\/blog\\/.*$/i (one per line).', 'wp-static-export')}
                     value={settings.additional_urls}
                     onChange={(value) => {
                         updateSetting('additional_urls', value);
                     }}
                 />
                 <TextareaControl
-                    label={__('Additional Files and Directories', 'simply-static')}
+                    label={__('Additional Files and Directories', 'wp-static-export')}
                     placeholder={options.home_path + "additional-directory/\n" + options.home_path + "additional-file.html\n/\\.pdf$/i"}
                     __nextHasNoMarginBottom
-                    help={__('Enter absolute paths or regex (wrap with / /). Examples: /\\.pdf$/i or /wp-content\\/uploads\\/reports\\/.*/ (one per line).', 'simply-static')}
+                    help={__('Enter absolute paths or regex (wrap with / /). Examples: /\\.pdf$/i or /wp-content\\/uploads\\/reports\\/.*/ (one per line).', 'wp-static-export')}
                     value={settings.additional_files}
                     onChange={(value) => {
                         updateSetting('additional_files', value);
@@ -792,19 +792,19 @@ function GeneralSettings() {
                         }
                     }}
                 >
-                    {hasCopied ? __('Copied home path', 'simply-static') : __('Copy home path', 'simply-static')}
+                    {hasCopied ? __('Copied home path', 'wp-static-export') : __('Copy home path', 'wp-static-export')}
                 </Button>
                 <ToggleControl
                     __nextHasNoMarginBottom
                     label={
                         <>
-                            {__('Include RSS Feeds?', 'simply-static')}
+                            {__('Include RSS Feeds?', 'wp-static-export')}
                         </>
                     }
                     help={
                         addFeeds
-                            ? __('Include feed URLs of all your posts.', 'simply-static')
-                            : __('Don\'t include feed URLs for all your posts.', 'simply-static')
+                            ? __('Include feed URLs of all your posts.', 'wp-static-export')
+                            : __('Don\'t include feed URLs for all your posts.', 'wp-static-export')
                     }
                     checked={addFeeds}
                     onChange={(value) => {
@@ -816,13 +816,13 @@ function GeneralSettings() {
                     __nextHasNoMarginBottom
                     label={
                         <>
-                            {__('Include Rest API?', 'simply-static')}
+                            {__('Include Rest API?', 'wp-static-export')}
                         </>
                     }
                     help={
                         addRestApi
-                            ? __('Include all Rest API endpoints as JSON files.', 'simply-static')
-                            : __('Don\'t include Rest API endpoints as JSON files.', 'simply-static')
+                            ? __('Include all Rest API endpoints as JSON files.', 'wp-static-export')
+                            : __('Don\'t include Rest API endpoints as JSON files.', 'wp-static-export')
                     }
                     checked={addRestApi}
                     onChange={(value) => {
@@ -835,14 +835,14 @@ function GeneralSettings() {
         <Spacer margin={5}/>
         <Card>
             <CardHeader>
-                <b>{__('Exclude', 'simply-static')}</b>
+                <b>{__('Exclude', 'wp-static-export')}</b>
             </CardHeader>
             <CardBody>
                 <TextareaControl
-                    label={__('URLs to exclude', 'simply-static')}
+                    label={__('URLs to exclude', 'wp-static-export')}
                     placeholder={"/some-directory/\n.jpg\n/\\.(pdf|zip)$/i\n/\\/private\\/.*/"}
                     __nextHasNoMarginBottom
-                    help={__('You can enter substrings or regex (wrap with / /). Examples: .jpg or /\\.(pdf|zip)$/i or /\/private\/.*/ (one per line).', 'simply-static')}
+                    help={__('You can enter substrings or regex (wrap with / /). Examples: .jpg or /\\.(pdf|zip)$/i or /\/private\/.*/ (one per line).', 'wp-static-export')}
                     value={settings.urls_to_exclude}
                     onChange={(value) => {
                         updateSetting('urls_to_exclude', value);
@@ -857,7 +857,7 @@ function GeneralSettings() {
                     {() => (
                         <Notice status="success" isDismissible={false}>
                             <p>
-                                {__('Settings saved successfully.', 'simply-static')}
+                                {__('Settings saved successfully.', 'wp-static-export')}
                             </p>
                         </Notice>
                     )}
@@ -868,7 +868,7 @@ function GeneralSettings() {
 
         <div className={"save-settings"}>
             <Button onClick={setSavingSettings}
-                    variant="primary">{__('Save Settings', 'simply-static')}</Button>
+                    variant="primary">{__('Save Settings', 'wp-static-export')}</Button>
         </div>
     </div>)
 }

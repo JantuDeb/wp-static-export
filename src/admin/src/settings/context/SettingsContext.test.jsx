@@ -61,10 +61,10 @@ describe( 'SettingsContext maintenance actions', () => {
 		currentContext = null;
 		apiFetch.mockReset();
 		apiFetch.mockImplementation( ( request ) => {
-			if ( request.path === '/simplystatic/v1/settings' && ! request.method ) {
+			if ( request.path === '/wp-static-export/v1/settings' && ! request.method ) {
 				return Promise.resolve( { delivery_method: 'local' } );
 			}
-			if ( request.path === '/simplystatic/v1/is-running' ) {
+			if ( request.path === '/wp-static-export/v1/is-running' ) {
 				return Promise.resolve(
 					JSON.stringify( { running: false, paused: false } )
 				);
@@ -82,7 +82,7 @@ describe( 'SettingsContext maintenance actions', () => {
 		await waitFor( () => expect( currentContext ).not.toBeNull() );
 		await waitFor( () =>
 			expect( apiFetch ).toHaveBeenCalledWith( {
-				path: '/simplystatic/v1/settings',
+				path: '/wp-static-export/v1/settings',
 			} )
 		);
 	}
@@ -95,11 +95,11 @@ describe( 'SettingsContext maintenance actions', () => {
 		} );
 
 		expect( apiFetch ).toHaveBeenCalledWith( {
-			path: '/simplystatic/v1/settings',
+			path: '/wp-static-export/v1/settings',
 			method: 'POST',
 			data: {
 				delivery_method: 'zip',
-				__simply_static_import: true,
+				__wpse_import: true,
 			},
 		} );
 		expect( currentContext.settings ).toEqual( { delivery_method: 'local' } );
@@ -113,14 +113,14 @@ describe( 'SettingsContext maintenance actions', () => {
 		} );
 
 		expect( apiFetch ).toHaveBeenCalledWith( {
-			path: '/simplystatic/v1/migrate',
+			path: '/wp-static-export/v1/migrate',
 			method: 'POST',
 			data: { migrate: true },
 		} );
 		expect(
 			apiFetch.mock.calls.filter(
 				( [ request ] ) =>
-					request.path === '/simplystatic/v1/settings' &&
+					request.path === '/wp-static-export/v1/settings' &&
 					request.method === 'POST'
 			)
 		).toHaveLength( 0 );

@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 /**
  * WP Async Request
@@ -91,7 +91,7 @@ abstract class Async_Request {
 		// Async credentials must never be forwarded to a filtered cross-origin
 		// endpoint. Refuse the dispatch rather than relying on redirect behavior.
 		if ( ! $this->is_dispatch_url_allowed( $url ) ) {
-			return new \WP_Error( 'invalid_async_origin', __( 'The background request URL must use the WordPress admin origin.', 'simply-static' ) );
+			return new \WP_Error( 'invalid_async_origin', __( 'The background request URL must use the WordPress admin origin.', 'wp-static-export' ) );
 		}
 
 		if ( class_exists( __NAMESPACE__ . '\\Util' ) ) {
@@ -158,7 +158,7 @@ abstract class Async_Request {
 		} else {
 			$url       = $this->get_query_url();
 			$sslverify = class_exists( __NAMESPACE__ . '\\Util' ) ? Util::should_verify_ssl( $url ) : true;
-			$sslverify = (bool) apply_filters( 'ss_remote_get_sslverify', $sslverify, $url );
+			$sslverify = (bool) apply_filters( 'wpse_remote_get_sslverify', $sslverify, $url );
 			$args = array(
 				'timeout'     => 5,
 				'blocking'    => false,
@@ -255,7 +255,7 @@ abstract class Async_Request {
 
 		// A blocking capability probe validates this exact action, authentication,
 		// nonce, and WAF route without consuming queued work.
-		if ( ! empty( $_REQUEST['simply_static_probe'] ) ) {
+		if ( ! empty( $_REQUEST['wpse_probe'] ) ) {
 			return $this->maybe_wp_die();
 		}
 

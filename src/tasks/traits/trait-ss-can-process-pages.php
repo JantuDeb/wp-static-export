@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 trait canProcessPages {
 
@@ -38,7 +38,7 @@ trait canProcessPages {
 	 * @return mixed
 	 */
 	protected function get_batch_size() {
-		return apply_filters( 'simply_static_' . static::$task_name . '_batch_size', $this->batch_size );
+		return apply_filters( 'wpse_' . static::$task_name . '_batch_size', $this->batch_size );
 	}
 
 	/**
@@ -88,7 +88,7 @@ trait canProcessPages {
 	 * inside a single task before the dispatcher can hand off the next
 	 * request.
 	 *
-	 * Filterable via `simply_static_max_batch_time`.
+	 * Filterable via `wpse_max_batch_time`.
 	 *
 	 * @var int
 	 */
@@ -111,11 +111,11 @@ trait canProcessPages {
 			$processed_pages = $this->get_processed_pages();
 			$message         = $this->processed_pages_message( $processed_pages, $total_pages );
 			// In 404-only exports, force the transfer log to reflect a single artifact.
-			$only_404 = get_option( 'simply-static-404-only' );
+			$only_404 = get_option( 'wp-static-export-404-only' );
 			if ( ! empty( $only_404 ) ) {
 				$message = sprintf(
 					/* translators: 1: number of files transferred, 2: total number of files. */
-					__( 'Transferred %1$d of %2$d files', 'simply-static' ),
+					__( 'Transferred %1$d of %2$d files', 'wp-static-export' ),
 					1,
 					1
 				);
@@ -130,7 +130,7 @@ trait canProcessPages {
 						'Skipped %d page or file after repeated processing attempts.',
 						'Skipped %d pages or files after repeated processing attempts.',
 						$skipped_pages,
-						'simply-static'
+						'wp-static-export'
 					),
 					$skipped_pages
 				);
@@ -143,7 +143,7 @@ trait canProcessPages {
 		// Time-limit awareness: yield back to handle() before the server
 		// hard-kills the PHP process on restricted hosting.
 		$batch_start    = time();
-		$max_batch_time = (int) apply_filters( 'simply_static_max_batch_time', $this->max_batch_time );
+		$max_batch_time = (int) apply_filters( 'wpse_max_batch_time', $this->max_batch_time );
 
  	while ( $static_page = array_shift( $pages_to_process ) ) {
 			// Yield if we are approaching the time limit.
@@ -255,7 +255,7 @@ trait canProcessPages {
 
 		$query->where( 'fetch_attempts >= 3' );
 
-		$use_single = get_option( 'simply-static-use-single' );
+		$use_single = get_option( 'wp-static-export-use-single' );
 		if ( ! empty( $use_single ) ) {
 			$ids = array_values( array_filter( array_map( 'intval', explode( ',', $use_single ) ) ) );
 			if ( count( $ids ) === 1 ) {
@@ -265,7 +265,7 @@ trait canProcessPages {
 			}
 		}
 
-		$build_id = get_option( 'simply-static-use-build' );
+		$build_id = get_option( 'wp-static-export-use-build' );
 		if ( ! empty( $build_id ) ) {
 			$query->where( 'build_id = ?', $build_id );
 		}
@@ -292,7 +292,7 @@ trait canProcessPages {
 	protected function processed_pages_message( $processed, $total ) {
 		return sprintf(
 			/* translators: 1: number of files uploaded, 2: total number of files. */
-			__( 'Uploaded %1$d of %2$d files', 'simply-static' ),
+			__( 'Uploaded %1$d of %2$d files', 'wp-static-export' ),
 			$processed,
 			$total
 		);
@@ -366,7 +366,7 @@ trait canProcessPages {
 		$query->where( "fetch_attempts < 3" );
 
 		// Modify the query based on post id column.
-		$use_single = get_option( 'simply-static-use-single' );
+		$use_single = get_option( 'wp-static-export-use-single' );
 
 		if ( ! empty( $use_single ) ) {
 			$ids = array_map( 'intval', explode( ',', $use_single ) );
@@ -379,7 +379,7 @@ trait canProcessPages {
 		}
 
 		// Modify the query based on build id column.
-		$build_id = get_option( 'simply-static-use-build' );
+		$build_id = get_option( 'wp-static-export-use-build' );
 
 		if ( ! empty( $build_id ) ) {
 			$query->where( "build_id = ?", $build_id );
@@ -393,7 +393,7 @@ trait canProcessPages {
 			return $this->get_total_pages_sql();
 		}
 
-		$option_name = 'simply_static_' . static::$task_name . '_total_pages';
+		$option_name = 'wpse_' . static::$task_name . '_total_pages';
 		$count       = get_option( $option_name );
 
 		if ( false === $count ) {
@@ -418,7 +418,7 @@ trait canProcessPages {
 	}
 
 	public static function delete_total_pages() {
-		delete_option( 'simply_static_' . static::$task_name . '_total_pages' );
+		delete_option( 'wpse_' . static::$task_name . '_total_pages' );
 	}
 
 	/**
@@ -438,7 +438,7 @@ trait canProcessPages {
 		}
 
 		// Modify the query based on post id column.
-		$use_single = get_option( 'simply-static-use-single' );
+		$use_single = get_option( 'wp-static-export-use-single' );
 
 		if ( ! empty( $use_single ) ) {
 			$ids = array_map( 'intval', explode( ',', $use_single ) );
@@ -451,7 +451,7 @@ trait canProcessPages {
 		}
 
 		// Modify the query based on build id column.
-		$build_id = get_option( 'simply-static-use-build' );
+		$build_id = get_option( 'wp-static-export-use-build' );
 
 		if ( ! empty( $build_id ) ) {
 			$query->where( "build_id = ?", $build_id );
@@ -465,7 +465,7 @@ trait canProcessPages {
 	/**
 	 * Get the main Query.
 	 *
-	 * @return Query|\Simply_Static\Query
+	 * @return Query|\WP_Static_Export\Query
 	 * @throws \Exception
 	 */
 	public function get_main_query() {

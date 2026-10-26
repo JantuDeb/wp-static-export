@@ -11,7 +11,7 @@ export default function EnvironmentForm({onClose, setSelectableEnvironments, set
     const createNew = () => {
         setCreating(true);
         apiFetch({
-            path: '/simplystatic/v1/environment',
+            path: '/wp-static-export/v1/environment',
             method: 'POST',
             data: {title: name},
         }).then(resp => {
@@ -37,15 +37,15 @@ export default function EnvironmentForm({onClose, setSelectableEnvironments, set
                 onChange={(val) => setName(val)}
                 value={name}
             />
-            <p>{__('A new environment will be created with the current configuration.', 'simply-static')}</p>
+            <p>{__('A new environment will be created with the current configuration.', 'wp-static-export')}</p>
             <Flex>
                 <FlexBlock>
                     <Button variant={'primary'} onClick={createNew} isBusy={creating}>
-                        {creating ? __('Creating...', 'simply-static') : __('Create', 'simply-static')}
+                        {creating ? __('Creating...', 'wp-static-export') : __('Create', 'wp-static-export')}
                     </Button>
                 </FlexBlock>
                 <FlexBlock>
-                    <Button variant={'secondary'} onClick={onClose}>{__('Cancel', 'simply-static')}</Button>
+                    <Button variant={'secondary'} onClick={onClose}>{__('Cancel', 'wp-static-export')}</Button>
                 </FlexBlock>
             </Flex>
 

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
 use ReflectionClass;
-use Simply_Static\Admin_Settings;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Admin_Settings;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 final class AdminSettingsSecurityTest extends UnitTestCase {
 
@@ -38,7 +38,7 @@ final class AdminSettingsSecurityTest extends UnitTestCase {
 			'allowed_pages'                => array( '/', '/diagnostics', '/general', '/deployment', '/uam' ),
 			'home_path'                    => '/srv/www/wordpress',
 			'admin_email'                  => 'owner@example.test',
-			'temp_files_dir'               => '/tmp/simply-static-private',
+			'temp_files_dir'               => '/tmp/wp-static-export-private',
 			'local_dir'                    => '/srv/filter-injected-export',
 			'log_file'                     => 'https://example.test/uploads/installation-key-debug.txt',
 			'debug_log_url'                => 'https://example.test/uploads/alternate-private-debug.txt',
@@ -175,7 +175,7 @@ final class AdminSettingsSecurityTest extends UnitTestCase {
 		WpEnv::$is_admin = true;
 		WpEnv::$capabilities['publish_pages'] = true;
 		$_GET = array(
-			'page'          => 'simply-static-generate',
+			'page'          => 'wp-static-export-generate',
 			'cancel-export' => 'true',
 		);
 		if ( null !== $nonce ) {
@@ -189,7 +189,7 @@ final class AdminSettingsSecurityTest extends UnitTestCase {
 			array(
 				array(
 					'nonce'  => null === $nonce ? '' : $nonce,
-					'action' => 'simply-static-cancel-export',
+					'action' => 'wp-static-export-cancel-export',
 				),
 			),
 			WpEnv::$nonce_verifications
@@ -206,12 +206,12 @@ final class AdminSettingsSecurityTest extends UnitTestCase {
 
 	public function test_get_cancel_authorization_accepts_a_valid_nonce_for_generate_user(): void {
 		WpEnv::$capabilities['publish_pages'] = true;
-		WpEnv::$valid_nonces['simply-static-cancel-export'] = array( 'valid-nonce' );
+		WpEnv::$valid_nonces['wp-static-export-cancel-export'] = array( 'valid-nonce' );
 
 		self::assertTrue(
 			$this->settings->is_authorized_get_cancel_request(
 				array(
-					'page'          => 'simply-static-generate',
+					'page'          => 'wp-static-export-generate',
 					'cancel-export' => 'true',
 					'_wpnonce'      => 'valid-nonce',
 				)

@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
 use ReflectionClass;
 use ReflectionProperty;
-use Simply_Static\Admin_Rest;
-use Simply_Static\Admin_Settings;
-use Simply_Static\Options;
-use Simply_Static\Plugin;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
-use Simply_Static\Upgrade_Handler;
+use WP_Static_Export\Admin_Rest;
+use WP_Static_Export\Admin_Settings;
+use WP_Static_Export\Options;
+use WP_Static_Export\Plugin;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Upgrade_Handler;
 
 final class AdminControllerWpdb {
 
@@ -151,7 +151,7 @@ final class AdminControllerCoverageTest extends UnitTestCase {
 
 		foreach ( $expected_callbacks as $expected ) {
 			$route = $this->registeredRoute( $expected[0], $expected[1] );
-			self::assertSame( 'simplystatic/v1', $route['namespace'] );
+			self::assertSame( 'wp-static-export/v1', $route['namespace'] );
 			self::assertSame( $this->rest, $route['args']['callback'][0] );
 			self::assertSame( $expected[2], $route['args']['callback'][1] );
 		}
@@ -159,7 +159,7 @@ final class AdminControllerCoverageTest extends UnitTestCase {
 		self::assertFalse( $this->hasRegisteredRoute( '/sites', 'GET' ) );
 
 		add_filter(
-			'ss_user_capability',
+			'wpse_user_capability',
 			static function ( string $default, string $context ): string {
 				return 'test_' . $context;
 			},
@@ -251,13 +251,13 @@ final class AdminControllerCoverageTest extends UnitTestCase {
 			}
 		};
 		$this->pluginInstanceProperty()->setValue( null, $plugin );
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'delivery_method' => 'sftp',
 			'legacy_only'     => 'remove me',
 		);
 		Options::reinstance();
 		add_filter(
-			'ss_default_options',
+			'wpse_default_options',
 			static function ( array $defaults ): array {
 				$defaults['extension_setting'] = 'extension-default';
 				return $defaults;
@@ -273,7 +273,7 @@ final class AdminControllerCoverageTest extends UnitTestCase {
 		self::assertSame( 200, $response['status'] ?? null );
 		self::assertSame( 'Ok', $response['message'] ?? null );
 		self::assertSame( $expected, $response['data'] ?? null );
-		self::assertSame( $expected, WpEnv::$options['simply-static'] );
+		self::assertSame( $expected, WpEnv::$options['wp-static-export'] );
 		self::assertSame( 'extension-default', Options::instance()->get( 'extension_setting' ) );
 		self::assertNull( Options::instance()->get( 'legacy_only' ) );
 		self::assertArrayHasKey( 'ss_webhook_enabled_types', $response['data'] );
@@ -288,8 +288,8 @@ final class AdminControllerCoverageTest extends UnitTestCase {
 				array( 'name' => 'Temporary directory', 'test' => true ),
 			),
 		);
-		WpEnv::$transients['simply_static_checks'] = $passing_checks;
-		WpEnv::$transients['simply_static_failed_tests'] = 2;
+		WpEnv::$transients['wpse_checks'] = $passing_checks;
+		WpEnv::$transients['wpse_failed_tests'] = 2;
 
 		self::assertSame( $passing_checks, $this->rest->get_system_status() );
 		self::assertSame(
@@ -297,7 +297,7 @@ final class AdminControllerCoverageTest extends UnitTestCase {
 			json_decode( (string) $this->rest->check_system_status_passed(), true )
 		);
 
-		WpEnv::$transients['simply_static_checks']['filesystem'][] = array(
+		WpEnv::$transients['wpse_checks']['filesystem'][] = array(
 			'name' => 'WordPress cron',
 			'test' => false,
 		);
@@ -310,8 +310,8 @@ final class AdminControllerCoverageTest extends UnitTestCase {
 			array( 'status' => 200 ),
 			json_decode( (string) $this->rest->reset_diagnostics(), true )
 		);
-		self::assertArrayNotHasKey( 'simply_static_checks', WpEnv::$transients );
-		self::assertArrayNotHasKey( 'simply_static_failed_tests', WpEnv::$transients );
+		self::assertArrayNotHasKey( 'wpse_checks', WpEnv::$transients );
+		self::assertArrayNotHasKey( 'wpse_failed_tests', WpEnv::$transients );
 	}
 
 	public function test_post_type_provider_excludes_internal_types_and_formats_public_types(): void {
@@ -362,7 +362,7 @@ final class AdminControllerCoverageTest extends UnitTestCase {
 	}
 
 	public function test_activity_log_sanitizes_messages_dates_and_invalid_entries(): void {
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'archive_status_messages' => array(
 				'fetch'   => array(
 					'message'  => '<strong>Ready</strong><script>alert(1)</script><a href="javascript:alert(2)" onclick="bad()">link</a>',
@@ -387,8 +387,8 @@ final class AdminControllerCoverageTest extends UnitTestCase {
 			),
 			$log
 		);
-		self::assertContains( 'ss_before_render_activity_log', WpEnv::$action_log );
-		self::assertContains( 'ss_after_render_activity_log', WpEnv::$action_log );
+		self::assertContains( 'wpse_before_render_activity_log', WpEnv::$action_log );
+		self::assertContains( 'wpse_after_render_activity_log', WpEnv::$action_log );
 	}
 
 	public function test_log_endpoints_normalize_request_values_and_response_shapes(): void {
@@ -557,7 +557,7 @@ final class AdminControllerCoverageTest extends UnitTestCase {
 	}
 
 	public function test_export_log_clamps_pagination_and_sanitizes_formatted_rows(): void {
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'generate_type'      => 'export',
 			'archive_start_time' => null,
 		);
@@ -604,8 +604,8 @@ final class AdminControllerCoverageTest extends UnitTestCase {
 		self::assertStringContainsString( 'LIMIT 200 OFFSET 200', $queries );
 		self::assertStringContainsString( 'status_message LIKE', $queries );
 		self::assertStringContainsString( 'needle\\_\\%', $queries );
-		self::assertContains( 'ss_before_render_export_log', WpEnv::$action_log );
-		self::assertContains( 'ss_after_render_export_log', WpEnv::$action_log );
+		self::assertContains( 'wpse_before_render_export_log', WpEnv::$action_log );
+		self::assertContains( 'wpse_after_render_export_log', WpEnv::$action_log );
 	}
 
 	/** @return array<string,mixed> */

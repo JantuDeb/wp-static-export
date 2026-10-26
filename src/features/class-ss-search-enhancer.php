@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {

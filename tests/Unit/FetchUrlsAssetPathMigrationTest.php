@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Fetch_Urls_Task;
-use Simply_Static\Options;
-use Simply_Static\Page;
-use Simply_Static\Page_Handler;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Fetch_Urls_Task;
+use WP_Static_Export\Options;
+use WP_Static_Export\Page;
+use WP_Static_Export\Page_Handler;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-plugin.php';
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-options.php';
@@ -80,7 +80,7 @@ final class FetchUrlsAssetPathMigrationTest extends UnitTestCase {
 
 		WpEnv::$home_url = 'https://example.test';
 		WpEnv::$site_url = 'https://example.test/wordpress';
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'archive_start_time' => '2026-07-12 11:00:00',
 			'generate_type'      => 'update',
 			'origin_url'         => '',

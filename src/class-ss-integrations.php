@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -13,7 +13,7 @@ class Integrations {
 	 */
 	public function load() {
 		$this->includes();
-		do_action( 'ss_integrations_before_load' );
+		do_action( 'wpse_integrations_before_load' );
 		$integrations = $this->get_integrations();
 
 		foreach ( $integrations as $integration ) {
@@ -23,7 +23,7 @@ class Integrations {
 	}
 
 	public function get_integrations() {
-		return apply_filters( 'simply_static_integrations', [
+		return apply_filters( 'wpse_integrations', [
 			'ss-uam'           => SS_UAM_Integration::class,
 			'ss-adminbar'       => SS_Adminbar_Integration::class,
 			'yoast'             => Yoast_Integration::class,

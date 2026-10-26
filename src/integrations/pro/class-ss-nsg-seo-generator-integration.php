@@ -1,5 +1,5 @@
 <?php
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 class Nsg_SEO_Generator_Integration extends Pro_Integration {
 	/**
@@ -10,8 +10,8 @@ class Nsg_SEO_Generator_Integration extends Pro_Integration {
 	protected $id = 'nsg-seo-generator';
 
 	public function __construct() {
-		$this->name = __( 'SEO Generator', 'simply-static' );
-		$this->description = __( 'Efficiently crawl, queue and export pSEO websites with this integration.', 'simply-static' );
+		$this->name = __( 'SEO Generator', 'wp-static-export' );
+		$this->description = __( 'Efficiently crawl, queue and export pSEO websites with this integration.', 'wp-static-export' );
 		$this->active_by_default = false;
 	}
 

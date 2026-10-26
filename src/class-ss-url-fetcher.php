@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) {
@@ -25,7 +25,7 @@ class Url_Fetcher {
 
 	/**
 	 * Singleton instance
-	 * @var Simply_Static\Url_Fetcher
+	 * @var WP_Static_Export\Url_Fetcher
 	 */
 	protected static $instance = null;
 
@@ -57,8 +57,8 @@ class Url_Fetcher {
 	}
 
 	/**
-	 * Return an instance of Simply_Static\Url_Fetcher
-	 * @return Simply_Static
+	 * Return an instance of WP_Static_Export\Url_Fetcher
+	 * @return WP_Static_Export
 	 */
 	public static function instance() {
 		if ( null === self::$instance ) {
@@ -72,7 +72,7 @@ class Url_Fetcher {
 	/**
 	 * Fetch the URL and return a \WP_Error if we get one, otherwise a Response class.
 	 *
-	 * @param \Simply_Static\Page $static_page URL to fetch
+	 * @param \WP_Static_Export\Page $static_page URL to fetch
 	 *
 	 * @return boolean                        Was the fetch successful?
 	 */
@@ -94,7 +94,7 @@ class Url_Fetcher {
 		if ( ! Util::is_local_url( $url ) ) {
 			Util::debug_log( "Not fetching URL because it is not a local URL" );
 			$static_page->http_status_code = null;
-			$message                       = sprintf( __( "An error occurred: %s", 'simply-static' ), __( "Attempted to fetch a remote URL", 'simply-static' ) );
+			$message                       = sprintf( __( "An error occurred: %s", 'wp-static-export' ), __( "Attempted to fetch a remote URL", 'wp-static-export' ) );
 			$static_page->set_error_message( $message );
 			$static_page->save();
 
@@ -178,8 +178,8 @@ class Url_Fetcher {
 						$alt_url  = isset( $is_local_asset ) && $is_local_asset ? Util::get_source_url_from_local_url( $url ) : $url;
 						$alt_args = array(
 							'timeout'     => self::TIMEOUT,
-							'user-agent'  => apply_filters( 'ss_crawler_user_agent', self::DEFAULT_USER_AGENT ),
-							'sslverify'   => (bool) apply_filters( 'ss_remote_get_sslverify', Util::should_verify_ssl( $alt_url ), $alt_url ),
+							'user-agent'  => apply_filters( 'wpse_crawler_user_agent', self::DEFAULT_USER_AGENT ),
+							'sslverify'   => (bool) apply_filters( 'wpse_remote_get_sslverify', Util::should_verify_ssl( $alt_url ), $alt_url ),
 							'redirection' => 0,
 							'blocking'    => true,
 							'decompress'  => true,
@@ -188,7 +188,7 @@ class Url_Fetcher {
 						if ( null !== $authorization ) {
 							$alt_args['headers'] = array( 'Authorization' => $authorization );
 						}
-						$alt_resp = wp_remote_get( $alt_url, apply_filters( 'ss_remote_get_args', $alt_args ) );
+						$alt_resp = wp_remote_get( $alt_url, apply_filters( 'wpse_remote_get_args', $alt_args ) );
 					if ( ! is_wp_error( $alt_resp ) ) {
 						$body = wp_remote_retrieve_body( $alt_resp );
 						if ( strlen( $body ) > 0 ) {
@@ -207,7 +207,7 @@ class Url_Fetcher {
 			Util::debug_log( "We encountered an error when fetching: " . $response->get_error_message() );
 			Util::debug_log( $response );
 			$static_page->http_status_code = null;
-			$message                       = sprintf( __( "An error occurred: %s", 'simply-static' ), $response->get_error_message() );
+			$message                       = sprintf( __( "An error occurred: %s", 'wp-static-export' ), $response->get_error_message() );
 			$static_page->set_error_message( $message );
 			$static_page->save();
 			if ( file_exists( $temp_filename ) ) {
@@ -243,7 +243,7 @@ class Url_Fetcher {
 			}
 
 			if ( $relative_filename !== null ) {
-				$relative_filename      = apply_filters( 'simply_static_relative_filename', $relative_filename, $static_page );
+				$relative_filename      = apply_filters( 'wpse_relative_filename', $relative_filename, $static_page );
 				$static_page->file_path = $relative_filename;
 				$file_path              = $this->archive_dir . $relative_filename;
 
@@ -415,7 +415,7 @@ class Url_Fetcher {
 			'eot'   => 'application/vnd.ms-fontobject',
 		);
 
-		$map = apply_filters( 'ss_mime_type_map', $map, $ext, $file_path, $url );
+		$map = apply_filters( 'wpse_mime_type_map', $map, $ext, $file_path, $url );
 
 		if ( $ext && isset( $map[ $ext ] ) ) {
 			return $map[ $ext ];
@@ -443,7 +443,7 @@ class Url_Fetcher {
 			return true;
 		}
 
-		return apply_filters( 'simply_static_can_create_directories_for_page', false, $static_page );
+		return apply_filters( 'wpse_can_create_directories_for_page', false, $static_page );
 	}
 
 	/**
@@ -453,7 +453,7 @@ class Url_Fetcher {
 	 * can compare a stored path with the path the current export rules would
 	 * generate.
 	 *
-	 * @param \Simply_Static\Page $static_page The Simply_Static\Page.
+	 * @param \WP_Static_Export\Page $static_page The WP_Static_Export\Page.
 	 *
 	 * @return string|null The relative file path, or null when no file should be created.
 	 */
@@ -495,7 +495,7 @@ class Url_Fetcher {
 			if ( $static_page->is_type( 'xml' ) ) {
 				$path_info['extension'] = 'xml';
 			} else {
-				$path_info['extension'] = apply_filters( 'ss_default_extension_type', 'html' );
+				$path_info['extension'] = apply_filters( 'wpse_default_extension_type', 'html' );
 			}
 		}
 
@@ -521,9 +521,9 @@ class Url_Fetcher {
 			 *
 			 * @param bool $use_results_page Whether to use the Search Results Page export. Default requires search to be enabled.
 			 * @param array<string,mixed> $qs_args Parsed query-string arguments.
-			 * @param \Simply_Static\Page $static_page The current static page instance.
+			 * @param \WP_Static_Export\Page $static_page The current static page instance.
 			 */
-			$use_results_page = apply_filters( 'ss_use_search_results_page', $use_results_page, $qs_args, $static_page );
+			$use_results_page = apply_filters( 'wpse_use_search_results_page', $use_results_page, $qs_args, $static_page );
 			if ( false === $use_results_page ) {
 				Util::debug_log( '[SS][SEARCH_QS] Skipping __qs/ creation due to search/results page setting being disabled: ' . $static_page->url );
 				return null; // do not create a file for this query-string URL
@@ -540,9 +540,9 @@ class Url_Fetcher {
 			 *
 			 * @param bool $use_hash_dir Whether to use the hash directory. Default true (except for native search URLs).
 			 * @param array<string,mixed> $qs_args Parsed query-string arguments.
-			 * @param \Simply_Static\Page $static_page The current static page.
+			 * @param \WP_Static_Export\Page $static_page The current static page.
 			 */
-			$use_hash_dir = apply_filters( 'simply_static_use_qs_hash_dir', $use_hash_dir, $qs_args, $static_page );
+			$use_hash_dir = apply_filters( 'wpse_use_qs_hash_dir', $use_hash_dir, $qs_args, $static_page );
 			if ( $use_hash_dir ) {
 				$qs_hash           = substr( md5( $url_parts['query'] ), 0, 12 );
 				$relative_file_dir .= '__qs/' . $qs_hash . '/';
@@ -552,7 +552,7 @@ class Url_Fetcher {
 			}
 		}
 
-		$path_info         = apply_filters( 'simply_static_page_path_info', $page_handler->get_path_info( $path_info ), $static_page );
+		$path_info         = apply_filters( 'wpse_page_path_info', $page_handler->get_path_info( $path_info ), $static_page );
 		$relative_file_dir = apply_filters( 'simple_static_page_relative_file_dir', $page_handler->get_relative_dir( $relative_file_dir ), $static_page );
 
 		$sanitized_relative_dir = Util::sanitize_path( (string) urldecode( $relative_file_dir ) );
@@ -564,7 +564,7 @@ class Url_Fetcher {
 	/**
 	 * Return the final relative filename produced by the current export rules.
 	 *
-	 * @param \Simply_Static\Page $static_page The Simply_Static\Page.
+	 * @param \WP_Static_Export\Page $static_page The WP_Static_Export\Page.
 	 *
 	 * @return string|null The filtered relative file path.
 	 */
@@ -575,7 +575,7 @@ class Url_Fetcher {
 			return null;
 		}
 
-		return apply_filters( 'simply_static_relative_filename', $relative_filename, $static_page );
+		return apply_filters( 'wpse_relative_filename', $relative_filename, $static_page );
 	}
 
 	/**
@@ -584,7 +584,7 @@ class Url_Fetcher {
 	 * This will also create directories as needed so that a file could be
 	 * created at the returned file path.
 	 *
-	 * @param \Simply_Static\Page $static_page The Simply_Static\Page.
+	 * @param \WP_Static_Export\Page $static_page The WP_Static_Export\Page.
 	 *
 	 * @return string|null The unfiltered relative file path.
 	 */
@@ -618,9 +618,9 @@ class Url_Fetcher {
 	}
 
 	public static function remote_get( $url, $filename = null ) {
-		$allowed = (bool) apply_filters( 'ss_url_fetcher_allow_request', Util::is_local_origin_url( $url ), $url );
+		$allowed = (bool) apply_filters( 'wpse_url_fetcher_allow_request', Util::is_local_origin_url( $url ), $url );
 		if ( ! $allowed ) {
-			return new \WP_Error( 'simply_static_unsafe_url', __( 'Refusing to fetch a URL outside the configured WordPress origin.', 'simply-static' ) );
+			return new \WP_Error( 'wpse_unsafe_url', __( 'Refusing to fetch a URL outside the configured WordPress origin.', 'wp-static-export' ) );
 		}
 
 		Util::debug_log( "Fetching URL: " . $url );
@@ -633,12 +633,12 @@ class Url_Fetcher {
 		 *
 		 * @param string $user_agent Default User-Agent.
 		 */
-		$user_agent = apply_filters( 'ss_crawler_user_agent', self::DEFAULT_USER_AGENT );
+		$user_agent = apply_filters( 'wpse_crawler_user_agent', self::DEFAULT_USER_AGENT );
 
 		$args = array(
 			'timeout'     => self::TIMEOUT,
 			'user-agent'  => $user_agent,
-			'sslverify'   => (bool) apply_filters( 'ss_remote_get_sslverify', Util::should_verify_ssl( $url ), $url ),
+			'sslverify'   => (bool) apply_filters( 'wpse_remote_get_sslverify', Util::should_verify_ssl( $url ), $url ),
 			'redirection' => 0, // disable redirection.
 			'blocking'    => true,
 			'decompress'  => true, // ensure WordPress decompresses gzip/deflate responses.
@@ -660,7 +660,7 @@ class Url_Fetcher {
 
 		$args['headers'] = $headers;
 
-		return wp_remote_get( $url, apply_filters( 'ss_remote_get_args', $args ) );
+		return wp_remote_get( $url, apply_filters( 'wpse_remote_get_args', $args ) );
 	}
 
 }

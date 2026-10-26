@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static\Crawler;
+namespace WP_Static_Export\Crawler;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,8 +24,8 @@ class Home_Crawler extends Crawler {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->name = __( 'Homepage URL', 'simply-static' );
-		$this->description = __( 'Detects the homepage URL.', 'simply-static' );
+		$this->name = __( 'Homepage URL', 'wp-static-export' );
+		$this->description = __( 'Detects the homepage URL.', 'wp-static-export' );
 		$this->active_by_default = true;
 	}
 

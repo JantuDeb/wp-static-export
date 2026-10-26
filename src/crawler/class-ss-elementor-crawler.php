@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static\Crawler;
+namespace WP_Static_Export\Crawler;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,8 +24,8 @@ class Elementor_Crawler extends Crawler {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->name        = __( 'Elementor Assets', 'simply-static' );
-		$this->description = __( 'Detects Elementor assets and jQuery files.', 'simply-static' );
+		$this->name        = __( 'Elementor Assets', 'wp-static-export' );
+		$this->description = __( 'Detects Elementor assets and jQuery files.', 'wp-static-export' );
 	}
 
 	/**
@@ -37,7 +37,7 @@ class Elementor_Crawler extends Crawler {
 	 */
 	public function add_urls_to_queue(): int {
 		$signature = hash( 'sha256', serialize( array(
-			'archive_start_time' => \Simply_Static\Options::instance()->get( 'archive_start_time' ),
+			'archive_start_time' => \WP_Static_Export\Options::instance()->get( 'archive_start_time' ),
 			'site_url'           => site_url(),
 			'elementor_version'  => defined( 'ELEMENTOR_VERSION' ) ? ELEMENTOR_VERSION : '',
 		) ) );
@@ -49,9 +49,9 @@ class Elementor_Crawler extends Crawler {
 				'elementor_directory_crawler_state',
 				$this->get_elementor_scan_directories(),
 				array(),
-				(array) apply_filters( 'ss_skip_crawl_elementor_directories', array( '.git', 'node_modules', 'cache', 'tmp', 'temp' ) ),
-				'simply_static_elementor_crawler_max_entries_per_batch',
-				'simply_static_elementor_crawler_max_batch_seconds'
+				(array) apply_filters( 'wpse_skip_crawl_elementor_directories', array( '.git', 'node_modules', 'cache', 'tmp', 'temp' ) ),
+				'wpse_elementor_crawler_max_entries_per_batch',
+				'wpse_elementor_crawler_max_batch_seconds'
 			);
 			if ( ! $this->is_complete() ) {
 				return $added_now;
@@ -107,7 +107,7 @@ class Elementor_Crawler extends Crawler {
 
 	/** @return array<string,mixed> */
 	private function load_elementor_state( $signature ) : array {
-		$state = \Simply_Static\Options::instance()->get( 'elementor_crawler_state' );
+		$state = \WP_Static_Export\Options::instance()->get( 'elementor_crawler_state' );
 		if ( ! is_array( $state )
 			|| 1 !== ( $state['version'] ?? null )
 			|| $signature !== ( $state['signature'] ?? null )
@@ -144,10 +144,10 @@ class Elementor_Crawler extends Crawler {
 		global $wpdb;
 
 		$this->complete = false;
-		$batch_size     = max( 1, min( 50, (int) apply_filters( 'simply_static_elementor_meta_batch_size', 5 ) ) );
-		$row_limit      = max( 1024, min( 10 * 1024 * 1024, (int) apply_filters( 'simply_static_elementor_meta_max_bytes', 5 * 1024 * 1024 ) ) );
-		$entry_limit    = max( $batch_size, min( 1000, (int) apply_filters( 'simply_static_elementor_meta_max_entries_per_batch', 50 ) ) );
-		$seconds        = (float) apply_filters( 'simply_static_elementor_meta_max_batch_seconds', 10 );
+		$batch_size     = max( 1, min( 50, (int) apply_filters( 'wpse_elementor_meta_batch_size', 5 ) ) );
+		$row_limit      = max( 1024, min( 10 * 1024 * 1024, (int) apply_filters( 'wpse_elementor_meta_max_bytes', 5 * 1024 * 1024 ) ) );
+		$entry_limit    = max( $batch_size, min( 1000, (int) apply_filters( 'wpse_elementor_meta_max_entries_per_batch', 50 ) ) );
+		$seconds        = (float) apply_filters( 'wpse_elementor_meta_max_batch_seconds', 10 );
 		$deadline       = microtime( true ) + max( 0.5, min( 15, $seconds ) );
 		$processed      = 0;
 		$added_now      = 0;
@@ -207,7 +207,7 @@ class Elementor_Crawler extends Crawler {
 			'scanned' => $state['scanned'],
 		);
 		$this->clear_crawler_state( 'elementor_crawler_state' );
-		\Simply_Static\Util::debug_log( sprintf( 'Elementor crawler added %d URLs across resumable batches.', $state['added'] ) );
+		\WP_Static_Export\Util::debug_log( sprintf( 'Elementor crawler added %d URLs across resumable batches.', $state['added'] ) );
 	}
 
 	/**
@@ -271,7 +271,7 @@ class Elementor_Crawler extends Crawler {
 				$directory_urls = $this->scan_directory_for_assets( $dir_path, $site_url . $url_path );
 				$asset_urls = array_merge( $asset_urls, $directory_urls );
 			} else {
-				\Simply_Static\Util::debug_log( "Directory does not exist: $dir_path" );
+				\WP_Static_Export\Util::debug_log( "Directory does not exist: $dir_path" );
 			}
 		}
 
@@ -296,10 +296,10 @@ class Elementor_Crawler extends Crawler {
 		global $wpdb;
 		$lottie_urls = array();
 		$last_meta_id = 0;
-		$batch_size = max( 1, min( 50, (int) apply_filters( 'simply_static_elementor_meta_batch_size', 5 ) ) );
-		$row_limit   = max( 1024, min( 10 * 1024 * 1024, (int) apply_filters( 'simply_static_elementor_meta_max_bytes', 5 * 1024 * 1024 ) ) );
-		$max_entries = max( 1, min( 10000, (int) apply_filters( 'simply_static_elementor_meta_detection_limit', 500 ) ) );
-		$seconds     = (float) apply_filters( 'simply_static_elementor_meta_detection_seconds', 10 );
+		$batch_size = max( 1, min( 50, (int) apply_filters( 'wpse_elementor_meta_batch_size', 5 ) ) );
+		$row_limit   = max( 1024, min( 10 * 1024 * 1024, (int) apply_filters( 'wpse_elementor_meta_max_bytes', 5 * 1024 * 1024 ) ) );
+		$max_entries = max( 1, min( 10000, (int) apply_filters( 'wpse_elementor_meta_detection_limit', 500 ) ) );
+		$seconds     = (float) apply_filters( 'wpse_elementor_meta_detection_seconds', 10 );
 		$deadline    = microtime( true ) + max( 0.5, min( 15, $seconds ) );
 		$processed   = 0;
 
@@ -347,7 +347,7 @@ class Elementor_Crawler extends Crawler {
 
 		$lottie_urls = array_values( $lottie_urls );
 
-		\Simply_Static\Util::debug_log( "Found " . count( $lottie_urls ) . " Lottie file URLs" );
+		\WP_Static_Export\Util::debug_log( "Found " . count( $lottie_urls ) . " Lottie file URLs" );
 
 		return $lottie_urls;
 	}
@@ -473,14 +473,14 @@ class Elementor_Crawler extends Crawler {
 	 */
 	private function scan_directory_for_assets( $dir, $url_base ): array {
 		$urls        = [];
-		$max_entries = max( 1, min( 100000, (int) apply_filters( 'simply_static_elementor_detection_max_entries', 5000 ) ) );
-		$seconds     = (float) apply_filters( 'simply_static_elementor_detection_max_seconds', 5 );
+		$max_entries = max( 1, min( 100000, (int) apply_filters( 'wpse_elementor_detection_max_entries', 5000 ) ) );
+		$seconds     = (float) apply_filters( 'wpse_elementor_detection_max_seconds', 5 );
 		$deadline    = microtime( true ) + max( 0.5, min( 15, $seconds ) );
 		$scanned     = 0;
 
 		// Check if directory exists
 		if ( ! is_dir( $dir ) ) {
-			\Simply_Static\Util::debug_log( "Directory does not exist: $dir" );
+			\WP_Static_Export\Util::debug_log( "Directory does not exist: $dir" );
 			return $urls;
 		}
 
@@ -506,16 +506,16 @@ class Elementor_Crawler extends Crawler {
 				}
 
 				// Build the relative path safely
-				$relative_path = \Simply_Static\Util::safe_relative_path( $dir, $file->getPathname() );
+				$relative_path = \WP_Static_Export\Util::safe_relative_path( $dir, $file->getPathname() );
 
 				// Create the full URL with safe joining
-				$url = \Simply_Static\Util::safe_join_url( $url_base, $relative_path );
+				$url = \WP_Static_Export\Util::safe_join_url( $url_base, $relative_path );
 				$urls[] = $url;
 			}
 
-			\Simply_Static\Util::debug_log( "Found " . count( $urls ) . " asset URLs in $dir" );
+			\WP_Static_Export\Util::debug_log( "Found " . count( $urls ) . " asset URLs in $dir" );
 		} catch ( \Exception $e ) {
-			\Simply_Static\Util::debug_log( "Error scanning directory $dir: " . $e->getMessage() );
+			\WP_Static_Export\Util::debug_log( "Error scanning directory $dir: " . $e->getMessage() );
 		}
 
 		return $urls;

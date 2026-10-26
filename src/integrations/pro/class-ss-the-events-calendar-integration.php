@@ -1,5 +1,5 @@
 <?php
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 class The_Events_Calendar_Integration extends Pro_Integration {
     /**
@@ -10,8 +10,8 @@ class The_Events_Calendar_Integration extends Pro_Integration {
     protected $id = 'the-events-calendar';
 
     public function __construct() {
-        $this->name        = __( 'The Events Calendar', 'simply-static' );
-        $this->description = __( 'Support for events, archives, and assets from The Events Calendar. Requires Simply Static Pro.', 'simply-static' );
+        $this->name        = __( 'The Events Calendar', 'wp-static-export' );
+        $this->description = __( 'Support for events, archives, and assets from The Events Calendar. Requires Simply Static Pro.', 'wp-static-export' );
     }
 
     /**

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Migrate_Settings;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Migrate_Settings;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 final class MigrationWpdb {
 	public function get_charset_collate(): string {
@@ -39,14 +39,14 @@ final class MigrateSettingsTest extends UnitTestCase {
 	}
 
 	public function test_migrates_basic_auth_without_truncating_colons_and_removes_digest(): void {
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'http_basic_auth_digest' => base64_encode( 'crawler:p:a:ss' ),
 			'urls_to_exclude'         => "/private/\n/preview/",
 			'search-excludable'       => "/hidden/\n",
 		);
 
 		Migrate_Settings::migrate();
-		$options = WpEnv::$options['simply-static'];
+		$options = WpEnv::$options['wp-static-export'];
 
 		self::assertArrayNotHasKey( 'http_basic_auth_digest', $options );
 		self::assertSame( 'crawler', $options['http_basic_auth_username'] );
@@ -56,14 +56,14 @@ final class MigrateSettingsTest extends UnitTestCase {
 	}
 
 	public function test_invalid_digest_does_not_overwrite_existing_credentials(): void {
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'http_basic_auth_digest'   => '%%%not-base64%%%',
 			'http_basic_auth_username' => 'existing-user',
 			'http_basic_auth_password' => 'existing-pass',
 		);
 
 		Migrate_Settings::migrate();
-		$options = WpEnv::$options['simply-static'];
+		$options = WpEnv::$options['wp-static-export'];
 
 		self::assertArrayNotHasKey( 'http_basic_auth_digest', $options );
 		self::assertSame( 'existing-user', $options['http_basic_auth_username'] );
@@ -73,7 +73,7 @@ final class MigrateSettingsTest extends UnitTestCase {
 	public function test_legacy_lists_and_comment_requirements_are_migrated_safely(): void {
 		WpEnv::$options['comment_registration'] = 1;
 		WpEnv::$options['require_name_email'] = 0;
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'urls_to_exclude'   => array( '/one/' => array(), '/two/' => array() ),
 			'search-excludable' => array( '/search-one/' => true, '/search-two/' => true ),
 			'use-comments'      => 'yes',
@@ -81,7 +81,7 @@ final class MigrateSettingsTest extends UnitTestCase {
 		);
 
 		Migrate_Settings::migrate();
-		$options = WpEnv::$options['simply-static'];
+		$options = WpEnv::$options['wp-static-export'];
 
 		self::assertSame( "/one/\n/two/", $options['urls_to_exclude'] );
 		self::assertSame( "/search-one/\n/search-two/", $options['search_excludable'] );
@@ -95,8 +95,8 @@ final class MigrateSettingsTest extends UnitTestCase {
 	public function test_missing_settings_option_migrates_to_a_valid_array(): void {
 		Migrate_Settings::migrate();
 
-		self::assertIsArray( WpEnv::$options['simply-static'] );
-		self::assertSame( SIMPLY_STATIC_VERSION, WpEnv::$options['simply-static']['version'] );
-		self::assertFalse( WpEnv::$options['simply-static']['server_cron'] );
+		self::assertIsArray( WpEnv::$options['wp-static-export'] );
+		self::assertSame( WPSE_VERSION, WpEnv::$options['wp-static-export']['version'] );
+		self::assertFalse( WpEnv::$options['wp-static-export']['server_cron'] );
 	}
 }

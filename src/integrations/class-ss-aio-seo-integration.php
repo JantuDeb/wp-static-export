@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 class AIO_SEO_Integration extends Integration {
 
@@ -12,8 +12,8 @@ class AIO_SEO_Integration extends Integration {
 	protected $id = 'aio-seo';
 
 	public function __construct() {
-		$this->name = __( 'All in One SEO', 'simply-static' );
-		$this->description = __( 'Adds XML sitemaps to generated static files.', 'simply-static' );
+		$this->name = __( 'All in One SEO', 'wp-static-export' );
+		$this->description = __( 'Adds XML sitemaps to generated static files.', 'wp-static-export' );
 	}
 
 	/**
@@ -23,17 +23,17 @@ class AIO_SEO_Integration extends Integration {
 	 */
 	public function run() {
 		add_filter( 'aioseo_unrecognized_allowed_query_args', [ $this, 'allowed_query_args' ] );
-		add_action( 'ss_after_setup_task', [ $this, 'register_sitemap_pages' ] );
-		add_action( 'ss_finished_fetching_pages', [ $this, 'finalize_sitemap_files' ] );
+		add_action( 'wpse_after_setup_task', [ $this, 'register_sitemap_pages' ] );
+		add_action( 'wpse_finished_fetching_pages', [ $this, 'finalize_sitemap_files' ] );
 		add_filter( 'ssp_single_export_additional_urls', [ $this, 'add_sitemap_url' ] );
-		add_filter( 'ss_additional_urls', [ $this, 'add_dynamic_robots_url' ] );
-		add_filter( 'ss_additional_files', [ $this, 'maybe_add_text_files' ] );
+		add_filter( 'wpse_additional_urls', [ $this, 'add_dynamic_robots_url' ] );
+		add_filter( 'wpse_additional_files', [ $this, 'maybe_add_text_files' ] );
 
 		$this->include_file( 'handlers/class-ss-aio-seo-sitemap-handler.php' );
 	}
 
     /**
-     * Adding 'simply_static_page' as an allowed query argument.
+     * Adding 'wpse_page' as an allowed query argument.
      *
      * @param array $args Query Arguments that are allowed and won't be removed from urls.
      * @return array|mixed
@@ -43,8 +43,8 @@ class AIO_SEO_Integration extends Integration {
             $args = [];
         }
 
-		if ( ! in_array( 'simply_static_page', $args, true ) ) {
-			$args[] = 'simply_static_page';
+		if ( ! in_array( 'wpse_page', $args, true ) ) {
+			$args[] = 'wpse_page';
 		}
 
 		return $args;
@@ -93,9 +93,9 @@ class AIO_SEO_Integration extends Integration {
 		$url = home_url( 'main-sitemap.xsl' );
 
 		Util::debug_log( 'Adding AIOSEO sitemap stylesheet to queue: ' . $url );
-		/** @var \Simply_Static\Page $static_page */
+		/** @var \WP_Static_Export\Page $static_page */
 		$static_page = Page::query()->find_or_initialize_by( 'url', $url );
-		$static_page->set_status_message( __( 'Sitemap Stylesheet', 'simply-static' ) );
+		$static_page->set_status_message( __( 'Sitemap Stylesheet', 'wp-static-export' ) );
 		$static_page->found_on_id = 0;
 		$static_page->handler     = AIO_SEO_Sitemap_Handler::class;
 		$static_page->save();
@@ -153,9 +153,9 @@ class AIO_SEO_Integration extends Integration {
 	 */
 	public function register_sitemap_page( $url ) {
 		Util::debug_log( 'Adding sitemap URL to queue: ' . $url );
-		/** @var \Simply_Static\Page $static_page */
+		/** @var \WP_Static_Export\Page $static_page */
 		$static_page = Page::query()->find_or_initialize_by( 'url', $url );
-		$static_page->set_status_message( __( 'Sitemap URL', 'simply-static' ) );
+		$static_page->set_status_message( __( 'Sitemap URL', 'wp-static-export' ) );
 		$static_page->found_on_id = 0;
 		$static_page->handler     = AIO_SEO_Sitemap_Handler::class;
 		$static_page->save();
@@ -216,9 +216,9 @@ class AIO_SEO_Integration extends Integration {
 		foreach ( $this->extract_sitemap_index_urls( $response ) as $sitemap_url ) {
 			// Add the sitemap URL to the queue.
 			Util::debug_log( 'Adding individual sitemap URL to queue: ' . $sitemap_url );
-			/** @var \Simply_Static\Page $static_page */
+			/** @var \WP_Static_Export\Page $static_page */
 			$static_page = Page::query()->find_or_initialize_by( 'url', $sitemap_url );
-			$static_page->set_status_message( __( 'Individual Sitemap URL', 'simply-static' ) );
+			$static_page->set_status_message( __( 'Individual Sitemap URL', 'wp-static-export' ) );
 			$static_page->found_on_id = 0;
 			$static_page->handler     = AIO_SEO_Sitemap_Handler::class;
 			$static_page->save();
@@ -246,8 +246,8 @@ class AIO_SEO_Integration extends Integration {
 		$additional_files = is_array( $additional_files ) ? $additional_files : [];
 
 		// Global flags to allow disabling robots.txt and llms.txt entirely.
-		$include_robots = (bool) apply_filters( 'ss_include_robots_txt_in_export', true );
-		$include_llms   = (bool) apply_filters( 'ss_include_llms_txt_in_export', true );
+		$include_robots = (bool) apply_filters( 'wpse_include_robots_txt_in_export', true );
+		$include_llms   = (bool) apply_filters( 'wpse_include_llms_txt_in_export', true );
 
 		$robots_physical = ABSPATH . 'robots.txt';
 		$llms_physical   = ABSPATH . 'llms.txt';

@@ -8,7 +8,7 @@ function LogButtons() {
 
     const deleteLog = () => {
         apiFetch({
-            path: '/simplystatic/v1/delete-log',
+            path: '/wp-static-export/v1/delete-log',
             method: 'POST',
         });
 
@@ -22,15 +22,15 @@ function LogButtons() {
     return (
         <>
         <Button variant="primary" href={options.log_file} download={true}
-                style={{marginRight: "10px"}}>{__('Download Log', 'simply-static')}</Button>
+                style={{marginRight: "10px"}}>{__('Download Log', 'wp-static-export')}</Button>
         <Button variant="secondary"
-            onClick={deleteLog}>{__('Clear Log', 'simply-static')}</Button>
+            onClick={deleteLog}>{__('Clear Log', 'wp-static-export')}</Button>
         {logDeleted &&
         <Animate type="slide-in" options={{origin: 'top'}}>
             {() => (
                 <Notice status="success" isDismissible={false}>
                     <p>
-                        {__('Log file cleared.', 'simply-static')}
+                        {__('Log file cleared.', 'wp-static-export')}
                     </p>
                 </Notice>
             )}

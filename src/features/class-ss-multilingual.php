@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -20,8 +20,8 @@ class Multilingual {
 	 * Register hooks.
 	 */
 	public static function init() {
-		add_filter( 'ss_additional_urls', array( __CLASS__, 'add_language_urls' ) );
-		add_filter( 'ss_after_replace_urls_in_html', array( __CLASS__, 'maybe_add_language_redirect' ), 20, 2 );
+		add_filter( 'wpse_additional_urls', array( __CLASS__, 'add_language_urls' ) );
+		add_filter( 'wpse_after_replace_urls_in_html', array( __CLASS__, 'maybe_add_language_redirect' ), 20, 2 );
 	}
 
 	/**

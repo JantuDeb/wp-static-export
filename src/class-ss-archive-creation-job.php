@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) {
@@ -18,6 +18,7 @@ class Archive_Creation_Job extends Background_Process {
 	 * The name of the job/action
 	 * @var string
 	 */
+	protected $prefix = 'wpse';
 	protected $action = 'archive_creation_job';
 
 	/**
@@ -28,7 +29,7 @@ class Archive_Creation_Job extends Background_Process {
 
 	/**
 	 * An instance of the options structure containing all options for this plugin
-	 * @var \Simply_Static\Options
+	 * @var \WP_Static_Export\Options
 	 */
 	protected $options = null;
 
@@ -63,7 +64,7 @@ class Archive_Creation_Job extends Background_Process {
 		register_shutdown_function( array( $this, 'shutdown_handler' ) );
 
 		// Set the cron interval for the job
-		add_filter( 'wp_archive_creation_job_cron_interval', array( $this, 'set_job_interval' ) );
+		add_filter( 'wpse_archive_creation_job_cron_interval', array( $this, 'set_job_interval' ) );
 
 		// The queue stores task-name scalars only. Disallow object hydration so a
 		// tampered option cannot trigger PHP object-injection gadget methods.
@@ -123,7 +124,7 @@ class Archive_Creation_Job extends Background_Process {
 		}
 
 		$task_list = apply_filters(
-			'simplystatic.archive_creation_job.task_list',
+			'wpse.archive_creation_job.task_list',
 			array(),
 			$this->options->get( 'delivery_method' )
 		);
@@ -171,7 +172,7 @@ class Archive_Creation_Job extends Background_Process {
 		$start_lock_acquired = false;
 
 		try {
-			do_action( 'ss_archive_creation_job_before_start', $blog_id, $this );
+			do_action( 'wpse_archive_creation_job_before_start', $blog_id, $this );
 			$this->set_current_site_id( $blog_id ?: get_current_blog_id() );
 
 			// Serialize the check/state/queue transition itself. Worker-level locks
@@ -179,7 +180,7 @@ class Archive_Creation_Job extends Background_Process {
 			// job and enqueue duplicate batches before either worker begins.
 			if ( $this->has_active_process_lock() || false === $this->lock_process() ) {
 				Util::debug_log( "Not starting; another request owns the archive start lock" );
-				do_action( 'ss_archive_creation_job_already_running', $blog_id, $this );
+				do_action( 'wpse_archive_creation_job_already_running', $blog_id, $this );
 
 				return false;
 			}
@@ -198,18 +199,18 @@ class Archive_Creation_Job extends Background_Process {
 				Util::debug_log( "Starting a job; no job is presently running" );
 				Util::debug_log( "Here's our task list: " . implode( ', ', $task_list ) );
 
-				do_action( 'ss_archive_creation_job_before_start_queue', $blog_id, $this );
+				do_action( 'wpse_archive_creation_job_before_start_queue', $blog_id, $this );
 
 				if ( empty( $task_list ) ) {
 					$this->options->set( 'archive_task_list', array() );
 					$this->save_status_message(
-						__( 'Unable to start export because no archive tasks were registered.', 'simply-static' ),
+						__( 'Unable to start export because no archive tasks were registered.', 'wp-static-export' ),
 						'error'
 					);
 					$this->unlock_process();
 					$start_lock_acquired = false;
 					$failure_notified = true;
-					do_action( 'ss_archive_creation_job_start_failed', $blog_id, $this );
+					do_action( 'wpse_archive_creation_job_start_failed', $blog_id, $this );
 
 					return false;
 				}
@@ -240,12 +241,12 @@ class Archive_Creation_Job extends Background_Process {
 
 				if ( method_exists( $this, 'was_last_queue_save_successful' ) && ! $this->was_last_queue_save_successful() ) {
 					$this->abort_failed_start(
-						__( 'Unable to start the export because the background queue could not be saved.', 'simply-static' ),
+						__( 'Unable to start the export because the background queue could not be saved.', 'wp-static-export' ),
 						$start_lock_acquired
 					);
 					$start_lock_acquired = false;
 					$failure_notified    = true;
-					do_action( 'ss_archive_creation_job_start_failed', $blog_id, $this );
+					do_action( 'wpse_archive_creation_job_start_failed', $blog_id, $this );
 
 					return false;
 				}
@@ -257,16 +258,16 @@ class Archive_Creation_Job extends Background_Process {
 				$dispatch_result = $this->dispatch();
 				if ( false === $dispatch_result && ! $this->is_processing() ) {
 					$this->abort_failed_start(
-						__( 'Unable to start the export because the background worker could not be dispatched.', 'simply-static' ),
+						__( 'Unable to start the export because the background worker could not be dispatched.', 'wp-static-export' ),
 						false
 					);
 					$failure_notified = true;
-					do_action( 'ss_archive_creation_job_start_failed', $blog_id, $this );
+					do_action( 'wpse_archive_creation_job_start_failed', $blog_id, $this );
 
 					return false;
 				}
 
-				do_action( 'ss_archive_creation_job_after_start_queue', $blog_id, $this );
+				do_action( 'wpse_archive_creation_job_after_start_queue', $blog_id, $this );
 
 				return true;
 			} else {
@@ -274,7 +275,7 @@ class Archive_Creation_Job extends Background_Process {
 				$start_lock_acquired = false;
 				Util::debug_log( "Not starting; we're already in the middle of a job" );
 				// looks like we're in the middle of creating an archive...
-				do_action( 'ss_archive_creation_job_already_running', $blog_id, $this );
+				do_action( 'wpse_archive_creation_job_already_running', $blog_id, $this );
 
 				return false;
 			}
@@ -285,7 +286,7 @@ class Archive_Creation_Job extends Background_Process {
 
 			if ( ! $failure_notified ) {
 				try {
-					do_action( 'ss_archive_creation_job_start_failed', $blog_id, $this, $exception );
+					do_action( 'wpse_archive_creation_job_start_failed', $blog_id, $this, $exception );
 				} catch ( \Throwable $cleanup_exception ) {
 					Util::debug_log( 'Archive start cleanup failed: ' . $cleanup_exception->getMessage() );
 				}
@@ -327,8 +328,8 @@ class Archive_Creation_Job extends Background_Process {
 	 */
 	public function get_task_object( $task_name ) {
 		// convert 'an_example' to 'An_Example_Task'
-		$class_name = 'Simply_Static\\' . ucwords( $task_name ) . '_Task';
-		$class_name = apply_filters( 'simply_static_class_name', $class_name, $task_name );
+		$class_name = 'WP_Static_Export\\' . ucwords( $task_name ) . '_Task';
+		$class_name = apply_filters( 'wpse_class_name', $class_name, $task_name );
 
 		// this shouldn't ever happen, but just in case...
 		if ( ! class_exists( $class_name ) ) {
@@ -367,12 +368,12 @@ class Archive_Creation_Job extends Background_Process {
 			if ( false === $task ) {
 				$message = sprintf(
 					/* translators: %s: archive task class name. */
-					__( 'Unable to run archive task because its class is unavailable: %s', 'simply-static' ),
+					__( 'Unable to run archive task because its class is unavailable: %s', 'wp-static-export' ),
 					$task_name
 				);
 				$this->options->set( 'archive_end_time', Util::formatted_datetime() );
 				$this->save_status_message( $message, 'error' );
-				do_action( 'ss_completed', 'error', $message );
+				do_action( 'wpse_completed', 'error', $message );
 
 				// Let the regular cancellation task run its cleanup when available.
 				// If that class is itself missing, remove the queue item to avoid an
@@ -467,13 +468,13 @@ class Archive_Creation_Job extends Background_Process {
 		$this->save_status_message(
 			sprintf(
 				/* translators: %s: export duration in hours, minutes, and seconds. */
-				__( 'Done! Finished in %s', 'simply-static' ),
+				__( 'Done! Finished in %s', 'wp-static-export' ),
 				$time_string
 			)
 		);
 		parent::complete();
 
-		do_action( 'ss_completed', 'success' );
+		do_action( 'wpse_completed', 'success' );
 	}
 
 
@@ -717,12 +718,12 @@ class Archive_Creation_Job extends Background_Process {
 
 		$message = sprintf(
 			/* translators: %s: exception message. */
-			__( 'An exception occurred: %s', 'simply-static' ),
+			__( 'An exception occurred: %s', 'wp-static-export' ),
 			$exception->getMessage()
 		);
 		$this->options->set( 'archive_end_time', Util::formatted_datetime() );
 		$this->save_status_message( $message, 'error' );
-		do_action( 'ss_completed', 'exception', $message );
+		do_action( 'wpse_completed', 'exception', $message );
 
 		return 'cancel';
 	}
@@ -740,12 +741,12 @@ class Archive_Creation_Job extends Background_Process {
 
 		$message = sprintf(
 			/* translators: %s: error message. */
-			__( 'An error occurred: %s', 'simply-static' ),
+			__( 'An error occurred: %s', 'wp-static-export' ),
 			$wp_error->get_error_message()
 		);
 		$this->options->set( 'archive_end_time', Util::formatted_datetime() );
 		$this->save_status_message( $message, 'error' );
-		do_action( 'ss_completed', 'error', $message );
+		do_action( 'wpse_completed', 'error', $message );
 
 		return 'cancel';
 	}
@@ -780,7 +781,7 @@ class Archive_Creation_Job extends Background_Process {
 
 			$error_message = sprintf(
 				/* translators: 1: PHP error type, 2: error message, 3: file path, 4: line number. */
-				__( '(%1$s) %2$s in <b>%3$s</b> on line <b>%4$d</b>', 'simply-static' ),
+				__( '(%1$s) %2$s in <b>%3$s</b> on line <b>%4$d</b>', 'wp-static-export' ),
 				$error['type'],
 				$error['message'],
 				$error['file'],
@@ -789,7 +790,7 @@ class Archive_Creation_Job extends Background_Process {
 
 			$message = sprintf(
 				/* translators: %s: formatted PHP error details. */
-				__( 'Error: %s', 'simply-static' ),
+				__( 'Error: %s', 'wp-static-export' ),
 				$error_message
 			);
 			Util::debug_log( $message );

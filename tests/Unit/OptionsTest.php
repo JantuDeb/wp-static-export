@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Options;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Options;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 final class OptionsTest extends UnitTestCase {
 
@@ -18,34 +18,34 @@ final class OptionsTest extends UnitTestCase {
 	}
 
 	public function test_it_reads_mutates_and_persists_options(): void {
-		WpEnv::$options['simply-static'] = array( 'delivery_method' => 'zip' );
+		WpEnv::$options['wp-static-export'] = array( 'delivery_method' => 'zip' );
 		$options = Options::reinstance();
 
 		self::assertSame( 'zip', $options->get( 'delivery_method' ) );
 		self::assertNull( $options->get( 'missing' ) );
 		self::assertTrue( $options->set( 'delivery_method', 'local' )->save() );
-		self::assertSame( 'local', WpEnv::$options['simply-static']['delivery_method'] );
+		self::assertSame( 'local', WpEnv::$options['wp-static-export']['delivery_method'] );
 		self::assertTrue( $options->destroy( 'delivery_method' ) );
 		self::assertFalse( $options->destroy( 'delivery_method' ) );
 	}
 
 	public function test_constant_overrides_do_not_require_a_persisted_option_key(): void {
-		if ( ! defined( 'SIMPLY_STATIC_RUNTIME_ONLY_SETTING' ) ) {
-			define( 'SIMPLY_STATIC_RUNTIME_ONLY_SETTING', 'from-constant' );
+		if ( ! defined( 'WPSE_RUNTIME_ONLY_SETTING' ) ) {
+			define( 'WPSE_RUNTIME_ONLY_SETTING', 'from-constant' );
 		}
 
-		WpEnv::$options['simply-static'] = array( 'delivery_method' => 'zip' );
+		WpEnv::$options['wp-static-export'] = array( 'delivery_method' => 'zip' );
 		$options = Options::reinstance();
 
 		self::assertSame( 'from-constant', $options->get( 'runtime_only_setting' ) );
 		self::assertTrue( $options->set( 'archive_start_time', '2026-07-13 18:00:00' )->save() );
 		self::assertSame( 'from-constant', $options->get( 'runtime_only_setting' ) );
-		self::assertArrayNotHasKey( 'runtime_only_setting', WpEnv::$options['simply-static'] );
+		self::assertArrayNotHasKey( 'runtime_only_setting', WpEnv::$options['wp-static-export'] );
 	}
 
 	public function test_runtime_filtered_options_remain_available_after_save(): void {
 		add_filter(
-			'ss_get_options',
+			'wpse_get_options',
 			static function ( $options ) {
 				$options = is_array( $options ) ? $options : array();
 				$options['filtered_runtime_setting'] = 'from-filter';
@@ -54,17 +54,17 @@ final class OptionsTest extends UnitTestCase {
 			}
 		);
 
-		WpEnv::$options['simply-static'] = array( 'delivery_method' => 'zip' );
+		WpEnv::$options['wp-static-export'] = array( 'delivery_method' => 'zip' );
 		$options = Options::reinstance();
 
 		self::assertSame( 'from-filter', $options->get( 'filtered_runtime_setting' ) );
 		self::assertTrue( $options->set( 'archive_start_time', '2026-07-13 18:00:00' )->save() );
 		self::assertSame( 'from-filter', $options->get( 'filtered_runtime_setting' ) );
-		self::assertArrayNotHasKey( 'filtered_runtime_setting', WpEnv::$options['simply-static'] );
+		self::assertArrayNotHasKey( 'filtered_runtime_setting', WpEnv::$options['wp-static-export'] );
 	}
 
 	public function test_save_merges_only_dirty_keys_into_fresh_database_state(): void {
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'delivery_method'    => 'zip',
 			'archive_start_time' => null,
 		);
@@ -73,8 +73,8 @@ final class OptionsTest extends UnitTestCase {
 
 		// Simulate an administrator saving a different key while a long-lived
 		// worker still holds its original request-local Options instance.
-		WpEnv::$options['simply-static']['delivery_method'] = 'local';
-		WpEnv::$options['simply-static']['new_admin_value'] = 'keep-me';
+		WpEnv::$options['wp-static-export']['delivery_method'] = 'local';
+		WpEnv::$options['wp-static-export']['new_admin_value'] = 'keep-me';
 
 		self::assertTrue( $options->save() );
 		self::assertSame(
@@ -83,24 +83,24 @@ final class OptionsTest extends UnitTestCase {
 				'archive_start_time' => '2026-07-12 12:00:00',
 				'new_admin_value'    => 'keep-me',
 			),
-			WpEnv::$options['simply-static']
+			WpEnv::$options['wp-static-export']
 		);
 		self::assertSame( 'local', $options->get( 'delivery_method' ) );
 	}
 
 	public function test_destroy_removes_only_the_requested_key_from_fresh_state(): void {
-		WpEnv::$options['simply-static'] = array( 'remove_me' => 'old', 'keep' => 'old' );
+		WpEnv::$options['wp-static-export'] = array( 'remove_me' => 'old', 'keep' => 'old' );
 		$options = Options::reinstance();
 		self::assertTrue( $options->destroy( 'remove_me' ) );
-		WpEnv::$options['simply-static']['keep'] = 'new';
+		WpEnv::$options['wp-static-export']['keep'] = 'new';
 
 		self::assertTrue( $options->save() );
-		self::assertSame( array( 'keep' => 'new' ), WpEnv::$options['simply-static'] );
+		self::assertSame( array( 'keep' => 'new' ), WpEnv::$options['wp-static-export'] );
 	}
 
 	public function test_invalid_options_filter_output_cannot_corrupt_the_container(): void {
 		add_filter(
-			'ss_get_options',
+			'wpse_get_options',
 			static function () {
 				return 'invalid';
 			}
@@ -109,11 +109,11 @@ final class OptionsTest extends UnitTestCase {
 		$options = Options::reinstance();
 		self::assertSame( array(), $options->get_as_array() );
 		self::assertTrue( $options->set( 'delivery_method', 'zip' )->save() );
-		self::assertSame( 'zip', WpEnv::$options['simply-static']['delivery_method'] );
+		self::assertSame( 'zip', WpEnv::$options['wp-static-export']['delivery_method'] );
 	}
 
 	public function test_save_merges_against_a_fresh_database_row_instead_of_stale_option_cache(): void {
-		WpEnv::$options['simply-static'] = array( 'admin_value' => 'stale-cache', 'runtime' => 'old' );
+		WpEnv::$options['wp-static-export'] = array( 'admin_value' => 'stale-cache', 'runtime' => 'old' );
 		$options = Options::reinstance();
 		$options->set( 'runtime', 'new' );
 
@@ -123,7 +123,7 @@ final class OptionsTest extends UnitTestCase {
 			public $options = 'wp_options';
 
 			public function prepare( $query, ...$arguments ) {
-				return str_replace( '%s', "'simply-static'", $query );
+				return str_replace( '%s', "'wp-static-export'", $query );
 			}
 
 			public function get_var( $query ) {
@@ -141,8 +141,8 @@ final class OptionsTest extends UnitTestCase {
 			}
 		}
 
-		self::assertSame( 'fresh-database', WpEnv::$options['simply-static']['admin_value'] );
-		self::assertSame( 'new', WpEnv::$options['simply-static']['runtime'] );
+		self::assertSame( 'fresh-database', WpEnv::$options['wp-static-export']['admin_value'] );
+		self::assertSame( 'new', WpEnv::$options['wp-static-export']['runtime'] );
 	}
 
 	/**
@@ -150,7 +150,7 @@ final class OptionsTest extends UnitTestCase {
 	 * @param array<string,mixed> $settings
 	 */
 	public function test_it_builds_destination_urls( array $settings, string $expected ): void {
-		WpEnv::$options['simply-static'] = $settings;
+		WpEnv::$options['wp-static-export'] = $settings;
 		self::assertSame( $expected, Options::reinstance()->get_destination_url() );
 	}
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) {
@@ -30,7 +30,7 @@ class Util {
 		 *
 		 * @param string[] $statuses Public post status slugs.
 		 */
-		$statuses = apply_filters( 'simply_static_public_post_statuses', $statuses );
+		$statuses = apply_filters( 'wpse_public_post_statuses', $statuses );
 		$statuses = is_array( $statuses ) ? $statuses : array();
 		$statuses = array_map(
 			static function ( $status ): string {
@@ -106,7 +106,7 @@ class Util {
 			'ss_webhook_url',
 		);
 
-		$filtered = apply_filters( 'ss_sensitive_option_keys', $keys );
+		$filtered = apply_filters( 'wpse_sensitive_option_keys', $keys );
 		if ( is_array( $filtered ) ) {
 			$keys = array_merge( $keys, $filtered );
 		}
@@ -228,7 +228,7 @@ class Util {
 		 *
 		 * @param string[] $defaults Directory slugs of required plugins.
 		 */
-		$list = apply_filters( 'ss_required_plugins', $defaults );
+		$list = apply_filters( 'wpse_required_plugins', $defaults );
 
 		if ( ! is_array( $list ) ) {
 			$list = $defaults;
@@ -320,7 +320,7 @@ class Util {
 		 *
 		 * @param string[] $defaults Directory slugs of admin-only plugins.
 		 */
-		$list = apply_filters( 'ss_admin_only_plugins', $defaults );
+		$list = apply_filters( 'wpse_admin_only_plugins', $defaults );
 
 		if ( ! is_array( $list ) ) {
 			$list = $defaults;
@@ -358,7 +358,7 @@ class Util {
 	 */
 	public static function add_plugin_to_enhanced_crawl( string $slug ): void {
 		$slug    = sanitize_title( $slug );
-		$options = get_option( 'simply-static' );
+		$options = get_option( 'wp-static-export' );
 		if ( ! is_array( $options ) ) {
 			$options = array();
 		}
@@ -370,7 +370,7 @@ class Util {
 			$current[] = $slug;
 		}
 		$options['plugins_to_include'] = array_values( array_unique( array_map( 'sanitize_title', $current ) ) );
-		update_option( 'simply-static', $options );
+		update_option( 'wp-static-export', $options );
 	}
 
 	/**
@@ -388,7 +388,7 @@ class Util {
 			return;
 		}
 
-		$options = get_option( 'simply-static' );
+		$options = get_option( 'wp-static-export' );
 		if ( ! is_array( $options ) ) {
 			$options = array();
 		}
@@ -404,7 +404,7 @@ class Util {
 			}
 		}
 		$options['plugins_to_include'] = array_values( array_unique( array_map( 'sanitize_title', $filtered ) ) );
-		update_option( 'simply-static', $options );
+		update_option( 'wp-static-export', $options );
 	}
 
 	/**
@@ -438,7 +438,7 @@ class Util {
 	 * @return void
 	 */
 	public static function add_themes_to_enhanced_crawl( array $slugs ): void {
-		$options = get_option( 'simply-static' );
+		$options = get_option( 'wp-static-export' );
 		if ( ! is_array( $options ) ) {
 			$options = array();
 		}
@@ -453,7 +453,7 @@ class Util {
 			}
 		}
 		$options['themes_to_include'] = array_values( array_unique( array_map( 'sanitize_title', $current ) ) );
-		update_option( 'simply-static', $options );
+		update_option( 'wp-static-export', $options );
 	}
 
 	/**
@@ -470,7 +470,7 @@ class Util {
 	 * @return void
 	 */
 	public static function maybe_auto_remove_deactivated_plugin( $plugin, $network_deactivating ): void {
-		$enabled = apply_filters( 'ss_auto_remove_on_deactivation', true );
+		$enabled = apply_filters( 'wpse_auto_remove_on_deactivation', true );
 		if ( ! $enabled ) {
 			return;
 		}
@@ -511,13 +511,13 @@ class Util {
 	 * @return void
 	 */
 	public static function maybe_auto_include_active_theme( ...$args ): void {
-		$enabled = apply_filters( 'ss_auto_include_themes_on_switch', true );
+		$enabled = apply_filters( 'wpse_auto_include_themes_on_switch', true );
 		if ( ! $enabled ) {
 			return;
 		}
 		$slugs = self::active_theme_slugs();
 
-		$skip = apply_filters( 'ss_auto_include_skip_themes', array() );
+		$skip = apply_filters( 'wpse_auto_include_skip_themes', array() );
 		if ( ! is_array( $skip ) ) {
 			$skip = array();
 		}
@@ -539,7 +539,7 @@ class Util {
 	 * - `ss_auto_include_on_activation` (bool) Gate entire behavior (default true).
 	 * - `ss_auto_include_skip_plugins` (string[]) Additional plugin slugs to skip.
 	 * - `ss_admin_only_plugins` (string[]) Centralized admin-only list.
-	 * - `ss_auto_include_self_slugs` (string[]) Defaults to ['simply-static','simply-static-pro'].
+	 * - `ss_auto_include_self_slugs` (string[]) Defaults to ['wp-static-export','simply-static-pro'].
 	 * - `ss_auto_include_debug` (bool) Enable error_log debug lines.
 	 *
 	 * @param string $plugin Relative plugin path like akismet/akismet.php
@@ -549,7 +549,7 @@ class Util {
 	 */
 	public static function maybe_auto_include_activated_plugin( $plugin, $network_wide ): void {
 		// Allow disabling globally.
-		$enabled = apply_filters( 'ss_auto_include_on_activation', true );
+		$enabled = apply_filters( 'wpse_auto_include_on_activation', true );
 		if ( ! $enabled ) {
 			return;
 		}
@@ -565,14 +565,14 @@ class Util {
 		$admin_only_list = self::get_admin_only_plugins();
 		$admin_only_lc   = array_map( 'strtolower', array_map( 'strval', (array) $admin_only_list ) );
 
-		$custom_skips = apply_filters( 'ss_auto_include_skip_plugins', array() );
+		$custom_skips = apply_filters( 'wpse_auto_include_skip_plugins', array() );
 		if ( ! is_array( $custom_skips ) ) {
 			$custom_skips = array();
 		}
 		$custom_skips_lc = array_map( 'strtolower', array_map( 'sanitize_title', array_filter( array_map( 'strval', $custom_skips ) ) ) );
 
-		$self_defaults = array( 'simply-static', 'simply-static-pro' );
-		$self_slugs    = apply_filters( 'ss_auto_include_self_slugs', $self_defaults );
+		$self_defaults = array( 'wp-static-export', 'simply-static-pro' );
+		$self_slugs    = apply_filters( 'wpse_auto_include_self_slugs', $self_defaults );
 		if ( ! is_array( $self_slugs ) ) {
 			$self_slugs = $self_defaults;
 		}
@@ -580,7 +580,7 @@ class Util {
 
 		$skip_lc = array_values( array_unique( array_merge( $admin_only_lc, $custom_skips_lc, $self_slugs_lc ) ) );
 		if ( in_array( $slug_lc, $skip_lc, true ) ) {
-			if ( apply_filters( 'ss_auto_include_debug', false ) ) {
+			if ( apply_filters( 'wpse_auto_include_debug', false ) ) {
 				error_log( sprintf( '[WP Static Export] Auto-include skipped for plugin "%s" (in skip list).', $slug ) );
 			}
 
@@ -596,7 +596,7 @@ class Util {
 					restore_current_blog();
 				}
 			}
-			if ( apply_filters( 'ss_auto_include_debug', false ) ) {
+			if ( apply_filters( 'wpse_auto_include_debug', false ) ) {
 				error_log( sprintf( '[WP Static Export] Auto-included plugin "%s" for %d site(s) via network activation.', $slug, is_array( $sites ) ? count( $sites ) : 0 ) );
 			}
 
@@ -605,7 +605,7 @@ class Util {
 
 		// Single site or per-site activation.
 		self::add_plugin_to_enhanced_crawl( $slug );
-		if ( apply_filters( 'ss_auto_include_debug', false ) ) {
+		if ( apply_filters( 'wpse_auto_include_debug', false ) ) {
 			error_log( sprintf( '[WP Static Export] Auto-included plugin "%s" on this site.', $slug ) );
 		}
 	}
@@ -655,13 +655,13 @@ class Util {
 	 * @return string[]
 	 */
 	public static function candidate_urls_for_regex(): array {
-		$limit = max( 0, (int) apply_filters( 'ss_regex_candidate_url_limit', 5000 ) );
+		$limit = max( 0, (int) apply_filters( 'wpse_regex_candidate_url_limit', 5000 ) );
 
 		if ( 0 === $limit ) {
 			return array();
 		}
 
-		$batch_size = (int) apply_filters( 'ss_regex_candidate_query_batch_size', 250, $limit );
+		$batch_size = (int) apply_filters( 'wpse_regex_candidate_query_batch_size', 250, $limit );
 		$batch_size = min( 1000, $limit, max( 1, $batch_size ) );
 		$urls       = array();
 		$seen       = array();
@@ -690,7 +690,7 @@ class Util {
 		// Posts and pages of public types
 		$post_types = get_post_types( [ 'public' => true ], 'names' );
 		unset( $post_types['attachment'] );
-		$post_types = apply_filters( 'simply_static_post_types_to_crawl', $post_types );
+		$post_types = apply_filters( 'wpse_post_types_to_crawl', $post_types );
 
 		if ( is_array( $post_types ) && ! empty( $post_types ) ) {
 			// Each provider may examine at most the remaining result capacity. This
@@ -927,11 +927,11 @@ class Util {
 			}
 		}
 
-		if ( apply_filters( 'simply_static_exclude_temp_dir', true ) ) {
+		if ( apply_filters( 'wpse_exclude_temp_dir', true ) ) {
 			$excluded[] = self::get_temp_dir_url();
 		}
 
-		$excluded = apply_filters( 'ss_excluded_by_default', $excluded );
+		$excluded = apply_filters( 'wpse_excluded_by_default', $excluded );
 
 		if ( $excluded ) {
 			$excluded = array_filter( $excluded );
@@ -986,7 +986,7 @@ class Util {
 	 * Static backup directory.
 	 *
 	 * Backup/Migrate stores working files below
-	 * uploads/simply-static/backup-{32-character random key}/. These files may
+	 * uploads/wp-static-export/backup-{32-character random key}/. These files may
 	 * contain archives and installation metadata and must never become static
 	 * site artifacts.
 	 *
@@ -1003,7 +1003,7 @@ class Util {
 
 		$path = self::normalize_slashes( rawurldecode( $path ) );
 
-		return 1 === preg_match( '#(?:^|/)simply-static/backup-[a-f0-9]{32}(?:/|$)#i', $path );
+		return 1 === preg_match( '#(?:^|/)wp-static-export/backup-[a-f0-9]{32}(?:/|$)#i', $path );
 	}
 
 	/**
@@ -1041,7 +1041,7 @@ class Util {
 	 * @return string The static site URL or empty string when unavailable.
 	 */
 	public static function get_static_site_url() {
-		$options = get_option( 'simply-static' );
+		$options = get_option( 'wp-static-export' );
 		if ( empty( $options ) || ! is_array( $options ) ) {
 			return '';
 		}
@@ -1144,7 +1144,7 @@ class Util {
 		$content              = preg_replace_callback(
 			'/(^\s*Sitemap:\s*)(\S+)/im',
 			function ( $matches ) use ( &$sitemap_placeholders ) {
-				$placeholder = '__SIMPLY_STATIC_SITEMAP_' . count( $sitemap_placeholders ) . '__';
+				$placeholder = '__WPSE_SITEMAP_' . count( $sitemap_placeholders ) . '__';
 				$sitemap_placeholders[ $placeholder ] = $matches[1] . self::convert_text_file_sitemap_url( $matches[2] );
 				return $placeholder;
 			},
@@ -1269,7 +1269,7 @@ class Util {
 			return strlen( (string) $b_path ) <=> strlen( (string) $a_path );
 		} );
 
-		return apply_filters( 'ss_local_url_bases', $bases );
+		return apply_filters( 'wpse_local_url_bases', $bases );
 	}
 
 	/**
@@ -1346,7 +1346,7 @@ class Util {
 		$is_current_wordpress_host = in_array( $host, $allowed_hosts, true );
 
 		return (bool) apply_filters(
-			'ss_is_current_wordpress_host',
+			'wpse_is_current_wordpress_host',
 			$is_current_wordpress_host,
 			$host,
 			$allowed_hosts
@@ -1376,7 +1376,7 @@ class Util {
 			$hosts[] = function_exists( 'wp_unslash' ) ? wp_unslash( $_SERVER['SERVER_NAME'] ) : $_SERVER['SERVER_NAME'];
 		}
 
-		$hosts = (array) apply_filters( 'ss_current_wordpress_hosts', $hosts );
+		$hosts = (array) apply_filters( 'wpse_current_wordpress_hosts', $hosts );
 		$hosts = array_map( array( __CLASS__, 'normalize_url_host' ), $hosts );
 		$hosts = array_filter( $hosts );
 		$hosts = array_values( array_unique( $hosts ) );
@@ -1492,10 +1492,10 @@ class Util {
 		$options = Options::instance();
 
 		if ( $options->get( 'origin_url' ) ) {
-			return apply_filters( 'ss_origin_url', esc_url( untrailingslashit( $options->get( 'origin_url' ) ) ) );
+			return apply_filters( 'wpse_origin_url', esc_url( untrailingslashit( $options->get( 'origin_url' ) ) ) );
 		}
 
-		return apply_filters( 'ss_origin_url', untrailingslashit( home_url() ) );
+		return apply_filters( 'wpse_origin_url', untrailingslashit( home_url() ) );
 	}
 
 	/**
@@ -1594,15 +1594,15 @@ class Util {
 	public static function get_debug_log_filename() {
 		// Get directories.
 		$uploads_dir       = wp_upload_dir();
-		$simply_static_dir = $uploads_dir['basedir'] . DIRECTORY_SEPARATOR . 'simply-static' . DIRECTORY_SEPARATOR;
+		$wpse_dir = $uploads_dir['basedir'] . DIRECTORY_SEPARATOR . 'wp-static-export' . DIRECTORY_SEPARATOR;
 
 		// Set name for debug file.
-		$options = get_option( 'simply-static' );
+		$options = get_option( 'wp-static-export' );
 
 		if ( isset( $options['encryption_key'] ) ) {
-			return apply_filters( 'ss_debug_log_file', $simply_static_dir . $options['encryption_key'] . '-debug.txt', $options['encryption_key'] );
+			return apply_filters( 'wpse_debug_log_file', $wpse_dir . $options['encryption_key'] . '-debug.txt', $options['encryption_key'] );
 		} else {
-			return apply_filters( 'ss_debug_log_file', $simply_static_dir . 'debug.txt', '' );
+			return apply_filters( 'wpse_debug_log_file', $wpse_dir . 'debug.txt', '' );
 		}
 	}
 
@@ -1634,7 +1634,7 @@ class Util {
 
 		// For arrays/objects, avoid var_dump which can explode memory usage.
 		// Prefer JSON with partial output on error; fall back to print_r.
-		$max_length = apply_filters( 'simply_static_debug_max_length', 100000 ); // 100 KB by default
+		$max_length = apply_filters( 'wpse_debug_max_length', 100000 ); // 100 KB by default
 		$json_opts  = defined( 'JSON_PARTIAL_OUTPUT_ON_ERROR' ) ? JSON_PARTIAL_OUTPUT_ON_ERROR : 0;
 		$encoded    = function_exists( 'wp_json_encode' ) ? wp_json_encode( $object, $json_opts, 5 ) : json_encode( $object, $json_opts, 5 );
 
@@ -1650,7 +1650,7 @@ class Util {
 	}
 
 	public static function is_valid_scheme( $scheme ) {
-		$valid_schemes = apply_filters( 'simply_static_valid_schemes', [
+		$valid_schemes = apply_filters( 'wpse_valid_schemes', [
 			'http',
 			'https',
 		] );
@@ -1807,7 +1807,7 @@ class Util {
 	 * @return boolean      true if URL is local, false otherwise
 	 */
 	public static function is_local_url( $url ) {
-		return apply_filters( 'ss_is_local_url', null !== self::get_local_url_base( self::remove_params_and_fragment( $url ) ) );
+		return apply_filters( 'wpse_is_local_url', null !== self::get_local_url_base( self::remove_params_and_fragment( $url ) ) );
 	}
 
 	/**
@@ -1870,7 +1870,7 @@ class Util {
 			}
 		}
 
-		return (bool) apply_filters( 'ss_is_local_origin_url', $is_local, $url, self::local_url_bases() );
+		return (bool) apply_filters( 'wpse_is_local_origin_url', $is_local, $url, self::local_url_bases() );
 	}
 
 	/**
@@ -1951,7 +1951,7 @@ class Util {
 			}
 		}
 
-		$allowed = (bool) apply_filters( 'ss_send_basic_auth_to_url', $allowed, $url, $auth_bases );
+		$allowed = (bool) apply_filters( 'wpse_send_basic_auth_to_url', $allowed, $url, $auth_bases );
 		if ( ! $allowed ) {
 			return null;
 		}
@@ -2148,8 +2148,8 @@ class Util {
 	public static function resolve_local_asset_path( $url ) {
 		$unsafe_path_error = static function () {
 			return new \WP_Error(
-				'simply_static_unsafe_local_asset_path',
-				__( 'Refusing to read a local asset outside an allowed WordPress directory.', 'simply-static' )
+				'wpse_unsafe_local_asset_path',
+				__( 'Refusing to read a local asset outside an allowed WordPress directory.', 'wp-static-export' )
 			);
 		};
 
@@ -2495,7 +2495,7 @@ class Util {
 		$query_args = array();
 		if ( ! empty( $parts['query'] ) ) {
 			parse_str( html_entity_decode( (string) $parts['query'], ENT_QUOTES | ENT_HTML5, 'UTF-8' ), $query_args );
-			unset( $query_args['simply_static_page'] );
+			unset( $query_args['wpse_page'] );
 		}
 
 		if ( isset( $query_args['feed'] ) ) {
@@ -2638,7 +2638,7 @@ class Util {
 		 * @since 3.6.0.1
 		 *
 		 */
-		if ( apply_filters( 'ss_preserve_original_filenames', false ) ) {
+		if ( apply_filters( 'wpse_preserve_original_filenames', false ) ) {
 			return $filename;
 		}
 
@@ -2777,7 +2777,7 @@ class Util {
 			return false;
 		}
 
-		$allowed_asset_extensions = apply_filters( 'simply_static_allowed_local_asset_extensions', [
+		$allowed_asset_extensions = apply_filters( 'wpse_allowed_local_asset_extensions', [
 			// Images
 			'webp',
 			'gif',
@@ -2828,7 +2828,7 @@ class Util {
 	 * @return bool True if it's a core include asset.
 	 */
 	public static function is_core_include_asset( string $url ): bool {
-		$core_paths = [ includes_url(), plugins_url() . '/simply-static/', plugins_url() . '/simply-static-pro/' ];
+		$core_paths = [ includes_url(), plugins_url() . '/wp-static-export/', plugins_url() . '/simply-static-pro/' ];
 		foreach ( $core_paths as $path ) {
 			if ( strpos( $url, $path ) !== false ) {
 				return self::is_local_asset_url( $url );
@@ -3104,8 +3104,8 @@ class Util {
 	 */
 	public static function clear_transients() {
 		// Diagnostics.
-		delete_transient( 'simply_static_checks' );
-		delete_transient( 'simply_static_failed_tests' );
+		delete_transient( 'wpse_checks' );
+		delete_transient( 'wpse_failed_tests' );
 
 		// Tasks.
 		$tasks = [
@@ -3128,7 +3128,7 @@ class Util {
 		];
 
 		foreach ( $tasks as $task ) {
-			delete_option( 'simply_static_' . $task . '_total_pages' );
+			delete_option( 'wpse_' . $task . '_total_pages' );
 		}
 	}
 
@@ -3147,7 +3147,7 @@ class Util {
 		if ( class_exists( __NAMESPACE__ . '\\Options' ) ) {
 			$configured_dir = Options::instance()->get( 'temp_files_dir' );
 		} else {
-			$options        = get_option( 'simply-static' );
+			$options        = get_option( 'wp-static-export' );
 			$configured_dir = is_array( $options ) && isset( $options['temp_files_dir'] )
 				? $options['temp_files_dir']
 				: '';
@@ -3160,14 +3160,14 @@ class Util {
 
 		$upload_dir = wp_upload_dir( null, false );
 		if ( is_array( $upload_dir ) && ! empty( $upload_dir['basedir'] ) ) {
-			$candidates[] = rtrim( $upload_dir['basedir'], "/\\" ) . DIRECTORY_SEPARATOR . 'simply-static' . DIRECTORY_SEPARATOR . 'temp-files';
+			$candidates[] = rtrim( $upload_dir['basedir'], "/\\" ) . DIRECTORY_SEPARATOR . 'wp-static-export' . DIRECTORY_SEPARATOR . 'temp-files';
 		}
 
 		if ( defined( 'WP_CONTENT_DIR' ) && WP_CONTENT_DIR ) {
-			$candidates[] = rtrim( WP_CONTENT_DIR, "/\\" ) . DIRECTORY_SEPARATOR . 'simply-static' . DIRECTORY_SEPARATOR . 'temp-files';
+			$candidates[] = rtrim( WP_CONTENT_DIR, "/\\" ) . DIRECTORY_SEPARATOR . 'wp-static-export' . DIRECTORY_SEPARATOR . 'temp-files';
 		}
 
-		$candidates[] = rtrim( sys_get_temp_dir(), "/\\" ) . DIRECTORY_SEPARATOR . 'simply-static' . DIRECTORY_SEPARATOR . 'temp-files';
+		$candidates[] = rtrim( sys_get_temp_dir(), "/\\" ) . DIRECTORY_SEPARATOR . 'wp-static-export' . DIRECTORY_SEPARATOR . 'temp-files';
 		$candidates   = array_values( array_unique( array_filter( $candidates, 'is_string' ) ) );
 		$allowed_dir  = '';
 
@@ -3306,7 +3306,7 @@ class Util {
 	 *
 	 * This rejects filesystem roots, symlinks, WordPress/application roots, upload
 	 * and system-temp roots, and common user-data roots. Descendant directories
-	 * (such as uploads/simply-static/temp-files) remain valid.
+	 * (such as uploads/wp-static-export/temp-files) remain valid.
 	 *
 	 * @param string $dir Directory path.
 	 *
@@ -3367,7 +3367,7 @@ class Util {
 			}
 		}
 
-		return (bool) apply_filters( 'ss_is_safe_directory_to_delete', $is_safe, $real_path, $protected );
+		return (bool) apply_filters( 'wpse_is_safe_directory_to_delete', $is_safe, $real_path, $protected );
 	}
 
 	/**

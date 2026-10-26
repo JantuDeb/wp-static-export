@@ -30,7 +30,7 @@ function ActivityLog() {
 			? snapshotRollback.message
 			: __(
 					'Rollback in progress. WP Static Export export actions are locked until the rollback has finished.',
-					'simply-static'
+					'wp-static-export'
 			  );
 	const rollbackProgress =
 		snapshotRollback && snapshotRollback.progress
@@ -47,7 +47,7 @@ function ActivityLog() {
 		: rollbackMessage;
 	const [ terminalLineData, setTerminalLineData ] = useState( [
 		<TerminalOutput key="waiting">
-			{ __( 'Waiting for new push…', 'simply-static' ) }
+			{ __( 'Waiting for new push…', 'wp-static-export' ) }
 		</TerminalOutput>,
 	] );
 	const activityRequest = useRef( {
@@ -81,7 +81,7 @@ function ActivityLog() {
 
 		const request = {
 			path:
-				'/simplystatic/v1/activity-log?blog_id=' +
+				'/wp-static-export/v1/activity-log?blog_id=' +
 				blogId +
 				'&is_network_admin=' +
 				options.is_network,
@@ -210,14 +210,14 @@ function ActivityLog() {
 		if ( isRunning && ! isResumed ) {
 			setTerminalLineData( [
 				<TerminalOutput key="waiting">
-					{ __( 'Waiting for new push…', 'simply-static' ) }
+					{ __( 'Waiting for new push…', 'wp-static-export' ) }
 				</TerminalOutput>,
 			] );
 		}
 		if ( isRunning && isResumed ) {
 			setTerminalLineData( [
 				<TerminalOutput key="resuming">
-					{ __( 'Resuming the push…', 'simply-static' ) }
+					{ __( 'Resuming the push…', 'wp-static-export' ) }
 				</TerminalOutput>,
 			] );
 		}
@@ -236,14 +236,14 @@ function ActivityLog() {
 					<p>
 						<Dashicon icon="update" />
 						<strong>
-							{ __( 'Rollback in progress', 'simply-static' ) }
+							{ __( 'Rollback in progress', 'wp-static-export' ) }
 						</strong>
 						<span>{ rollbackProgressText }</span>
 					</p>
 				</Notice>
 			) }
 			<Terminal
-				name={ __( 'Activity Log', 'simply-static' ) }
+				name={ __( 'Activity Log', 'wp-static-export' ) }
 				height="250px"
 				colorMode={ ColorMode.Dark }
 			>

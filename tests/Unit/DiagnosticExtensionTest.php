@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
 use ReflectionClass;
-use Simply_Static\Diagnostic;
-use Simply_Static\Tests\Support\UnitTestCase;
+use WP_Static_Export\Diagnostic;
+use WP_Static_Export\Tests\Support\UnitTestCase;
 
 final class DiagnosticExtensionTest extends UnitTestCase {
 
@@ -16,7 +16,7 @@ final class DiagnosticExtensionTest extends UnitTestCase {
 	}
 
 	public function test_extensions_can_add_diagnostic_checks(): void {
-		add_filter( 'ss_diagnostic_checks', static function ( array $checks ): array {
+		add_filter( 'wpse_diagnostic_checks', static function ( array $checks ): array {
 			$checks['WordPress']['Extension check'] = array(
 				'test'        => false,
 				'description' => 'Extension check passed.',
@@ -43,7 +43,7 @@ final class DiagnosticExtensionTest extends UnitTestCase {
 			),
 		);
 
-		add_filter( 'ss_diagnostic_checks', static function () {
+		add_filter( 'wpse_diagnostic_checks', static function () {
 			return null;
 		} );
 

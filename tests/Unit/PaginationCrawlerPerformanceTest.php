@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Crawler {
+namespace WP_Static_Export\Crawler {
 	/** @param array<string,mixed> $args */
 	function get_posts( $args = array() ) {
-		$GLOBALS['simply_static_pagination_queries'][] = $args;
-		$posts  = isset( $GLOBALS['simply_static_pagination_posts'] ) ? $GLOBALS['simply_static_pagination_posts'] : array();
+		$GLOBALS['wpse_pagination_queries'][] = $args;
+		$posts  = isset( $GLOBALS['wpse_pagination_posts'] ) ? $GLOBALS['wpse_pagination_posts'] : array();
 		$offset = isset( $args['offset'] ) ? (int) $args['offset'] : 0;
 		$limit  = isset( $args['posts_per_page'] ) ? (int) $args['posts_per_page'] : count( $posts );
 
@@ -42,12 +42,12 @@ namespace Simply_Static\Crawler {
 	}
 }
 
-namespace Simply_Static\Tests\Unit {
+namespace WP_Static_Export\Tests\Unit {
 
 	use ReflectionMethod;
-	use Simply_Static\Crawler\Pagination_Crawler;
-	use Simply_Static\Tests\Support\UnitTestCase;
-	use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+	use WP_Static_Export\Crawler\Pagination_Crawler;
+	use WP_Static_Export\Tests\Support\UnitTestCase;
+	use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 	final class PaginationCrawlerWpdb {
 
@@ -99,22 +99,22 @@ namespace Simply_Static\Tests\Unit {
 			$this->requireSource( 'src/crawler/class-ss-crawler.php' );
 			$this->requireSource( 'src/crawler/class-ss-pagination-crawler.php' );
 
-			$GLOBALS['simply_static_pagination_queries'] = array();
-			$GLOBALS['simply_static_pagination_posts']   = array();
+			$GLOBALS['wpse_pagination_queries'] = array();
+			$GLOBALS['wpse_pagination_posts']   = array();
 			for ( $id = 1; $id <= 25; ++$id ) {
-				$GLOBALS['simply_static_pagination_posts'][] = (object) array(
+				$GLOBALS['wpse_pagination_posts'][] = (object) array(
 					'ID'           => $id,
 					'post_content' => 'First<!--nextpage-->Second<!--nextpage-->Third',
 				);
 			}
-			WpEnv::$options['simply-static'] = array(
+			WpEnv::$options['wp-static-export'] = array(
 				'post_types'            => array( 'post' ),
 				'post_types_configured' => true,
 			);
 		}
 
 		protected function tearDown(): void {
-			unset( $GLOBALS['simply_static_pagination_queries'], $GLOBALS['simply_static_pagination_posts'] );
+			unset( $GLOBALS['wpse_pagination_queries'], $GLOBALS['wpse_pagination_posts'] );
 			if ( null === $this->previous_wpdb ) {
 				unset( $GLOBALS['wpdb'] );
 			} else {
@@ -125,13 +125,13 @@ namespace Simply_Static\Tests\Unit {
 
 		public function test_nextpage_candidate_query_is_batched_and_hard_limited(): void {
 			add_filter(
-				'simply_static_pagination_post_query_batch_size',
+				'wpse_pagination_post_query_batch_size',
 				static function (): int {
 					return 10;
 				}
 			);
 			add_filter(
-				'simply_static_pagination_max_posts_to_scan',
+				'wpse_pagination_max_posts_to_scan',
 				static function (): int {
 					return 12;
 				}
@@ -145,13 +145,13 @@ namespace Simply_Static\Tests\Unit {
 			self::assertCount( 24, $urls );
 			self::assertSame( 'https://example.test/post-1/2/', $urls[0] );
 			self::assertSame( 'https://example.test/post-12/3/', $urls[23] );
-			self::assertCount( 2, $GLOBALS['simply_static_pagination_queries'] );
-			self::assertSame( 0, $GLOBALS['simply_static_pagination_queries'][0]['offset'] );
-			self::assertSame( 10, $GLOBALS['simply_static_pagination_queries'][0]['posts_per_page'] );
-			self::assertSame( 10, $GLOBALS['simply_static_pagination_queries'][1]['offset'] );
-			self::assertSame( 2, $GLOBALS['simply_static_pagination_queries'][1]['posts_per_page'] );
-			self::assertTrue( $GLOBALS['simply_static_pagination_queries'][0]['no_found_rows'] );
-			self::assertFalse( $GLOBALS['simply_static_pagination_queries'][0]['update_post_meta_cache'] );
+			self::assertCount( 2, $GLOBALS['wpse_pagination_queries'] );
+			self::assertSame( 0, $GLOBALS['wpse_pagination_queries'][0]['offset'] );
+			self::assertSame( 10, $GLOBALS['wpse_pagination_queries'][0]['posts_per_page'] );
+			self::assertSame( 10, $GLOBALS['wpse_pagination_queries'][1]['offset'] );
+			self::assertSame( 2, $GLOBALS['wpse_pagination_queries'][1]['posts_per_page'] );
+			self::assertTrue( $GLOBALS['wpse_pagination_queries'][0]['no_found_rows'] );
+			self::assertFalse( $GLOBALS['wpse_pagination_queries'][0]['update_post_meta_cache'] );
 		}
 
 		public function test_public_cpt_archive_pagination_is_discovered_by_default(): void {
@@ -167,7 +167,7 @@ namespace Simply_Static\Tests\Unit {
 				'knowledge_articles' => 15,
 			);
 			WpEnv::$options['posts_per_page'] = 10;
-			WpEnv::$options['simply-static'] = array(
+			WpEnv::$options['wp-static-export'] = array(
 				'post_types'            => array( 'knowledge_articles' ),
 				'post_types_configured' => true,
 			);
@@ -203,7 +203,7 @@ namespace Simply_Static\Tests\Unit {
 			);
 			$GLOBALS['wpdb'] = $database;
 			WpEnv::$options['posts_per_page'] = 10;
-			WpEnv::$options['simply-static'] = array(
+			WpEnv::$options['wp-static-export'] = array(
 				'post_types'            => array( 'post' ),
 				'post_types_configured' => true,
 			);

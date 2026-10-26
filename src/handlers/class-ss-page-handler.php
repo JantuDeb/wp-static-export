@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -46,13 +46,13 @@ class Page_Handler {
 		if ( isset( $parsed_url['query'] ) && ! empty( $parsed_url['query'] ) ) {
 			// Check if the URL already ends with a query parameter
 			if ( substr( $url, -1 ) === '&' ) {
-				$url .= 'simply_static_page=' . $this->page->id;
+				$url .= 'wpse_page=' . $this->page->id;
 			} else {
-				$url .= '&simply_static_page=' . $this->page->id;
+				$url .= '&wpse_page=' . $this->page->id;
 			}
 		} else {
 			// No existing query parameters, use add_query_arg
-			$url = add_query_arg( 'simply_static_page', $this->page->id, $url );
+			$url = add_query_arg( 'wpse_page', $this->page->id, $url );
 		}
 
 		Util::debug_log( 'URL Prepared:' . $url );
@@ -63,7 +63,7 @@ class Page_Handler {
 	/**
 	 * Get Options Instance.
 	 *
-	 * @return \Simply_Static\Options|null
+	 * @return \WP_Static_Export\Options|null
 	 */
 	public function get_options() {
 		return Options::instance();

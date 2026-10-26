@@ -13,7 +13,7 @@ function Sites (props) {
 
     const triggerCron = (blogId) => {
         apiFetch({
-            path: '/simplystatic/v1/trigger-cron',
+            path: '/wp-static-export/v1/trigger-cron',
             method: 'POST',
             data: {
                 'blog_id': blogId,
@@ -67,7 +67,7 @@ function Sites (props) {
 		}
 		refreshInFlight.current = true;
 		apiFetch({
-            path: '/simplystatic/v1/sites',
+            path: '/wp-static-export/v1/sites',
             method: 'GET',
         }).then(resp => {
             let sitesObjects = [];
@@ -118,9 +118,9 @@ function Sites (props) {
             <table className={'wp-list-table widefat fixed striped posts simple-static-sites'}>
                 <thead>
                     <tr>
-                        <th>{__('Name', 'simply-static')}</th>
-                        <th>{__('Status', 'simply-static')}</th>
-                        <th>{__('Actions', 'simply-static')}</th>
+                        <th>{__('Name', 'wp-static-export')}</th>
+                        <th>{__('Status', 'wp-static-export')}</th>
+                        <th>{__('Actions', 'wp-static-export')}</th>
                     </tr>
                 </thead>
                 <tbody>

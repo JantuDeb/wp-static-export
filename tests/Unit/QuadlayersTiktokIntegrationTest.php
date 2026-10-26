@@ -2,25 +2,25 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
 use DOMDocument;
-use Simply_Static\Integrations;
-use Simply_Static\Options;
-use Simply_Static\Quadlayers_Tiktok_Integration;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Integrations;
+use WP_Static_Export\Options;
+use WP_Static_Export\Quadlayers_Tiktok_Integration;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 use QuadLayers\TTF\Api\Rest\Endpoints\Frontend\User_Video_List\Test_Callback as QuadlayersTestCallback;
 
-$simply_static_root = dirname( __DIR__, 2 );
-require_once $simply_static_root . '/src/class-ss-plugin.php';
-require_once $simply_static_root . '/src/class-ss-options.php';
-require_once $simply_static_root . '/src/class-ss-phpuri.php';
-require_once $simply_static_root . '/src/class-ss-util.php';
-require_once $simply_static_root . '/src/integrations/class-ss-integration.php';
-require_once $simply_static_root . '/src/integrations/class-ss-quadlayers-tiktok-integration.php';
-require_once $simply_static_root . '/src/class-ss-integrations.php';
-require_once $simply_static_root . '/tests/Support/QuadlayersRestCallback.php';
+$wpse_root = dirname( __DIR__, 2 );
+require_once $wpse_root . '/src/class-ss-plugin.php';
+require_once $wpse_root . '/src/class-ss-options.php';
+require_once $wpse_root . '/src/class-ss-phpuri.php';
+require_once $wpse_root . '/src/class-ss-util.php';
+require_once $wpse_root . '/src/integrations/class-ss-integration.php';
+require_once $wpse_root . '/src/integrations/class-ss-quadlayers-tiktok-integration.php';
+require_once $wpse_root . '/src/class-ss-integrations.php';
+require_once $wpse_root . '/tests/Support/QuadlayersRestCallback.php';
 
 final class TiktokSnapshotExtractor {
 	/** @var string[] */
@@ -111,7 +111,7 @@ final class QuadlayersTiktokIntegrationTest extends UnitTestCase {
 			'basedir' => $this->upload_root,
 			'baseurl' => 'https://example.test/wp-content/uploads',
 		);
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'archive_start_time' => '2026-09-07 18:00:00',
 		);
 		Options::reinstance();
@@ -152,7 +152,7 @@ final class QuadlayersTiktokIntegrationTest extends UnitTestCase {
 		$document    = $this->feedDocument( $settings, 2 );
 
 		$integration->run();
-		do_action( 'ss_after_extract_and_replace_urls_in_html', $document, $extractor );
+		do_action( 'wpse_after_extract_and_replace_urls_in_html', $document, $extractor );
 		$html = (string) $document->saveHTML();
 
 		self::assertSame( 1, $integration->feed_requests, 'Duplicate widgets should reuse one in-process snapshot.' );
@@ -161,11 +161,11 @@ final class QuadlayersTiktokIntegrationTest extends UnitTestCase {
 		self::assertStringNotContainsString( 'tiktok-feed-feed', $html );
 		self::assertStringNotContainsString( 'data-feed=', $html );
 		self::assertSame( 2, substr_count( $html, 'data-ss-tiktok-snapshot="1"' ) );
-		self::assertSame( 1, substr_count( $html, 'id="simply-static-tiktok-snapshot-css"' ) );
+		self::assertSame( 1, substr_count( $html, 'id="wp-static-export-tiktok-snapshot-css"' ) );
 		self::assertStringContainsString( 'ss-tiktok-feed--columns-4', $html );
 		self::assertStringContainsString( 'ss-tiktok-feed--layout-carousel', $html );
 		self::assertStringContainsString( 'https://www.tiktok.com/@example/video/123', $html );
-		self::assertStringContainsString( 'https://static.example.test/wp-content/uploads/simply-static/tiktok/', $html );
+		self::assertStringContainsString( 'https://static.example.test/wp-content/uploads/wp-static-export/tiktok/', $html );
 		self::assertCount( 2, $extractor->urls, 'Each rendered image reference is queued for export.' );
 		self::assertSame( $extractor->urls[0], $extractor->urls[1] );
 		self::assertFileExists( str_replace( 'https://example.test/wp-content/uploads', $this->upload_root, $extractor->urls[0] ) );
@@ -206,7 +206,7 @@ final class QuadlayersTiktokIntegrationTest extends UnitTestCase {
 		self::assertCount( 1, $snapshot );
 		self::assertNotSame( '', $snapshot[0]['image_url'] );
 
-		WpEnv::$options['simply-static']['archive_start_time'] = '2026-09-07 19:00:00';
+		WpEnv::$options['wp-static-export']['archive_start_time'] = '2026-09-07 19:00:00';
 		Options::reinstance();
 		$second   = new TestableTiktokSnapshotIntegration( new \WP_Error( 'offline', 'TikTok is unavailable.' ) );
 		$fallback = $second->snapshot( $settings );

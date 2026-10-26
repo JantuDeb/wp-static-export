@@ -145,14 +145,14 @@ function HideWP() {
             <CardHeader>
                 <Flex>
                     <FlexItem>
-                        <b>{__('Replace', 'simply-static')}</b>
+                        <b>{__('Replace', 'wp-static-export')}</b>
                     </FlexItem>
                 </Flex>
             </CardHeader>
             <CardBody>
                 <TextControl
-                    label={__('wp-content directory', 'simply-static')}
-                    help={__('Replace the "wp-content" directory.', 'simply-static')}
+                    label={__('wp-content directory', 'wp-static-export')}
+                    help={__('Replace the "wp-content" directory.', 'wp-static-export')}
                     disabled={('free' === options.plan || !isPro())}
                     type={"text"}
                     placeholder={"wp-content"}
@@ -165,8 +165,8 @@ function HideWP() {
                 />
 
                 <TextControl
-                    label={__('wp-includes directory', 'simply-static')}
-                    help={__('Replace the "wp-includes" directory.', 'simply-static')}
+                    label={__('wp-includes directory', 'wp-static-export')}
+                    help={__('Replace the "wp-includes" directory.', 'wp-static-export')}
                     disabled={('free' === options.plan || !isPro())}
                     type={"text"}
                     placeholder={"wp-includes"}
@@ -179,7 +179,7 @@ function HideWP() {
                 />
 
                 <div className="ss-directory-input-group">
-                    <label className="components-base-control__label">{__('Uploads directory', 'simply-static')}</label>
+                    <label className="components-base-control__label">{__('Uploads directory', 'wp-static-export')}</label>
                     <Flex align="flex-start" gap={0}>
                         <FlexItem>
                             <TextControl
@@ -206,11 +206,11 @@ function HideWP() {
                             />
                         </FlexItem>
                     </Flex>
-                    <p className="components-base-control__help">{__('Replace the "wp-content/uploads" directory.', 'simply-static')}</p>
+                    <p className="components-base-control__help">{__('Replace the "wp-content/uploads" directory.', 'wp-static-export')}</p>
                 </div>
 
                 <div className="ss-directory-input-group">
-                    <label className="components-base-control__label">{__('Plugins directory', 'simply-static')}</label>
+                    <label className="components-base-control__label">{__('Plugins directory', 'wp-static-export')}</label>
                     <Flex align="flex-start" gap={0}>
                         <FlexItem>
                             <TextControl
@@ -237,11 +237,11 @@ function HideWP() {
                             />
                         </FlexItem>
                     </Flex>
-                    <p className="components-base-control__help">{__('Replace the "wp-content/plugins" directory.', 'simply-static')}</p>
+                    <p className="components-base-control__help">{__('Replace the "wp-content/plugins" directory.', 'wp-static-export')}</p>
                 </div>
 
                 <div className="ss-directory-input-group">
-                    <label className="components-base-control__label">{__('Themes directory', 'simply-static')}</label>
+                    <label className="components-base-control__label">{__('Themes directory', 'wp-static-export')}</label>
                     <Flex align="flex-start" gap={0}>
                         <FlexItem>
                             <TextControl
@@ -268,12 +268,12 @@ function HideWP() {
                             />
                         </FlexItem>
                     </Flex>
-                    <p className="components-base-control__help">{__('Replace the "wp-content/themes" directory.', 'simply-static')}</p>
+                    <p className="components-base-control__help">{__('Replace the "wp-content/themes" directory.', 'wp-static-export')}</p>
                 </div>
 
                 <InputControl
-                    label={__('Theme style name', 'simply-static')}
-                    help={__('Replace the style.css filename.', 'simply-static')}
+                    label={__('Theme style name', 'wp-static-export')}
+                    help={__('Replace the style.css filename.', 'wp-static-export')}
                     disabled={('free' === options.plan || !isPro())}
                     type={"text"}
                     className={"ss-theme-style-name"}
@@ -289,8 +289,8 @@ function HideWP() {
                 />
 
                 <TextControl
-                    label={__('Author URL', 'simply-static')}
-                    help={__('Replace the author url.', 'simply-static')}
+                    label={__('Author URL', 'wp-static-export')}
+                    help={__('Replace the author url.', 'wp-static-export')}
                     disabled={('free' === options.plan || !isPro())}
                     type={"text"}
                     placeholder={"author"}
@@ -310,18 +310,18 @@ function HideWP() {
             <CardHeader>
                 <Flex>
                     <FlexItem>
-                        <b>{__('Custom Replacements', 'simply-static')}</b>
+                        <b>{__('Custom Replacements', 'wp-static-export')}</b>
                     </FlexItem>
                 </Flex>
             </CardHeader>
             <CardBody>
-                <p>{__('Replace your own strings in generated text files after the export is built and before it is deployed. Rules run from top to bottom; leave “Replace with” empty to remove a string.', 'simply-static')}</p>
+                <p>{__('Replace your own strings in generated text files after the export is built and before it is deployed. Rules run from top to bottom; leave “Replace with” empty to remove a string.', 'wp-static-export')}</p>
                 {customReplacements.map((replacement, index) => (
                     <div className="ss-custom-replacement-row" key={index}>
                         <Flex align="flex-end">
                             <FlexItem isBlock>
                                 <TextControl
-                                    label={__('Search for', 'simply-static')}
+                                    label={__('Search for', 'wp-static-export')}
                                     value={replacement.search}
                                     maxLength={65536}
                                     disabled={('free' === options.plan || !isPro())}
@@ -332,7 +332,7 @@ function HideWP() {
                             </FlexItem>
                             <FlexItem isBlock>
                                 <TextControl
-                                    label={__('Replace with', 'simply-static')}
+                                    label={__('Replace with', 'wp-static-export')}
                                     value={replacement.replace}
                                     maxLength={262144}
                                     disabled={('free' === options.plan || !isPro())}
@@ -344,7 +344,7 @@ function HideWP() {
                             <FlexItem className="ss-custom-replacement-remove">
                                 <Button
                                     icon="trash"
-                                    label={__('Remove replacement', 'simply-static')}
+                                    label={__('Remove replacement', 'wp-static-export')}
                                     variant="tertiary"
                                     isDestructive
                                     disabled={('free' === options.plan || !isPro())}
@@ -367,7 +367,7 @@ function HideWP() {
 						{search: '', replace: ''},
 					])}
                 >
-                    {__('Add replacement', 'simply-static')}
+                    {__('Add replacement', 'wp-static-export')}
                 </Button>
             </CardBody>
         </Card>
@@ -376,13 +376,13 @@ function HideWP() {
             <CardHeader>
                 <Flex>
                     <FlexItem>
-                        <b>{__('Hide', 'simply-static')}</b>
+                        <b>{__('Hide', 'wp-static-export')}</b>
                     </FlexItem>
                 </Flex>
             </CardHeader>
             <CardBody>
                 <ToggleControl
-                    label={__('Hide WordPress Version', 'simply-static')}
+                    label={__('Hide WordPress Version', 'wp-static-export')}
                     __nextHasNoMarginBottom
                     checked={hideVersion}
                     disabled={('free' === options.plan || !isPro())}
@@ -392,7 +392,7 @@ function HideWP() {
                     }}
                 />
                 <ToggleControl
-                    label={__('Hide WordPress Generator Meta', 'simply-static')}
+                    label={__('Hide WordPress Generator Meta', 'wp-static-export')}
                     __nextHasNoMarginBottom
                     checked={hideGenerator}
                     disabled={('free' === options.plan || !isPro())}
@@ -402,7 +402,7 @@ function HideWP() {
                     }}
                 />
                 <ToggleControl
-                    label={__('Hide DNS Prefetch WordPress link', 'simply-static')}
+                    label={__('Hide DNS Prefetch WordPress link', 'wp-static-export')}
                     __nextHasNoMarginBottom
                     checked={hidePrefetch}
                     disabled={('free' === options.plan || !isPro())}
@@ -412,7 +412,7 @@ function HideWP() {
                     }}
                 />
                 <ToggleControl
-                    label={__('Hide RSD Header', 'simply-static')}
+                    label={__('Hide RSD Header', 'wp-static-export')}
                     __nextHasNoMarginBottom
                     checked={hideRSD}
                     disabled={('free' === options.plan || !isPro())}
@@ -428,13 +428,13 @@ function HideWP() {
             <CardHeader>
                 <Flex>
                     <FlexItem>
-                        <b>{__('Disable', 'simply-static')}</b>
+                        <b>{__('Disable', 'wp-static-export')}</b>
                     </FlexItem>
                 </Flex>
             </CardHeader>
             <CardBody>
                 <ToggleControl
-                    label={__('Disable XML-RPC', 'simply-static')}
+                    label={__('Disable XML-RPC', 'wp-static-export')}
                     __nextHasNoMarginBottom
                     checked={disableXMLRPC}
                     disabled={('free' === options.plan || !isPro())}
@@ -444,7 +444,7 @@ function HideWP() {
                     }}
                 />
                 <ToggleControl
-                    label={__('Disable Embed Scripts', 'simply-static')}
+                    label={__('Disable Embed Scripts', 'wp-static-export')}
                     __nextHasNoMarginBottom
                     checked={disableEmbed}
                     disabled={('free' === options.plan || !isPro())}
@@ -454,7 +454,7 @@ function HideWP() {
                     }}
                 />
                 <ToggleControl
-                    label={__('Disable DB Debug in Frontend', 'simply-static')}
+                    label={__('Disable DB Debug in Frontend', 'wp-static-export')}
                     __nextHasNoMarginBottom
                     checked={disableDbDebug}
                     disabled={('free' === options.plan || !isPro())}
@@ -464,7 +464,7 @@ function HideWP() {
                     }}
                 />
                 <ToggleControl
-                    label={__('Disable WLW Manifest Scripts', 'simply-static')}
+                    label={__('Disable WLW Manifest Scripts', 'wp-static-export')}
                     __nextHasNoMarginBottom
                     checked={disableWLW}
                     disabled={('free' === options.plan || !isPro())}
@@ -474,7 +474,7 @@ function HideWP() {
                     }}
                 />
                 <ToggleControl
-                    label={__('Disable Emojis', 'simply-static')}
+                    label={__('Disable Emojis', 'wp-static-export')}
                     __nextHasNoMarginBottom
                     checked={hideEmojis}
                     disabled={('free' === options.plan || !isPro())}
@@ -492,7 +492,7 @@ function HideWP() {
                     {() => (
                         <Notice status="success" isDismissible={false}>
                             <p>
-                                {__('Settings saved successfully.', 'simply-static')}
+                                {__('Settings saved successfully.', 'wp-static-export')}
                             </p>
                         </Notice>
                     )}
@@ -503,7 +503,7 @@ function HideWP() {
         <div className={"save-settings"}>
             {'pro' === options.plan && isPro() &&
                 <Button onClick={setSavingSettings}
-                        variant="primary">{__('Save Settings', 'simply-static')}</Button>
+                        variant="primary">{__('Save Settings', 'wp-static-export')}</Button>
             }
         </div>
     </div>)

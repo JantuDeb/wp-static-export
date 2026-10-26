@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Integration;
-use Simply_Static\Options;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Integration;
+use WP_Static_Export\Options;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 final class IntegrationSecurityTest extends UnitTestCase {
 
@@ -22,7 +22,7 @@ final class IntegrationSecurityTest extends UnitTestCase {
 		$this->requireSource( 'src/class-ss-util.php' );
 		$this->requireSource( 'src/integrations/class-ss-integration.php' );
 
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'http_basic_auth_username' => 'crawler',
 			'http_basic_auth_password' => 'secret',
 		);
@@ -113,7 +113,7 @@ final class IntegrationSecurityTest extends UnitTestCase {
 		);
 		self::assertSame( array(), $this->integration->parse( $entity ) );
 
-		add_filter( 'ss_integration_sitemap_max_bytes', static function () { return 1024; } );
+		add_filter( 'wpse_integration_sitemap_max_bytes', static function () { return 1024; } );
 		$oversized = array(
 			'response' => array( 'code' => 200 ),
 			'body'     => '<sitemapindex>' . str_repeat( ' ', 2000 ) . '</sitemapindex>',
@@ -122,7 +122,7 @@ final class IntegrationSecurityTest extends UnitTestCase {
 	}
 
 	public function test_sitemap_parser_enforces_configured_url_limit(): void {
-		add_filter( 'ss_integration_sitemap_max_urls', static function () { return 1; } );
+		add_filter( 'wpse_integration_sitemap_max_urls', static function () { return 1; } );
 		$response = array(
 			'response' => array( 'code' => 200 ),
 			'body'     => '<sitemapindex><sitemap><loc>https://example.test/a.xml</loc></sitemap><sitemap><loc>https://example.test/b.xml</loc></sitemap></sitemapindex>',
@@ -137,7 +137,7 @@ final class IntegrationSecurityTest extends UnitTestCase {
 			$this->integration->add_dynamic_robots_url( array( 'https://example.test/existing' ) )
 		);
 
-		add_filter( 'ss_include_robots_txt_in_export', static function () { return false; } );
+		add_filter( 'wpse_include_robots_txt_in_export', static function () { return false; } );
 
 		self::assertSame(
 			array( 'https://example.test/existing' ),

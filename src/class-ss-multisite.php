@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 class Multisite {
 
@@ -39,24 +39,24 @@ class Multisite {
 	 * @return void
 	 */
 	public function __construct() {
-		add_action( 'ss_archive_creation_job_before_start', [ $this, 'switch_to_blog' ] );
-		add_action( 'ss_before_perform_archive_action', [ $this, 'before_perform_action' ], 1, 3 );
-		add_action( 'ss_after_perform_archive_action', [ $this, 'after_perform_action' ], 99, 3 );
-        add_action( 'ss_before_perform_archive_running_check', [ $this, 'before_running_check' ], 1, 2 );
-		add_action( 'ss_before_render_activity_log', [ $this, 'before_rendering_activity_log' ], 1 );;
-		add_action( 'ss_before_render_export_log', [ $this, 'switch_to_blog' ] );
-		add_action( 'ss_after_render_export_log', [ $this, 'restore_blog' ], 99, 2 );
-		add_action( 'ss_before_sending_response_for_static_archive', [ $this, 'restore_blog' ] );
-		add_action( 'ss_after_render_activity_log', [ $this, 'restore_blog' ], 99, 2 );
-		add_action( 'ss_archive_creation_job_after_start_queue', [ $this, 'restore_blog' ], 99, 2 );
-		add_action( 'ss_archive_creation_job_already_running', [ $this, 'restore_blog' ], 99, 2 );
-		add_action( 'ss_archive_creation_job_start_failed', [ $this, 'handle_start_failure' ], 99, 2 );
-		add_filter( 'ss_can_delete_file', [ $this, 'can_delete_file' ], 20, 3 );
+		add_action( 'wpse_archive_creation_job_before_start', [ $this, 'switch_to_blog' ] );
+		add_action( 'wpse_before_perform_archive_action', [ $this, 'before_perform_action' ], 1, 3 );
+		add_action( 'wpse_after_perform_archive_action', [ $this, 'after_perform_action' ], 99, 3 );
+        add_action( 'wpse_before_perform_archive_running_check', [ $this, 'before_running_check' ], 1, 2 );
+		add_action( 'wpse_before_render_activity_log', [ $this, 'before_rendering_activity_log' ], 1 );;
+		add_action( 'wpse_before_render_export_log', [ $this, 'switch_to_blog' ] );
+		add_action( 'wpse_after_render_export_log', [ $this, 'restore_blog' ], 99, 2 );
+		add_action( 'wpse_before_sending_response_for_static_archive', [ $this, 'restore_blog' ] );
+		add_action( 'wpse_after_render_activity_log', [ $this, 'restore_blog' ], 99, 2 );
+		add_action( 'wpse_archive_creation_job_after_start_queue', [ $this, 'restore_blog' ], 99, 2 );
+		add_action( 'wpse_archive_creation_job_already_running', [ $this, 'restore_blog' ], 99, 2 );
+		add_action( 'wpse_archive_creation_job_start_failed', [ $this, 'handle_start_failure' ], 99, 2 );
+		add_filter( 'wpse_can_delete_file', [ $this, 'can_delete_file' ], 20, 3 );
 		add_action( 'admin_footer', [ $this, 'hide_top_menu' ] );
 		add_action( 'network_admin_menu', array( Admin_Settings::get_instance(), 'add_menu' ), 2 );
-        add_action( 'ss_archive_creation_job_before_start', [ $this, 'check_for_export' ], 30 );
-        add_action( 'ss_archive_creation_job_before_start', [ $this, 'add_export' ], 40 );
-        add_action( 'ss_after_cleanup', [ $this, 'remove_export_check' ], 10, 1 );
+        add_action( 'wpse_archive_creation_job_before_start', [ $this, 'check_for_export' ], 30 );
+        add_action( 'wpse_archive_creation_job_before_start', [ $this, 'add_export' ], 40 );
+        add_action( 'wpse_after_cleanup', [ $this, 'remove_export_check' ], 10, 1 );
 
     }
 
@@ -80,7 +80,7 @@ class Multisite {
 		if ( ! $claimed ) {
 			$owner = $this->current_running_export_site_id();
 			if ( absint( $owner ) !== absint( $blog_id ) ) {
-				throw new \RuntimeException( __( 'Export is already running on another site. Upgrade to Pro to queue site exports.', 'simply-static' ) );
+				throw new \RuntimeException( __( 'Export is already running on another site. Upgrade to Pro to queue site exports.', 'wp-static-export' ) );
 			}
 		}
     }
@@ -157,12 +157,12 @@ class Multisite {
             return;
         }
 
-        throw new \Exception( __( 'Export is already running on another site. Upgrade to Pro to queue site exports.', 'simply-static' ) );
+        throw new \Exception( __( 'Export is already running on another site. Upgrade to Pro to queue site exports.', 'wp-static-export' ) );
      }
 
      public function can_disable_export() {
-        $is_pro_installed = defined( 'SIMPLY_STATIC_PRO_VERSION' ) ? true : false;
-        return apply_filters( 'ss_multisite_can_disable_export', ! $is_pro_installed );
+        $is_pro_installed = defined( 'WPSE_PRO_VERSION' ) ? true : false;
+        return apply_filters( 'wpse_multisite_can_disable_export', ! $is_pro_installed );
      }
 
 	public function after_perform_action( $blog_id, $action, $archive_creation_job ) {

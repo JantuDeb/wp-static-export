@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -75,7 +75,7 @@ abstract class Integration {
 	 * @return mixed|null
 	 */
 	public function is_enabled() {
-		return apply_filters( 'simply_static_integration_' . $this->id . '_enabled', $this->can_run() );
+		return apply_filters( 'wpse_integration_' . $this->id . '_enabled', $this->can_run() );
 	}
 
 	/**
@@ -159,7 +159,7 @@ abstract class Integration {
 		$urls = is_array( $urls ) ? $urls : array();
 
 		if (
-			! (bool) apply_filters( 'ss_include_robots_txt_in_export', true )
+			! (bool) apply_filters( 'wpse_include_robots_txt_in_export', true )
 			|| file_exists( ABSPATH . 'robots.txt' )
 		) {
 			return $urls;
@@ -184,14 +184,14 @@ abstract class Integration {
 	 */
 	protected function auth_remote_get( $url, $args = [] ) {
 		$allowed = Util::is_local_origin_url( $url );
-		$allowed = (bool) apply_filters( 'ss_integration_allow_remote_get', $allowed, $url, $this->id );
+		$allowed = (bool) apply_filters( 'wpse_integration_allow_remote_get', $allowed, $url, $this->id );
 		if ( ! $allowed ) {
-			return new \WP_Error( 'ss_disallowed_remote_url', __( 'Integration requests must target the configured WordPress origin.', 'simply-static' ) );
+			return new \WP_Error( 'ss_disallowed_remote_url', __( 'Integration requests must target the configured WordPress origin.', 'wp-static-export' ) );
 		}
 
 		// Verify TLS by default, except for exact-origin local environments.
 		if ( ! isset( $args['sslverify'] ) ) {
-			$args['sslverify'] = (bool) apply_filters( 'ss_remote_get_sslverify', Util::should_verify_ssl( $url ), $url );
+			$args['sslverify'] = (bool) apply_filters( 'wpse_remote_get_sslverify', Util::should_verify_ssl( $url ), $url );
 		}
 		// Redirects can cross origins while retaining request headers in some
 		// transports. Callers can explicitly opt in when no credentials are used.
@@ -205,7 +205,7 @@ abstract class Integration {
 			$args['headers']['Authorization'] = $authorization;
 		}
 
-		return wp_remote_get( $url, apply_filters( 'ss_remote_get_args', $args ) );
+		return wp_remote_get( $url, apply_filters( 'wpse_remote_get_args', $args ) );
 	}
 
 	/**
@@ -222,13 +222,13 @@ abstract class Integration {
 	 */
 	protected function auth_remote_post( $url, $args = [] ) {
 		$allowed = Util::is_local_origin_url( $url );
-		$allowed = (bool) apply_filters( 'ss_integration_allow_remote_post', $allowed, $url, $this->id );
+		$allowed = (bool) apply_filters( 'wpse_integration_allow_remote_post', $allowed, $url, $this->id );
 		if ( ! $allowed ) {
-			return new \WP_Error( 'ss_disallowed_remote_url', __( 'Integration requests must target the configured WordPress origin.', 'simply-static' ) );
+			return new \WP_Error( 'ss_disallowed_remote_url', __( 'Integration requests must target the configured WordPress origin.', 'wp-static-export' ) );
 		}
 
 		if ( ! isset( $args['sslverify'] ) ) {
-			$args['sslverify'] = (bool) apply_filters( 'ss_remote_post_sslverify', Util::should_verify_ssl( $url ), $url );
+			$args['sslverify'] = (bool) apply_filters( 'wpse_remote_post_sslverify', Util::should_verify_ssl( $url ), $url );
 		}
 		if ( ! isset( $args['redirection'] ) ) {
 			$args['redirection'] = 0;
@@ -240,7 +240,7 @@ abstract class Integration {
 			$args['headers']['Authorization'] = $authorization;
 		}
 
-		return wp_remote_post( $url, apply_filters( 'ss_remote_post_args', $args ) );
+		return wp_remote_post( $url, apply_filters( 'wpse_remote_post_args', $args ) );
 	}
 
 	/**
@@ -259,7 +259,7 @@ abstract class Integration {
 		}
 
 		$body      = wp_remote_retrieve_body( $response );
-		$max_bytes = max( 1024, (int) apply_filters( 'ss_integration_sitemap_max_bytes', 5 * 1024 * 1024 ) );
+		$max_bytes = max( 1024, (int) apply_filters( 'wpse_integration_sitemap_max_bytes', 5 * 1024 * 1024 ) );
 		if ( ! is_string( $body ) || '' === $body || strlen( $body ) > $max_bytes ) {
 			return array();
 		}
@@ -282,7 +282,7 @@ abstract class Integration {
 			return array();
 		}
 
-		$limit = max( 1, (int) apply_filters( 'ss_integration_sitemap_max_urls', 1000 ) );
+		$limit = max( 1, (int) apply_filters( 'wpse_integration_sitemap_max_urls', 1000 ) );
 		$urls  = array();
 		foreach ( $nodes as $node ) {
 			$url = trim( (string) $node );
@@ -306,7 +306,7 @@ abstract class Integration {
 	 * @return void
 	 */
 	public function include_file( $path ) {
-		require_once trailingslashit( SIMPLY_STATIC_PATH ) . 'src/' . $path;
+		require_once trailingslashit( WPSE_PATH ) . 'src/' . $path;
 	}
 
 	/**

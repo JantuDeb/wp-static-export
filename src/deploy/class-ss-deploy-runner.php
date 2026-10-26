@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -17,7 +17,7 @@ class Deploy_Runner {
 	const MIN_NODE_MAJOR = 18;
 
 	/** Directory (relative to uploads) holding incremental deploy state. */
-	const STATE_DIR = 'simply-static/deploy-state';
+	const STATE_DIR = 'wp-static-export/deploy-state';
 
 	/**
 	 * Keep the state directory out of exports: it lives in uploads, which the crawler scans, and the
@@ -29,11 +29,11 @@ class Deploy_Runner {
 	public static function init() {
 		// A hard-killed export (PHP crash, worker restart) leaves its run descriptor behind, and the next
 		// export would mistake it for its own job. Start every export, and end every export, clean.
-		add_action( 'ss_after_setup_task', array( __CLASS__, 'reset_runs' ) );
-		add_action( 'ss_completed', array( __CLASS__, 'reset_runs' ), 6 );
+		add_action( 'wpse_after_setup_task', array( __CLASS__, 'reset_runs' ) );
+		add_action( 'wpse_completed', array( __CLASS__, 'reset_runs' ), 6 );
 
 		add_filter(
-			'ss_skip_crawl_uploads_directories',
+			'wpse_skip_crawl_uploads_directories',
 			static function ( $dirs ) {
 				return array_merge( (array) $dirs, array( self::STATE_DIR ) );
 			}
@@ -70,10 +70,10 @@ class Deploy_Runner {
 	 */
 	public static function ignore_patterns() {
 		return apply_filters(
-			'ss_deploy_ignore',
+			'wpse_deploy_ignore',
 			array(
 				'*/' . self::STATE_DIR . '/*',
-				'*/simply-static/temp-files/*',
+				'*/wp-static-export/temp-files/*',
 				'*/ss-deploy-state/*',
 			)
 		);
@@ -85,7 +85,7 @@ class Deploy_Runner {
 	 * @return string
 	 */
 	public static function cli_path() {
-		return apply_filters( 'ss_deploy_cli_path', SIMPLY_STATIC_PATH . 'deployer/dist/cli.cjs' );
+		return apply_filters( 'wpse_deploy_cli_path', WPSE_PATH . 'deployer/dist/cli.cjs' );
 	}
 
 	/**
@@ -109,10 +109,10 @@ class Deploy_Runner {
 	 */
 	public static function find_node() {
 		if ( ! self::can_exec() ) {
-			return new \WP_Error( 'ss_deploy_no_exec', __( 'PHP exec() is disabled, so the deployer cannot be started.', 'simply-static' ) );
+			return new \WP_Error( 'ss_deploy_no_exec', __( 'PHP exec() is disabled, so the deployer cannot be started.', 'wp-static-export' ) );
 		}
 		if ( 0 === stripos( PHP_OS, 'WIN' ) ) {
-			return new \WP_Error( 'ss_deploy_windows', __( 'Deploying from a Windows server is not supported yet.', 'simply-static' ) );
+			return new \WP_Error( 'ss_deploy_windows', __( 'Deploying from a Windows server is not supported yet.', 'wp-static-export' ) );
 		}
 
 		$candidates = array_filter(
@@ -138,7 +138,7 @@ class Deploy_Runner {
 			'ss_deploy_no_node',
 			sprintf(
 				/* translators: %d: minimum Node.js major version. */
-				__( 'Node.js %d or newer was not found. Install it or set the "node_path" option.', 'simply-static' ),
+				__( 'Node.js %d or newer was not found. Install it or set the "node_path" option.', 'wp-static-export' ),
 				self::MIN_NODE_MAJOR
 			)
 		);
@@ -175,7 +175,7 @@ class Deploy_Runner {
 		}
 		$cli = self::cli_path();
 		if ( ! is_readable( $cli ) ) {
-			return new \WP_Error( 'ss_deploy_no_cli', __( 'The deployer bundle is missing. Run "npm run build" in the deployer folder.', 'simply-static' ) );
+			return new \WP_Error( 'ss_deploy_no_cli', __( 'The deployer bundle is missing. Run "npm run build" in the deployer folder.', 'wp-static-export' ) );
 		}
 
 		$dir = Util::get_temp_dir();
@@ -187,7 +187,7 @@ class Deploy_Runner {
 		// The job file holds credentials: create it private, and the CLI deletes it after reading.
 		$written = file_put_contents( $job_file, wp_json_encode( $job ) );
 		if ( false === $written ) {
-			return new \WP_Error( 'ss_deploy_job_file', __( 'Could not write the deploy job file.', 'simply-static' ) );
+			return new \WP_Error( 'ss_deploy_job_file', __( 'Could not write the deploy job file.', 'wp-static-export' ) );
 		}
 		chmod( $job_file, 0600 );
 		touch( $log_file );
@@ -197,12 +197,13 @@ class Deploy_Runner {
 			. '; echo "{\"type\":\"exit\",\"code\":$?}"';
 		$cmd   = 'nohup sh -c ' . escapeshellarg( $inner ) . ' >> ' . escapeshellarg( $log_file ) . ' 2>&1 < /dev/null & echo $!';
 
+		Util::debug_log( '[node] starting ' . basename( $cli ) . ' for job ' . ( $job['action'] ?? 'deploy' ) );
 		$out = array();
 		exec( $cmd, $out );
 		$pid = isset( $out[0] ) ? (int) $out[0] : 0;
 		if ( $pid <= 0 ) {
 			@unlink( $job_file ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
-			return new \WP_Error( 'ss_deploy_spawn', __( 'Could not start the deployer process.', 'simply-static' ) );
+			return new \WP_Error( 'ss_deploy_spawn', __( 'Could not start the deployer process.', 'wp-static-export' ) );
 		}
 
 		return array(
@@ -251,7 +252,7 @@ class Deploy_Runner {
 		if ( null === $exit_code && ! self::is_alive( (int) $run['pid'] ) ) {
 			clearstatcache();
 			$exit_code = -1;
-			$events[]  = array( 'type' => 'error', 'message' => __( 'The deployer process stopped unexpectedly.', 'simply-static' ) );
+			$events[]  = array( 'type' => 'error', 'message' => __( 'The deployer process stopped unexpectedly.', 'wp-static-export' ) );
 		}
 
 		return array(
@@ -277,7 +278,7 @@ class Deploy_Runner {
 		}
 		$cli = self::cli_path();
 		if ( ! is_readable( $cli ) ) {
-			return new \WP_Error( 'ss_deploy_no_cli', __( 'The deployer bundle is missing. Run "npm run build" in the deployer folder.', 'simply-static' ) );
+			return new \WP_Error( 'ss_deploy_no_cli', __( 'The deployer bundle is missing. Run "npm run build" in the deployer folder.', 'wp-static-export' ) );
 		}
 
 		$dir = Util::get_temp_dir();
@@ -293,7 +294,7 @@ class Deploy_Runner {
 		);
 		if ( ! is_resource( $proc ) ) {
 			@unlink( $job_file ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
-			return new \WP_Error( 'ss_deploy_spawn', __( 'Could not start the deployer process.', 'simply-static' ) );
+			return new \WP_Error( 'ss_deploy_spawn', __( 'Could not start the deployer process.', 'wp-static-export' ) );
 		}
 		stream_set_blocking( $pipes[1], false );
 
@@ -332,10 +333,10 @@ class Deploy_Runner {
 		}
 
 		if ( $timed_out && ! $result ) {
-			return new \WP_Error( 'ss_deploy_timeout', __( 'The check timed out.', 'simply-static' ) );
+			return new \WP_Error( 'ss_deploy_timeout', __( 'The check timed out.', 'wp-static-export' ) );
 		}
 		if ( $error || ! $result ) {
-			return new \WP_Error( 'ss_deploy_failed', $error ?: __( 'The deployer returned no result.', 'simply-static' ) );
+			return new \WP_Error( 'ss_deploy_failed', $error ?: __( 'The deployer returned no result.', 'wp-static-export' ) );
 		}
 
 		return $result;

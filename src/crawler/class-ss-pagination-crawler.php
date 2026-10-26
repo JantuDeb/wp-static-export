@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static\Crawler;
+namespace WP_Static_Export\Crawler;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,8 +24,8 @@ class Pagination_Crawler extends Crawler {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->name = __( 'Pagination URLs', 'simply-static' );
-		$this->description = __( 'Detects pagination URLs for archives, posts, and other paginated content.', 'simply-static' );
+		$this->name = __( 'Pagination URLs', 'wp-static-export' );
+		$this->description = __( 'Detects pagination URLs for archives, posts, and other paginated content.', 'wp-static-export' );
 	}
 
 	/**
@@ -45,7 +45,7 @@ class Pagination_Crawler extends Crawler {
 		// Get pagination for custom page templates (pages with custom WP_Query pagination)
 		$pagination_urls = array_merge( $pagination_urls, $this->get_page_template_pagination() );
 
-		$pagination_urls = apply_filters( 'simply_static_pagination_urls', $pagination_urls );
+		$pagination_urls = apply_filters( 'wpse_pagination_urls', $pagination_urls );
 		$pagination_urls = is_array( $pagination_urls ) ? array_values( array_unique( $pagination_urls ) ) : [];
 		$max_urls        = $this->get_max_generated_urls();
 		if ( count( $pagination_urls ) > $max_urls ) {
@@ -64,10 +64,10 @@ class Pagination_Crawler extends Crawler {
 	private function get_archive_pagination() : array {
 		$urls                = [];
 		$max_generated_urls  = $this->get_max_generated_urls();
-		$max_archive_objects = max( 1, min( 100000, (int) apply_filters( 'simply_static_pagination_max_archive_objects', 5000 ) ) );
+		$max_archive_objects = max( 1, min( 100000, (int) apply_filters( 'wpse_pagination_max_archive_objects', 5000 ) ) );
 
 		// Get selected post types from settings
-		$options             = get_option( 'simply-static' );
+		$options             = get_option( 'wp-static-export' );
 		$has_post_type_selection = isset( $options['post_types'] ) && is_array( $options['post_types'] ) && ( ! empty( $options['post_types_configured'] ) || ! empty( $options['post_types'] ) );
 		$selected_post_types = $has_post_type_selection
 			? $options['post_types']
@@ -77,7 +77,7 @@ class Pagination_Crawler extends Crawler {
 		// linked HTML pages, so limiting this list to regular posts leaves CPT
 		// archive pagination out of the export even when its entries are queued.
 		$public_post_types = get_post_types( array( 'public' => true ), 'names' );
-		$public_post_types = apply_filters( 'simply_static_post_types_to_crawl', $public_post_types );
+		$public_post_types = apply_filters( 'wpse_post_types_to_crawl', $public_post_types );
 		$post_types        = array( 'post' );
 
 		foreach ( (array) $public_post_types as $post_type ) {
@@ -92,7 +92,7 @@ class Pagination_Crawler extends Crawler {
 		}
 
 		// Allow integrations to add or remove archive pagination post types.
-		$post_types = apply_filters( 'simply_static_archive_pagination_post_types', array_values( array_unique( $post_types ) ) );
+		$post_types = apply_filters( 'wpse_archive_pagination_post_types', array_values( array_unique( $post_types ) ) );
 		$post_types = array_values( array_unique( array_filter( (array) $post_types, 'is_string' ) ) );
 
 		foreach ( $post_types as $post_type ) {
@@ -330,13 +330,13 @@ class Pagination_Crawler extends Crawler {
 	 */
 	private function get_post_pagination() : array {
 		$urls               = [];
-		$batch_size         = max( 10, min( 1000, (int) apply_filters( 'simply_static_pagination_post_query_batch_size', 250 ) ) );
-		$max_posts_to_scan  = max( 1, min( 1000000, (int) apply_filters( 'simply_static_pagination_max_posts_to_scan', 10000 ) ) );
+		$batch_size         = max( 10, min( 1000, (int) apply_filters( 'wpse_pagination_post_query_batch_size', 250 ) ) );
+		$max_posts_to_scan  = max( 1, min( 1000000, (int) apply_filters( 'wpse_pagination_max_posts_to_scan', 10000 ) ) );
 		$max_generated_urls = $this->get_max_generated_urls();
-		$public_statuses    = \Simply_Static\Util::get_public_post_statuses();
+		$public_statuses    = \WP_Static_Export\Util::get_public_post_statuses();
 
 		// Get selected post types from settings
-		$options = get_option( 'simply-static' );
+		$options = get_option( 'wp-static-export' );
 		$has_post_type_selection = isset( $options['post_types'] ) && is_array( $options['post_types'] ) && ( ! empty( $options['post_types_configured'] ) || ! empty( $options['post_types'] ) );
 		$selected_post_types = $has_post_type_selection
 			? $options['post_types'] 
@@ -402,10 +402,10 @@ class Pagination_Crawler extends Crawler {
 	private function get_page_template_pagination() : array {
 		$urls               = [];
 		$max_generated_urls = $this->get_max_generated_urls();
-		$public_statuses    = \Simply_Static\Util::get_public_post_statuses();
+		$public_statuses    = \WP_Static_Export\Util::get_public_post_statuses();
 
 		// Get selected post types from settings
-		$options             = get_option( 'simply-static' );
+		$options             = get_option( 'wp-static-export' );
 		$has_post_type_selection = isset( $options['post_types'] ) && is_array( $options['post_types'] ) && ( ! empty( $options['post_types_configured'] ) || ! empty( $options['post_types'] ) );
 		$selected_post_types = $has_post_type_selection
 			? $options['post_types']
@@ -416,8 +416,8 @@ class Pagination_Crawler extends Crawler {
 			return $urls;
 		}
 
-		$batch_size        = max( 10, min( 1000, (int) apply_filters( 'simply_static_pagination_page_query_batch_size', 100 ) ) );
-		$max_pages_to_scan = max( 1, min( 10000, (int) apply_filters( 'simply_static_pagination_max_page_templates_to_scan', 100 ) ) );
+		$batch_size        = max( 10, min( 1000, (int) apply_filters( 'wpse_pagination_page_query_batch_size', 100 ) ) );
+		$max_pages_to_scan = max( 1, min( 10000, (int) apply_filters( 'wpse_pagination_max_page_templates_to_scan', 100 ) ) );
 		$pages             = [];
 		$batch             = [];
 		$query_size        = 0;
@@ -451,15 +451,15 @@ class Pagination_Crawler extends Crawler {
 		 *
 		 * @param array $pages Array of WP_Post objects to scan for pagination.
 		 */
-		$pages = apply_filters( 'simply_static_pages_to_scan_for_pagination', $pages );
+		$pages = apply_filters( 'wpse_pages_to_scan_for_pagination', $pages );
 		$pages = is_array( $pages ) ? array_slice( $pages, 0, $max_pages_to_scan ) : [];
 
 		// Get the site URL for comparison
 		$site_url = trailingslashit( home_url() );
 
-		\Simply_Static\Util::debug_log( sprintf( 'Pagination Crawler: Scanning %d pages for custom pagination links', count( $pages ) ) );
+		\WP_Static_Export\Util::debug_log( sprintf( 'Pagination Crawler: Scanning %d pages for custom pagination links', count( $pages ) ) );
 
-		$global_scan_seconds = max( 1, min( 300, (int) apply_filters( 'simply_static_pagination_total_scan_seconds', 30 ) ) );
+		$global_scan_seconds = max( 1, min( 300, (int) apply_filters( 'wpse_pagination_total_scan_seconds', 30 ) ) );
 		$scan_deadline       = microtime( true ) + $global_scan_seconds;
 		foreach ( $pages as $page ) {
 			if ( microtime( true ) >= $scan_deadline ) {
@@ -476,7 +476,7 @@ class Pagination_Crawler extends Crawler {
 			$page_pagination_urls = $this->extract_pagination_urls_from_page( $page_url, $site_url, $scan_deadline );
 
 			if ( ! empty( $page_pagination_urls ) ) {
-				\Simply_Static\Util::debug_log( sprintf( 'Pagination Crawler: Found %d pagination URLs for page %s', count( $page_pagination_urls ), $page_url ) );
+				\WP_Static_Export\Util::debug_log( sprintf( 'Pagination Crawler: Found %d pagination URLs for page %s', count( $page_pagination_urls ), $page_url ) );
 				$remaining = $max_generated_urls - count( $urls );
 				if ( $remaining < count( $page_pagination_urls ) ) {
 					$this->report_truncation( 'page_template_urls', $max_generated_urls, count( $urls ) + count( $page_pagination_urls ) );
@@ -491,7 +491,7 @@ class Pagination_Crawler extends Crawler {
 		// Remove duplicates and return
 		$urls = array_values( array_unique( $urls ) );
 
-		\Simply_Static\Util::debug_log( sprintf( 'Pagination Crawler: Total custom page template pagination URLs found: %d', count( $urls ) ) );
+		\WP_Static_Export\Util::debug_log( sprintf( 'Pagination Crawler: Total custom page template pagination URLs found: %d', count( $urls ) ) );
 
 		return $urls;
 	}
@@ -511,7 +511,7 @@ class Pagination_Crawler extends Crawler {
 		$queued_urls         = [ $base_page_url => true ];
 		$urls_to_scan        = [ $base_page_url ];
 
-		if ( ! \Simply_Static\Util::is_local_origin_url( $base_page_url ) || ! \Simply_Static\Util::is_local_origin_url( $site_url ) ) {
+		if ( ! \WP_Static_Export\Util::is_local_origin_url( $base_page_url ) || ! \WP_Static_Export\Util::is_local_origin_url( $site_url ) ) {
 			return $all_pagination_urls;
 		}
 
@@ -530,10 +530,10 @@ class Pagination_Crawler extends Crawler {
 		];
 
 		// Limit the number of pages to scan to prevent infinite loops
-		$max_pages_to_scan = max( 1, min( 1000, (int) apply_filters( 'simply_static_max_pagination_pages_to_scan', 100 ) ) );
-		$max_body_bytes    = max( 1024, min( 10 * 1024 * 1024, (int) apply_filters( 'simply_static_pagination_max_response_bytes', 2 * 1024 * 1024 ) ) );
-		$max_run_seconds   = max( 1, min( 300, (int) apply_filters( 'simply_static_pagination_max_scan_seconds', 30 ) ) );
-		$request_timeout   = max( 1, min( 30, (int) apply_filters( 'simply_static_pagination_request_timeout', 10 ) ) );
+		$max_pages_to_scan = max( 1, min( 1000, (int) apply_filters( 'wpse_max_pagination_pages_to_scan', 100 ) ) );
+		$max_body_bytes    = max( 1024, min( 10 * 1024 * 1024, (int) apply_filters( 'wpse_pagination_max_response_bytes', 2 * 1024 * 1024 ) ) );
+		$max_run_seconds   = max( 1, min( 300, (int) apply_filters( 'wpse_pagination_max_scan_seconds', 30 ) ) );
+		$request_timeout   = max( 1, min( 30, (int) apply_filters( 'wpse_pagination_request_timeout', 10 ) ) );
 		$max_generated_urls = $this->get_max_generated_urls();
 		$started_at        = microtime( true );
 		$deadline          = is_numeric( $scan_deadline )
@@ -551,7 +551,7 @@ class Pagination_Crawler extends Crawler {
 			unset( $queued_urls[ $current_url ] );
 
 			// Skip if already scanned
-			if ( isset( $scanned_urls[ $current_url ] ) || ! \Simply_Static\Util::is_local_origin_url( $current_url ) ) {
+			if ( isset( $scanned_urls[ $current_url ] ) || ! \WP_Static_Export\Util::is_local_origin_url( $current_url ) ) {
 				continue;
 			}
 
@@ -562,21 +562,21 @@ class Pagination_Crawler extends Crawler {
 			$args = [
 				'timeout'             => min( $request_timeout, max( 1, $deadline - microtime( true ) ) ),
 				'redirection'         => 0,
-				'sslverify'           => (bool) apply_filters( 'ss_remote_get_sslverify', \Simply_Static\Util::should_verify_ssl( $current_url ), $current_url ),
+				'sslverify'           => (bool) apply_filters( 'wpse_remote_get_sslverify', \WP_Static_Export\Util::should_verify_ssl( $current_url ), $current_url ),
 				'limit_response_size' => $max_body_bytes + 1,
 			];
-			$authorization = \Simply_Static\Util::get_basic_auth_header_for_url( $current_url );
+			$authorization = \WP_Static_Export\Util::get_basic_auth_header_for_url( $current_url );
 			if ( null !== $authorization ) {
 				$args['headers'] = [ 'Authorization' => $authorization ];
 			}
 
-			$response = wp_remote_get( $current_url, apply_filters( 'ss_remote_get_args', $args ) );
+			$response = wp_remote_get( $current_url, apply_filters( 'wpse_remote_get_args', $args ) );
 
 			if ( is_wp_error( $response ) || 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
 				$error_message = is_wp_error( $response )
 					? $response->get_error_message()
 					: sprintf( 'HTTP %d', (int) wp_remote_retrieve_response_code( $response ) );
-				\Simply_Static\Util::debug_log( sprintf( 'Pagination Crawler: Failed to fetch page %s: %s', $current_url, $error_message ) );
+				\WP_Static_Export\Util::debug_log( sprintf( 'Pagination Crawler: Failed to fetch page %s: %s', $current_url, $error_message ) );
 				continue;
 			}
 
@@ -600,7 +600,7 @@ class Pagination_Crawler extends Crawler {
 						}
 						// Ensure trailing slash for consistency
 						$pagination_url = trailingslashit( rtrim( $match, '/' ) );
-						if ( ! \Simply_Static\Util::is_local_origin_url( $pagination_url ) ) {
+						if ( ! \WP_Static_Export\Util::is_local_origin_url( $pagination_url ) ) {
 							continue;
 						}
 
@@ -625,7 +625,7 @@ class Pagination_Crawler extends Crawler {
 
 	/** @return int Maximum pagination URLs contributed by this crawler. */
 	private function get_max_generated_urls() : int {
-		return max( 100, min( 1000000, (int) apply_filters( 'simply_static_pagination_max_generated_urls', 50000 ) ) );
+		return max( 100, min( 1000000, (int) apply_filters( 'wpse_pagination_max_generated_urls', 50000 ) ) );
 	}
 
 	/**
@@ -642,12 +642,12 @@ class Pagination_Crawler extends Crawler {
 			(int) $limit,
 			(int) $seen
 		);
-		\Simply_Static\Util::debug_log( $message );
-		if ( class_exists( '\\Simply_Static\\Options' ) ) {
-			\Simply_Static\Options::instance()
+		\WP_Static_Export\Util::debug_log( $message );
+		if ( class_exists( '\\WP_Static_Export\\Options' ) ) {
+			\WP_Static_Export\Options::instance()
 				->add_status_message( $message, 'pagination_warning' )
 				->save();
 		}
-		do_action( 'simply_static_pagination_truncated', $context, (int) $limit, (int) $seen, $message );
+		do_action( 'wpse_pagination_truncated', $context, (int) $limit, (int) $seen, $message );
 	}
 }

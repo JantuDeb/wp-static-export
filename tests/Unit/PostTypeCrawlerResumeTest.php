@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Crawler\Post_Type_Crawler;
-use Simply_Static\Options;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Crawler\Post_Type_Crawler;
+use WP_Static_Export\Options;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 final class PostTypeCrawlerResumeWpdb {
 
@@ -100,7 +100,7 @@ final class PostTypeCrawlerResumeTest extends UnitTestCase {
 		$this->requireSource( 'src/crawler/class-ss-post-type-crawler.php' );
 
 		WpEnv::$post_types = array( 'post' => 'post', 'page' => 'page', 'attachment' => 'attachment' );
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'post_types'            => array( 'post', 'page' ),
 			'post_types_configured' => true,
 		);
@@ -119,10 +119,10 @@ final class PostTypeCrawlerResumeTest extends UnitTestCase {
 			'page' => array( 3, 9 ),
 		) );
 		$GLOBALS['wpdb'] = $database;
-		add_filter( 'simply_static_post_type_crawler_batch_size', static function (): int {
+		add_filter( 'wpse_post_type_crawler_batch_size', static function (): int {
 			return 2;
 		} );
-		add_filter( 'simply_static_post_type_crawler_max_entries_per_batch', static function (): int {
+		add_filter( 'wpse_post_type_crawler_max_entries_per_batch', static function (): int {
 			return 2;
 		} );
 
@@ -170,7 +170,7 @@ final class PostTypeCrawlerResumeTest extends UnitTestCase {
 		WpEnv::$post_type_archives = array(
 			'knowledge_articles' => 'https://example.test/knowledge-articles/',
 		);
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'post_types'            => array( 'post', 'knowledge_articles' ),
 			'post_types_configured' => true,
 		);

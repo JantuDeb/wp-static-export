@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static\Crawler;
+namespace WP_Static_Export\Crawler;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,8 +24,8 @@ class Vendor_Files_Crawler extends Crawler {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->name = __( 'Vendor Files', 'simply-static' );
-		$this->description = __( 'Detects URLs for vendor files (third-party libraries, frameworks, etc.).', 'simply-static' );
+		$this->name = __( 'Vendor Files', 'wp-static-export' );
+		$this->description = __( 'Detects URLs for vendor files (third-party libraries, frameworks, etc.).', 'wp-static-export' );
 	}
 
 	/**
@@ -67,9 +67,9 @@ class Vendor_Files_Crawler extends Crawler {
 			'vendor_files_crawler_state',
 			$this->get_vendor_scan_directories(),
 			array( 'js', 'css', 'woff', 'woff2', 'ttf', 'eot', 'otf', 'svg', 'json' ),
-			(array) apply_filters( 'ss_skip_crawl_vendor_directories', array( '.git', 'node_modules', 'tests', 'docs', 'examples' ) ),
-			'simply_static_vendor_files_crawler_max_entries_per_batch',
-			'simply_static_vendor_files_crawler_max_batch_seconds'
+			(array) apply_filters( 'wpse_skip_crawl_vendor_directories', array( '.git', 'node_modules', 'tests', 'docs', 'examples' ) ),
+			'wpse_vendor_files_crawler_max_entries_per_batch',
+			'wpse_vendor_files_crawler_max_batch_seconds'
 		);
 	}
 
@@ -78,7 +78,7 @@ class Vendor_Files_Crawler extends Crawler {
 		$directories = array();
 		$vendor_dirs = array( 'vendor', 'vendors', 'lib', 'libs', 'library', 'libraries', 'assets/vendor', 'assets/vendors', 'assets/lib', 'assets/libs', 'includes/vendor', 'includes/vendors', 'includes/lib', 'includes/libs' );
 
-		foreach ( \Simply_Static\Util::get_all_active_plugins() as $plugin ) {
+		foreach ( \WP_Static_Export\Util::get_all_active_plugins() as $plugin ) {
 			$plugin_dir = dirname( $plugin );
 			if ( '.' === $plugin_dir ) {
 				continue;
@@ -270,8 +270,8 @@ class Vendor_Files_Crawler extends Crawler {
 	 */
 	private function scan_directory_for_vendor_files($dir, $url_base, $extensions) : array {
 		$urls            = [];
-		$max_entries     = max( 1, min( 100000, (int) apply_filters( 'simply_static_vendor_detection_max_entries', 5000 ) ) );
-		$deadline        = microtime( true ) + max( 0.5, min( 15, (float) apply_filters( 'simply_static_vendor_detection_max_seconds', 5 ) ) );
+		$max_entries     = max( 1, min( 100000, (int) apply_filters( 'wpse_vendor_detection_max_entries', 5000 ) ) );
+		$deadline        = microtime( true ) + max( 0.5, min( 15, (float) apply_filters( 'wpse_vendor_detection_max_seconds', 5 ) ) );
 		$entries_scanned = 0;
 
 		// Skip these directories
@@ -279,7 +279,7 @@ class Vendor_Files_Crawler extends Crawler {
 
 		// Check if directory exists
 		if ( ! is_dir( $dir ) ) {
-			\Simply_Static\Util::debug_log( "Directory does not exist: $dir" );
+			\WP_Static_Export\Util::debug_log( "Directory does not exist: $dir" );
 			return $urls;
 		}
 
@@ -291,7 +291,7 @@ class Vendor_Files_Crawler extends Crawler {
 			);
 
 			// Process files in batches to prevent memory issues
-			$batch_size = apply_filters( 'simply_static_vendor_files_batch_size', 500 );
+			$batch_size = apply_filters( 'wpse_vendor_files_batch_size', 500 );
 			$file_count = 0;
 			$batch_count = 0;
 			$file_batch = [];
@@ -312,7 +312,7 @@ class Vendor_Files_Crawler extends Crawler {
 				// Process batch when it reaches the batch size
 				if ( $file_count % $batch_size === 0 ) {
 					$batch_count++;
-					\Simply_Static\Util::debug_log( "Processing vendor files batch $batch_count with $batch_size files" );
+					\WP_Static_Export\Util::debug_log( "Processing vendor files batch $batch_count with $batch_size files" );
 					$urls = array_merge( $urls, $this->process_vendor_file_batch( $file_batch, $dir, $url_base, $skip_dirs, $extensions ) );
 					$file_batch = []; // Reset batch
 				}
@@ -321,13 +321,13 @@ class Vendor_Files_Crawler extends Crawler {
 			// Process any remaining files
 			if ( ! empty( $file_batch ) ) {
 				$batch_count++;
-				\Simply_Static\Util::debug_log( "Processing final vendor files batch $batch_count with " . count( $file_batch ) . " files" );
+				\WP_Static_Export\Util::debug_log( "Processing final vendor files batch $batch_count with " . count( $file_batch ) . " files" );
 				$urls = array_merge( $urls, $this->process_vendor_file_batch( $file_batch, $dir, $url_base, $skip_dirs, $extensions ) );
 			}
 
-			\Simply_Static\Util::debug_log( "Found " . count( $urls ) . " vendor file URLs in $dir" );
+			\WP_Static_Export\Util::debug_log( "Found " . count( $urls ) . " vendor file URLs in $dir" );
 		} catch ( \Exception $e ) {
-			\Simply_Static\Util::debug_log( "Error scanning directory $dir: " . $e->getMessage() );
+			\WP_Static_Export\Util::debug_log( "Error scanning directory $dir: " . $e->getMessage() );
 		}
 
 		return $urls;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 class AIO_SEO_Sitemap_Handler extends Page_Handler {
 
@@ -140,19 +140,19 @@ XSL;
 		return strtr(
 			$stylesheet,
 			array(
-				'{{xml-sitemap}}'         => esc_html__( 'XML Sitemap', 'simply-static' ),
+				'{{xml-sitemap}}'         => esc_html__( 'XML Sitemap', 'wp-static-export' ),
 				'{{sitemap-index-count}}' => sprintf(
 					/* translators: %s: number of sitemaps in the sitemap index. */
-					esc_html__( 'This sitemap index contains %s sitemaps.', 'simply-static' ),
+					esc_html__( 'This sitemap index contains %s sitemaps.', 'wp-static-export' ),
 					'<xsl:value-of select="count(sitemap:sitemapindex/sitemap:sitemap)"/>'
 				),
 				'{{sitemap-count}}'       => sprintf(
 					/* translators: %s: number of URLs in the sitemap. */
-					esc_html__( 'This sitemap contains %s URLs.', 'simply-static' ),
+					esc_html__( 'This sitemap contains %s URLs.', 'wp-static-export' ),
 					'<xsl:value-of select="count(sitemap:urlset/sitemap:url)"/>'
 				),
-				'{{images}}'              => esc_html__( 'Images', 'simply-static' ),
-				'{{last-modified}}'       => esc_html__( 'Last modified', 'simply-static' ),
+				'{{images}}'              => esc_html__( 'Images', 'wp-static-export' ),
+				'{{last-modified}}'       => esc_html__( 'Last modified', 'wp-static-export' ),
 			)
 		);
 	}

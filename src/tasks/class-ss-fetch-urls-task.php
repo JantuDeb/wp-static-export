@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 /**
  * Class which handles fetch url task.
@@ -47,7 +47,7 @@ class Fetch_Urls_Task extends Task {
 	protected function process_page( $static_page ) {
 		Util::debug_log( "URL: " . $static_page->url );
 
-		$excludable = apply_filters( 'ss_find_excludable', $this->find_excludable( $static_page ), $static_page );
+		$excludable = apply_filters( 'wpse_find_excludable', $this->find_excludable( $static_page ), $static_page );
 		if ( $excludable !== false ) {
 			$save_file   = false;
 			$follow_urls = false;
@@ -69,7 +69,7 @@ class Fetch_Urls_Task extends Task {
 				$static_page->file_path = null;
 			}
 			$static_page->last_checked_at = Util::formatted_datetime();
-			$static_page->set_status_message( __( "Do not save or follow", 'simply-static' ) );
+			$static_page->set_status_message( __( "Do not save or follow", 'wp-static-export' ) );
 			$static_page->save();
 			return;
 		} else {
@@ -107,7 +107,7 @@ class Fetch_Urls_Task extends Task {
 		$this->handle_200_response( $static_page, $save_file, $follow_urls );
 
 		do_action(
-			'ss_after_setup_static_page',
+			'wpse_after_setup_static_page',
 			$static_page,
 			$this
 		);
@@ -135,7 +135,7 @@ class Fetch_Urls_Task extends Task {
 		 * @param null|array{url:string,status_code?:int} $redirect Redirect data or null.
 		 * @param Page                                  $static_page Static page being processed.
 		 */
-		$redirect = apply_filters( 'simply_static_registered_redirect', null, $static_page );
+		$redirect = apply_filters( 'wpse_registered_redirect', null, $static_page );
 
 		if ( ! is_array( $redirect ) || empty( $redirect['url'] ) || ! is_string( $redirect['url'] ) ) {
 			return false;
@@ -188,7 +188,7 @@ class Fetch_Urls_Task extends Task {
 
 		// If we've processed all pages for this export, signal completion of this task.
 		if ( $done ) {
-			do_action( 'ss_finished_fetching_pages' );
+			do_action( 'wpse_finished_fetching_pages' );
 		}
 
 		return $done;
@@ -202,10 +202,10 @@ class Fetch_Urls_Task extends Task {
 	 * @throws Pause_Exception
 	 */
 	public function old_perform() {
-		$batch_size = apply_filters( 'simply_static_fetch_urls_batch_size', 50 );
+		$batch_size = apply_filters( 'wpse_fetch_urls_batch_size', 50 );
 
 		$static_pages = apply_filters(
-			'ss_static_pages',
+			'wpse_static_pages',
 			Page::query()
 			    ->where( 'last_checked_at < ? OR last_checked_at IS NULL', $this->archive_start_time )
 				->limit( $batch_size )
@@ -215,14 +215,14 @@ class Fetch_Urls_Task extends Task {
 
 		// Compute remaining and total using the dedicated filters so Single/Build exports report correctly
 		$pages_remaining = (int) apply_filters(
-			'ss_remaining_pages',
+			'wpse_remaining_pages',
 			Page::query()
 			    ->where( 'last_checked_at < ? OR last_checked_at IS NULL', $this->archive_start_time )
 			    ->count(),
 			$this->archive_start_time
 		);
 
-		$total_pages = (int) apply_filters( 'ss_total_pages', Page::query()->count() );
+		$total_pages = (int) apply_filters( 'wpse_total_pages', Page::query()->count() );
 
 		// Note: We will recalculate these values again after processing this batch so the
 		// status message always reflects the latest progress.
@@ -239,7 +239,7 @@ class Fetch_Urls_Task extends Task {
 			// Decrement after scheduling processing of this page.
 			$remaining_counter = max( 0, $remaining_counter - 1 );
 
-			$excludable = apply_filters( 'ss_find_excludable', $this->find_excludable( $static_page ), $static_page );
+			$excludable = apply_filters( 'wpse_find_excludable', $this->find_excludable( $static_page ), $static_page );
 			if ( $excludable !== false ) {
 				$save_file   = false;
 				$follow_urls = false;
@@ -255,7 +255,7 @@ class Fetch_Urls_Task extends Task {
 			if ( $save_file === false && $follow_urls === false ) {
 				Util::debug_log( "Skipping URL because it is no-save and no-follow" );
 				$static_page->last_checked_at = Util::formatted_datetime();
-				$static_page->set_status_message( __( "Do not save or follow", 'simply-static' ) );
+				$static_page->set_status_message( __( "Do not save or follow", 'wp-static-export' ) );
 				$static_page->save();
 				continue;
 			} else {
@@ -288,24 +288,24 @@ class Fetch_Urls_Task extends Task {
 
 			$this->handle_200_response( $static_page, $save_file, $follow_urls );
 
-			do_action( 'ss_after_setup_static_page', $static_page, $pages_remaining );
+			do_action( 'wpse_after_setup_static_page', $static_page, $pages_remaining );
 
 		}
 
 		// Recalculate progress after processing this batch to avoid stale counters.
 		$pages_remaining = (int) apply_filters(
-			'ss_remaining_pages',
+			'wpse_remaining_pages',
 			Page::query()
 		        ->where( 'last_checked_at < ? OR last_checked_at IS NULL', $this->archive_start_time )
 		        ->count(),
 			$this->archive_start_time
 		);
-		$total_pages = (int) apply_filters( 'ss_total_pages', Page::query()->count() );
+		$total_pages = (int) apply_filters( 'wpse_total_pages', Page::query()->count() );
 		$pages_processed = $total_pages - $pages_remaining;
 
 		$message = sprintf(
 			/* translators: 1: number of pages/files fetched, 2: total number of pages/files. */
-			__( 'Fetched %1$d of %2$d pages/files', 'simply-static' ),
+			__( 'Fetched %1$d of %2$d pages/files', 'wp-static-export' ),
 			$pages_processed,
 			$total_pages
 		);
@@ -313,7 +313,7 @@ class Fetch_Urls_Task extends Task {
 
 		// If we've processed all pages for this export, signal completion of this task.
 		if ( $pages_remaining == 0 ) {
-			do_action( 'ss_finished_fetching_pages' );
+			do_action( 'wpse_finished_fetching_pages' );
 		}
 
 		return $pages_remaining == 0;
@@ -323,7 +323,7 @@ class Fetch_Urls_Task extends Task {
 	/**
 	 * Process the response for a 200 response (success)
 	 *
-	 * @param \Simply_Static\Page $static_page Record to update.
+	 * @param \WP_Static_Export\Page $static_page Record to update.
 	 * @param boolean $save_file Save a static copy of the page.
 	 * @param boolean $follow_urls Save found URLs to database.
 	 *
@@ -355,7 +355,7 @@ class Fetch_Urls_Task extends Task {
 			}
 		} else {
 			Util::debug_log( "Not following URLs from this page" );
-			$static_page->set_status_message( __( "Do not follow", 'simply-static' ) );
+			$static_page->set_status_message( __( "Do not follow", 'wp-static-export' ) );
 		}
 
 		$file = $this->archive_dir . $static_page->file_path;
@@ -381,7 +381,7 @@ class Fetch_Urls_Task extends Task {
 			Util::debug_log( "Not saving this URL; deleting the static file" );
 			unlink( $file ); // delete saved file
 			$static_page->file_path = null;
-			$static_page->set_status_message( __( "Do not save", 'simply-static' ) );
+			$static_page->set_status_message( __( "Do not save", 'wp-static-export' ) );
 		}
 
 		$static_page->save();
@@ -390,7 +390,7 @@ class Fetch_Urls_Task extends Task {
 	/**
 	 * Only text-like files can contain URLs that should be extracted or replaced.
 	 *
-	 * @param \Simply_Static\Page $static_page Record to inspect.
+	 * @param \WP_Static_Export\Page $static_page Record to inspect.
 	 *
 	 * @return bool
 	 */
@@ -417,7 +417,7 @@ class Fetch_Urls_Task extends Task {
 	/**
 	 * Process the response to a 30x redirection
 	 *
-	 * @param \Simply_Static\Page $static_page Record to update
+	 * @param \WP_Static_Export\Page $static_page Record to update
 	 * @param boolean $save_file Save a static copy of the page?
 	 * @param boolean $follow_urls Save redirect URL to database?
 	 *
@@ -427,19 +427,19 @@ class Fetch_Urls_Task extends Task {
 		$destination_url = $this->options->get_destination_url();
 		$current_url     = $static_page->url;
 
-		// Remove simply_static_page parameter from the redirect URL
+		// Remove wpse_page parameter from the redirect URL
 		$redirect_url = $static_page->redirect_url;
 
 		// First try standard removal for normal query parameters
-		$redirect_url = remove_query_arg( 'simply_static_page', $redirect_url );
+		$redirect_url = remove_query_arg( 'wpse_page', $redirect_url );
 
-		// Also handle cases where simply_static_page is embedded in another parameter
-		// Look for patterns like %3Fsimply_static_page%3D12345 (URL-encoded ?simply_static_page=12345)
-		$redirect_url = preg_replace( '/%3Fsimply_static_page%3D\d+/i', '', $redirect_url );
+		// Also handle cases where wpse_page is embedded in another parameter
+		// Look for patterns like %3Fwpse_page%3D12345 (URL-encoded ?wpse_page=12345)
+		$redirect_url = preg_replace( '/%3Fwpse_page%3D\d+/i', '', $redirect_url );
 
 		// Handle standard query string formats
-		$redirect_url = preg_replace( '/\?simply_static_page=\d+/i', '', $redirect_url );
-		$redirect_url = preg_replace( '/&simply_static_page=\d+/i', '', $redirect_url );
+		$redirect_url = preg_replace( '/\?wpse_page=\d+/i', '', $redirect_url );
+		$redirect_url = preg_replace( '/&wpse_page=\d+/i', '', $redirect_url );
 
 		Util::debug_log( "redirect_url: " . $redirect_url );
 
@@ -456,7 +456,7 @@ class Fetch_Urls_Task extends Task {
 			|| array_key_exists( 'pass', $redirect_parts )
 		) {
 			$static_page->file_path = null;
-			$static_page->set_error_message( __( 'Unsafe or invalid redirect target', 'simply-static' ) );
+			$static_page->set_error_message( __( 'Unsafe or invalid redirect target', 'wp-static-export' ) );
 			$static_page->save();
 
 			return;
@@ -470,9 +470,9 @@ class Fetch_Urls_Task extends Task {
 			 * @param bool                  $skip_redirect_page Whether to skip creating the redirect page.
 			 * @param string                $redirect_url        Absolute redirect target URL.
 			 * @param string                $current_url         Current URL being fetched.
-			 * @param \Simply_Static\Page   $static_page         Current static page record.
+			 * @param \WP_Static_Export\Page   $static_page         Current static page record.
 			 */
-			$skip_local_asset_redirect_page = apply_filters( 'simply_static_skip_local_asset_redirect_page', true, $redirect_url, $current_url, $static_page );
+			$skip_local_asset_redirect_page = apply_filters( 'wpse_skip_local_asset_redirect_page', true, $redirect_url, $current_url, $static_page );
 			$has_known_static_reference     = null !== $static_page->found_on_id;
 
 			if ( $skip_local_asset_redirect_page && ! $has_known_static_reference && Util::is_local_asset_url( $redirect_url ) ) {
@@ -481,11 +481,11 @@ class Fetch_Urls_Task extends Task {
 					$this->set_url_found_on( $static_page, $redirect_url );
 				} else {
 					Util::debug_log( 'Not following the local asset redirect URL for this page' );
-					$static_page->set_status_message( __( "Do not follow", 'simply-static' ) );
+					$static_page->set_status_message( __( "Do not follow", 'wp-static-export' ) );
 				}
 
 				$static_page->file_path = null;
-				$static_page->set_status_message( __( "Do not save", 'simply-static' ) );
+				$static_page->set_status_message( __( "Do not save", 'wp-static-export' ) );
 				$static_page->save();
 
 				return;
@@ -524,7 +524,7 @@ class Fetch_Urls_Task extends Task {
 						$this->set_url_found_on( $static_page, $redirect_url );
 					} else {
 						Util::debug_log( "Not following the redirect URL for this page" );
-						$static_page->set_status_message( __( "Do not follow", 'simply-static' ) );
+						$static_page->set_status_message( __( "Do not follow", 'wp-static-export' ) );
 					}
 					// and update the URL
 					// Replace the matching local base with the configured destination URL. In proxy
@@ -565,7 +565,7 @@ class Fetch_Urls_Task extends Task {
 					}
 				} else {
 					Util::debug_log( "Not creating a redirect page" );
-					$static_page->set_status_message( __( "Do not save", 'simply-static' ) );
+					$static_page->set_status_message( __( "Do not save", 'wp-static-export' ) );
 				}
 
 				$static_page->save();
@@ -713,17 +713,17 @@ class Fetch_Urls_Task extends Task {
 	 * @return bool
 	 */
 	public function find_excludable( $static_page ) {
-		return \Simply_Static\Util::is_url_excluded( $static_page->url );
+		return \WP_Static_Export\Util::is_url_excluded( $static_page->url );
 	}
 
 	/**
 	 * Set ID for which page a URL was found on (& create page if not in DB yet)
 	 *
-	 * Given a URL, find the associated Simply_Static\Page, and then set the ID
+	 * Given a URL, find the associated WP_Static_Export\Page, and then set the ID
 	 * for which page it was found on if the ID isn't yet set or if the record
 	 * hasn't been updated in this instance of static generation yet.
 	 *
-	 * @param \Simply_Static\Page $static_page The record for the parent page.
+	 * @param \WP_Static_Export\Page $static_page The record for the parent page.
 	 * @param string $child_url The URL of the child page.
 	 * @param string $start_time Static generation start time.
 	 *
@@ -781,9 +781,9 @@ class Fetch_Urls_Task extends Task {
 				}
 			}
 
-			$child_static_page->handler = apply_filters( 'simply_static_handler_class_on_url_found', $static_page->get_handler_class(), $child_url, $static_page );
+			$child_static_page->handler = apply_filters( 'wpse_handler_class_on_url_found', $static_page->get_handler_class(), $child_url, $static_page );
 
-			do_action( 'simply_static_child_page_found_on_url_before_save', $child_static_page, $static_page );
+			do_action( 'wpse_child_page_found_on_url_before_save', $child_static_page, $static_page );
 
 			$child_static_page->save();
 		} elseif ( $path_migration ) {
@@ -799,7 +799,7 @@ class Fetch_Urls_Task extends Task {
 	 * while treating the existing asset record as unchanged and omitting the
 	 * corresponding file from the delta.
 	 *
-	 * @param \Simply_Static\Page $static_page Existing child asset record.
+	 * @param \WP_Static_Export\Page $static_page Existing child asset record.
 	 *
 	 * @return bool Whether the asset was marked for refetch and transfer.
 	 */
@@ -845,7 +845,7 @@ class Fetch_Urls_Task extends Task {
 	/**
 	 * Save the contents of a page to a file in our archive directory
 	 *
-	 * @param \Simply_Static\Page $static_page The Simply_Static\Page record.
+	 * @param \WP_Static_Export\Page $static_page The WP_Static_Export\Page record.
 	 * @param string $content The content of the page we want to save.
 	 *
 	 * @return string|null                The file path of the saved file.
@@ -878,7 +878,7 @@ class Fetch_Urls_Task extends Task {
 	protected function processed_pages_message( $processed, $total ) {
 		return sprintf(
 			/* translators: 1: number of pages/files fetched, 2: total number of pages/files. */
-			__( 'Fetched %1$d of %2$d pages/files', 'simply-static' ),
+			__( 'Fetched %1$d of %2$d pages/files', 'wp-static-export' ),
 			$processed,
 			$total
 		);
@@ -896,7 +896,7 @@ class Fetch_Urls_Task extends Task {
 		// the update/detect-changes flow. Installations that need a full
 		// revalidation pass can opt back into export-scoped fetching.
 		if ( 'update' === $type ) {
-			$type = apply_filters( 'simply_static_fetch_urls_update_generate_type', 'update', $this );
+			$type = apply_filters( 'wpse_fetch_urls_update_generate_type', 'update', $this );
 		}
 
 		return $type;

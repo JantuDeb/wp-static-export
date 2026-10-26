@@ -17,8 +17,8 @@ if [[ ! "$release_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 	exit 1
 fi
 
-plugin_header_version="$(awk '/^[[:space:]]*\*[[:space:]]*Version:/ { print $3; exit }' simply-static.php)"
-plugin_constant_version="$(awk -F"'" '/SIMPLY_STATIC_VERSION/ { print $4; exit }' simply-static.php)"
+plugin_header_version="$(awk '/^[[:space:]]*\*[[:space:]]*Version:/ { print $3; exit }' wp-static-export.php)"
+plugin_constant_version="$(awk -F"'" '/WPSE_VERSION/ { print $4; exit }' wp-static-export.php)"
 stable_tag="$(awk '/^Stable tag:/ { print $3; exit }' readme.txt)"
 admin_package_version="$(node -p "require('./src/admin/package.json').version")"
 
@@ -33,7 +33,7 @@ assert_version() {
 }
 
 assert_version "Plugin header version" "$plugin_header_version"
-assert_version "SIMPLY_STATIC_VERSION" "$plugin_constant_version"
+assert_version "WPSE_VERSION" "$plugin_constant_version"
 assert_version "readme.txt stable tag" "$stable_tag"
 assert_version "Admin package version" "$admin_package_version"
 

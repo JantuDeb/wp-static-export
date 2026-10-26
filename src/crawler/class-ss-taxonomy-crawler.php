@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static\Crawler;
+namespace WP_Static_Export\Crawler;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,8 +24,8 @@ class Taxonomy_Crawler extends Crawler {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->name = __( 'Taxonomy URLs', 'simply-static' );
-		$this->description = __( 'Detects URLs for all public taxonomies (categories, tags, etc.).', 'simply-static' );
+		$this->name = __( 'Taxonomy URLs', 'wp-static-export' );
+		$this->description = __( 'Detects URLs for all public taxonomies (categories, tags, etc.).', 'wp-static-export' );
 	}
 
 	/**
@@ -35,7 +35,7 @@ class Taxonomy_Crawler extends Crawler {
 	 */
 	public function detect() : array {
 		$taxonomy_urls = [];
-		$max_terms = max( 1, min( 100000, (int) apply_filters( 'simply_static_taxonomy_detection_limit', 1000 ) ) );
+		$max_terms = max( 1, min( 100000, (int) apply_filters( 'wpse_taxonomy_detection_limit', 1000 ) ) );
 		
 		// Get all public taxonomies
 		$taxonomies = get_taxonomies( [ 'public' => true ], 'names' );
@@ -77,15 +77,15 @@ class Taxonomy_Crawler extends Crawler {
 	public function add_urls_to_queue() : int {
 		$taxonomies = array_values( (array) get_taxonomies( array( 'public' => true ), 'names' ) );
 		$signature  = hash( 'sha256', serialize( array(
-			'archive_start_time' => \Simply_Static\Options::instance()->get( 'archive_start_time' ),
+			'archive_start_time' => \WP_Static_Export\Options::instance()->get( 'archive_start_time' ),
 			'taxonomies'         => $taxonomies,
 		) ) );
-		$state = \Simply_Static\Options::instance()->get( 'taxonomy_crawler_state' );
+		$state = \WP_Static_Export\Options::instance()->get( 'taxonomy_crawler_state' );
 		if ( ! is_array( $state ) || 1 !== ( $state['version'] ?? null ) || $signature !== ( $state['signature'] ?? null ) || ! is_int( $state['taxonomy_index'] ?? null ) || $state['taxonomy_index'] < 0 || ! is_int( $state['offset'] ?? null ) || $state['offset'] < 0 ) {
 			$state = array( 'version' => 1, 'signature' => $signature, 'taxonomy_index' => 0, 'offset' => 0, 'added' => 0, 'scanned' => 0 );
 		}
 
-		$batch_size = max( 1, min( 500, (int) apply_filters( 'simply_static_taxonomy_crawler_batch_size', 100 ) ) );
+		$batch_size = max( 1, min( 500, (int) apply_filters( 'wpse_taxonomy_crawler_batch_size', 100 ) ) );
 		$added_now  = 0;
 		$this->complete = true;
 		while ( $state['taxonomy_index'] < count( $taxonomies ) ) {

@@ -51,23 +51,23 @@ function SearchSettings() {
             <CardHeader>
                 <Flex>
                     <FlexItem>
-                        <b>{__('Search', 'simply-static')}</b>
+                        <b>{__('Search', 'wp-static-export')}</b>
                     </FlexItem>
                     {('free' === options.plan || !isPro()) &&
                         <FlexItem>
-                            <a href="admin.php?page=simply-static-features">{__('Configure in Deploy & Features', 'simply-static')}</a>
+                            <a href="admin.php?page=wp-static-export-features">{__('Configure in Deploy & Features', 'wp-static-export')}</a>
                         </FlexItem>
                     }
                 </Flex>
             </CardHeader>
             <CardBody>
                 <ToggleControl
-                    label={__('Use search?', 'simply-static')}
+                    label={__('Use search?', 'wp-static-export')}
                     __nextHasNoMarginBottom
                     help={
                         useSearch
-                            ? __('Use search on your static website.', 'simply-static')
-                            : __('Don\'t use search on your static website.', 'simply-static')
+                            ? __('Use search on your static website.', 'wp-static-export')
+                            : __('Don\'t use search on your static website.', 'wp-static-export')
                     }
                     disabled={('free' === options.plan || !isPro())}
                     checked={useSearch}
@@ -77,9 +77,9 @@ function SearchSettings() {
                     }}
                 />
                 <SelectControl
-                    label={__('Search Type', 'simply-static')}
+                    label={__('Search Type', 'wp-static-export')}
                     value={searchType}
-                    help={__('Decide which search type you want to use. Fuse runs locally based on a file, and Algolia is an external API service.', 'simply-static')}
+                    help={__('Decide which search type you want to use. Fuse runs locally based on a file, and Algolia is an external API service.', 'wp-static-export')}
                     __next40pxDefaultSize
                     __nextHasNoMarginBottom
                     options={[
@@ -97,9 +97,9 @@ function SearchSettings() {
                     <>
                         <Spacer margin={3} />
                         <ToggleControl
-                            label={__('Use Search Results Page', 'simply-static')}
+                            label={__('Use Search Results Page', 'wp-static-export')}
                             __nextHasNoMarginBottom
-                            help={__('WP Static Export will create a static search results page and the export will include a special __qs directory.', 'simply-static')}
+                            help={__('WP Static Export will create a static search results page and the export will include a special __qs directory.', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             checked={(settings.use_search_results_page ?? true)}
                             onChange={(value) => {
@@ -108,9 +108,9 @@ function SearchSettings() {
                         />
                         <Spacer margin={3} />
                         <ToggleControl
-                            label={__('Use Submit Button', 'simply-static')}
+                            label={__('Use Submit Button', 'wp-static-export')}
                             __nextHasNoMarginBottom
-                            help={__('Show or hide the submit button in the search UI.', 'simply-static')}
+                            help={__('Show or hide the submit button in the search UI.', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             checked={(settings.search_show_submit ?? settings.search_fuse_show_submit ?? false)}
                             onChange={(value) => {
@@ -121,12 +121,12 @@ function SearchSettings() {
                         {showSubmit && (
                             <>
                                 <TextControl
-                                    label={__('Submit button text', 'simply-static')}
+                                    label={__('Submit button text', 'wp-static-export')}
                                     type={"text"}
                                     __next40pxDefaultSize
                                     __nextHasNoMarginBottom
-                                    placeholder={__('Search', 'simply-static')}
-                                    help={__('Customize the submit button text or HTML (e.g., add an icon).', 'simply-static')}
+                                    placeholder={__('Search', 'wp-static-export')}
+                                    help={__('Customize the submit button text or HTML (e.g., add an icon).', 'wp-static-export')}
                                     disabled={('free' === options.plan || !isPro())}
                                     value={settings.search_submit_text ?? settings.search_fuse_submit_text}
                                     onChange={(val) => {
@@ -137,9 +137,9 @@ function SearchSettings() {
                         )}
 
                         <ToggleControl
-                            label={__('Show excerpt in suggestions/results', 'simply-static')}
+                            label={__('Show excerpt in suggestions/results', 'wp-static-export')}
                             __nextHasNoMarginBottom
-                            help={__('Enable to display the excerpt below each search suggestion and result item.', 'simply-static')}
+                            help={__('Enable to display the excerpt below each search suggestion and result item.', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             checked={(settings.search_show_excerpt ?? false)}
                             onChange={(value) => {
@@ -149,12 +149,12 @@ function SearchSettings() {
 
                         {/* Input placeholder should be independent of the submit button visibility */}
                         <TextControl
-                            label={__('Input placeholder', 'simply-static')}
+                            label={__('Input placeholder', 'wp-static-export')}
                             type={"text"}
                             __next40pxDefaultSize
                             __nextHasNoMarginBottom
-                            placeholder={__('Search..', 'simply-static')}
-                            help={__('Customize the placeholder text for the search input.', 'simply-static')}
+                            placeholder={__('Search..', 'wp-static-export')}
+                            help={__('Customize the placeholder text for the search input.', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             value={settings.search_placeholder ?? settings.search_fuse_placeholder}
                             onChange={(val) => {
@@ -167,25 +167,25 @@ function SearchSettings() {
         </Card>
         <>
             {isMetaModalOpen && (
-                <Modal title={__('How to select data with meta tags', 'simply-static')} onRequestClose={closeMetaModal}>
-                    <p>{__('Targeting for excerpt in the meta description tag.', 'simply-static')}</p>
+                <Modal title={__('How to select data with meta tags', 'wp-static-export')} onRequestClose={closeMetaModal}>
+                    <p>{__('Targeting for excerpt in the meta description tag.', 'wp-static-export')}</p>
                     <pre>
                             &lt;meta name="description" content="This content is what we want as excerpt" /&gt;
                         </pre>
-                    <p>{__('Adding such meta in the excerpt field would be:', 'simply-static')}</p>
+                    <p>{__('Adding such meta in the excerpt field would be:', 'wp-static-export')}</p>
                     <pre>
                             description|content
                         </pre>
-                    <p>{__('Targeting for title in the property meta tag.', 'simply-static')}</p>
+                    <p>{__('Targeting for title in the property meta tag.', 'wp-static-export')}</p>
                     <pre>
                             &lt;meta property="og:title" content="This content is what we want as excerpt" /&gt;
                         </pre>
-                    <p>{__('Adding such meta in the excerpt field would be:', 'simply-static')}</p>
+                    <p>{__('Adding such meta in the excerpt field would be:', 'wp-static-export')}</p>
                     <pre>
                             property|og:title
                         </pre>
-                    <p>{__('If the second item (after | ) is not <code>content</code>, we\'ll use it as value of that attribute (<code>property="og:title"</code> in this example) and use <code>content</code> for value.', 'simply-static')}</p>
-                    <p><strong>{__('Caution: Use meta tags that exist everywhere for title.', 'simply-static')}</strong>
+                    <p>{__('If the second item (after | ) is not <code>content</code>, we\'ll use it as value of that attribute (<code>property="og:title"</code> in this example) and use <code>content</code> for value.', 'wp-static-export')}</p>
+                    <p><strong>{__('Caution: Use meta tags that exist everywhere for title.', 'wp-static-export')}</strong>
                     </p>
                 </Modal>
             )}
@@ -194,27 +194,27 @@ function SearchSettings() {
                 <CardHeader>
                     <Flex>
                         <FlexItem>
-                            <b>{__('Indexing', 'simply-static')}</b>
+                            <b>{__('Indexing', 'wp-static-export')}</b>
                         </FlexItem>
                         {('free' === options.plan || !isPro()) &&
                             <FlexItem>
-                                <a href="admin.php?page=simply-static-features">{__('Configure in Deploy & Features', 'simply-static')}</a>
+                                <a href="admin.php?page=wp-static-export-features">{__('Configure in Deploy & Features', 'wp-static-export')}</a>
                             </FlexItem>
                         }
                     </Flex>
                 </CardHeader>
                 <CardBody>
                     <TextControl
-                        label={__('CSS selector for title', 'simply-static')}
+                        label={__('CSS selector for title', 'wp-static-export')}
                         type={"text"}
                         placeholder={'title'}
                         __next40pxDefaultSize
                         __nextHasNoMarginBottom
                         help={
                             <>
-                                {__('Add the CSS selector which contains the title of the page/post', 'simply-static')}{' '}
+                                {__('Add the CSS selector which contains the title of the page/post', 'wp-static-export')}{' '}
                                 <Button variant={'link'} onClick={openMetaModal}>
-                                    {__('Or meta tags. Click for more information.', 'simply-static')}
+                                    {__('Or meta tags. Click for more information.', 'wp-static-export')}
                                 </Button>
                             </>
                         }
@@ -225,16 +225,16 @@ function SearchSettings() {
                         }}
                     />
                     <TextControl
-                        label={__('CSS selector for content', 'simply-static')}
+                        label={__('CSS selector for content', 'wp-static-export')}
                         type={"text"}
                         placeholder={'body'}
                         __next40pxDefaultSize
                         __nextHasNoMarginBottom
                         help={
                             <>
-                                {__('Add the CSS selector which contains the content of the page/post.', 'simply-static')}{' '}
+                                {__('Add the CSS selector which contains the content of the page/post.', 'wp-static-export')}{' '}
                                 <Button variant={'link'} onClick={openMetaModal}>
-                                    {__('Or meta tags. Click for more information.', 'simply-static')}
+                                    {__('Or meta tags. Click for more information.', 'wp-static-export')}
                                 </Button>
                             </>
                         }
@@ -246,16 +246,16 @@ function SearchSettings() {
                     />
 
                     <TextControl
-                        label={__('CSS selector for excerpt', 'simply-static')}
+                        label={__('CSS selector for excerpt', 'wp-static-export')}
                         type={"text"}
                         placeholder={'.entry-content'}
                         __next40pxDefaultSize
                         __nextHasNoMarginBottom
                         help={
                             <>
-                                {__('Add the CSS selector which contains the excerpt of the page/post.', 'simply-static')}{' '}
+                                {__('Add the CSS selector which contains the excerpt of the page/post.', 'wp-static-export')}{' '}
                                 <Button variant={'link'} onClick={openMetaModal}>
-                                    {__('Or meta tags. Click for more information.', 'simply-static')}
+                                    {__('Or meta tags. Click for more information.', 'wp-static-export')}
                                 </Button>
                             </>
                         }
@@ -267,10 +267,10 @@ function SearchSettings() {
                     />
 
                     <TextareaControl
-                        label={__('Exclude URLs', 'simply-static')}
+                        label={__('Exclude URLs', 'wp-static-export')}
                         placeholder={"author\narchive\ncategory"}
                         __nextHasNoMarginBottom
-                        help={__('Exclude URLs from indexing (one per line). You can use full URLs, parts of a URL, or plain words (such as stop words).', 'simply-static')}
+                        help={__('Exclude URLs from indexing (one per line). You can use full URLs, parts of a URL, or plain words (such as stop words).', 'wp-static-export')}
                         disabled={('free' === options.plan || !isPro())}
                         value={settings.search_excludable}
                         onChange={(excludes) => {
@@ -287,22 +287,22 @@ function SearchSettings() {
                     <CardHeader>
                         <Flex>
                             <FlexItem>
-                                <b>{__('Fuse.js', 'simply-static')}</b>
+                                <b>{__('Fuse.js', 'wp-static-export')}</b>
                             </FlexItem>
                             {('free' === options.plan || !isPro()) &&
                                 <FlexItem>
-                                    <a href="admin.php?page=simply-static-features">{__('Configure in Deploy & Features', 'simply-static')}</a>
+                                    <a href="admin.php?page=wp-static-export-features">{__('Configure in Deploy & Features', 'wp-static-export')}</a>
                                 </FlexItem>
                             }
                         </Flex>
                     </CardHeader>
                     <CardBody>
                         <TextControl
-                            label={__('CSS selector', 'simply-static')}
+                            label={__('CSS selector', 'wp-static-export')}
                             type={"text"}
                             __next40pxDefaultSize
                             __nextHasNoMarginBottom
-                            help={__('Add the CSS selector for the <form> element that contains your search input field.', 'simply-static')}
+                            help={__('Add the CSS selector for the <form> element that contains your search input field.', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             value={settings.fuse_selector}
                             onChange={(selector) => {
@@ -310,18 +310,18 @@ function SearchSettings() {
                             }}
                         />
                         <Notice status="warning" isDismissible={false}>
-                            {__('If you have multiple search elements with different CSS selectors, separate them by a comma (,) such as: .search-form, .custom-search-form', 'simply-static')}
+                            {__('If you have multiple search elements with different CSS selectors, separate them by a comma (,) such as: .search-form, .custom-search-form', 'wp-static-export')}
                         </Notice>
                         <Spacer margin={5} />
                         <NumberControl
-                            label={__('Threshold', 'simply-static')}
+                            label={__('Threshold', 'wp-static-export')}
                             isShiftStepEnabled={ true }
                             step={ 0.1 }
                             min={0.1}
                             max={1}
                             __next40pxDefaultSize
                             __nextHasNoMarginBottom
-                            help={__(' A threshold of 0.0 requires a perfect match, a threshold of 1.0 would match anything.', 'simply-static')}
+                            help={__(' A threshold of 0.0 requires a perfect match, a threshold of 1.0 would match anything.', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             value={settings.fuse_threshold}
                             placeholder={0.1}
@@ -331,9 +331,9 @@ function SearchSettings() {
                         />
                         <Spacer margin={5} />
                         <ToggleControl
-                            label={__('Use Extended Search', 'simply-static')}
+                            label={__('Use Extended Search', 'wp-static-export')}
                             __nextHasNoMarginBottom
-                            help={__('Enable Fuse.js extended search operators such as exact match, prefix, suffix, and inverse match.', 'simply-static')}
+                            help={__('Enable Fuse.js extended search operators such as exact match, prefix, suffix, and inverse match.', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             checked={settings.fuse_use_extended_search}
                             onChange={(value) => {
@@ -341,9 +341,9 @@ function SearchSettings() {
                             }}
                         />
                         <ToggleControl
-                            label={__('Ignore Location', 'simply-static')}
+                            label={__('Ignore Location', 'wp-static-export')}
                             __nextHasNoMarginBottom
-                            help={__('When enabled, the search will look for a match anywhere in the string, regardless of position. By default, Fuse.js favors matches near the beginning of a string.', 'simply-static')}
+                            help={__('When enabled, the search will look for a match anywhere in the string, regardless of position. By default, Fuse.js favors matches near the beginning of a string.', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             checked={settings.fuse_ignore_location}
                             onChange={(value) => {
@@ -351,13 +351,13 @@ function SearchSettings() {
                             }}
                         />
                         <Spacer margin={5} />
-                        <h4>{__('Weight', 'simply-static')}</h4>
-                        <p>{__('Weighted search allows you to prioritize certain fields in your search results. A higher weight means results matching that field will appear higher in the results list. Default weight is 1.', 'simply-static')}</p>
+                        <h4>{__('Weight', 'wp-static-export')}</h4>
+                        <p>{__('Weighted search allows you to prioritize certain fields in your search results. A higher weight means results matching that field will appear higher in the results list. Default weight is 1.', 'wp-static-export')}</p>
                         <Spacer margin={3} />
                         <Flex gap={4} align="flex-start" wrap={true}>
                             <FlexItem style={{flex: 1, minWidth: '120px'}}>
                                 <NumberControl
-                                    label={__('Title Weight', 'simply-static')}
+                                    label={__('Title Weight', 'wp-static-export')}
                                     isShiftStepEnabled={ true }
                                     step={ 1 }
                                     min={1}
@@ -374,7 +374,7 @@ function SearchSettings() {
                             </FlexItem>
                             <FlexItem style={{flex: 1, minWidth: '120px'}}>
                                 <NumberControl
-                                    label={__('Content Weight', 'simply-static')}
+                                    label={__('Content Weight', 'wp-static-export')}
                                     isShiftStepEnabled={ true }
                                     step={ 1 }
                                     min={1}
@@ -391,7 +391,7 @@ function SearchSettings() {
                             </FlexItem>
                             <FlexItem style={{flex: 1, minWidth: '120px'}}>
                                 <NumberControl
-                                    label={__('Excerpt Weight', 'simply-static')}
+                                    label={__('Excerpt Weight', 'wp-static-export')}
                                     isShiftStepEnabled={ true }
                                     step={ 1 }
                                     min={1}
@@ -419,22 +419,22 @@ function SearchSettings() {
                     <CardHeader>
                         <Flex>
                             <FlexItem>
-                                <b>{__('Algolia API', 'simply-static')}</b>
+                                <b>{__('Algolia API', 'wp-static-export')}</b>
                             </FlexItem>
                             {('free' === options.plan || !isPro()) &&
                                 <FlexItem>
-                                    <a href="admin.php?page=simply-static-features">{__('Configure in Deploy & Features', 'simply-static')}</a>
+                                    <a href="admin.php?page=wp-static-export-features">{__('Configure in Deploy & Features', 'wp-static-export')}</a>
                                 </FlexItem>
                             }
                         </Flex>
                     </CardHeader>
                     <CardBody>
                         <TextControl
-                            label={__('Application ID', 'simply-static')}
+                            label={__('Application ID', 'wp-static-export')}
                             type={"password"}
                             __next40pxDefaultSize
                             __nextHasNoMarginBottom
-                            help={__('Add your Algolia App ID.', 'simply-static')}
+                            help={__('Add your Algolia App ID.', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             value={settings.algolia_app_id}
                             onChange={(app_id) => {
@@ -443,11 +443,11 @@ function SearchSettings() {
                         />
 
                         <TextControl
-                            label={__('Admin API Key', 'simply-static')}
+                            label={__('Admin API Key', 'wp-static-export')}
                             type={"password"}
                             __next40pxDefaultSize
                             __nextHasNoMarginBottom
-                            help={__('Add your Algolia Admin API Key.', 'simply-static')}
+                            help={__('Add your Algolia Admin API Key.', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             value={settings.algolia_admin_api_key}
                             onChange={(api_key) => {
@@ -456,11 +456,11 @@ function SearchSettings() {
                         />
 
                         <TextControl
-                            label={__('Search-Only API Key', 'simply-static')}
+                            label={__('Search-Only API Key', 'wp-static-export')}
                             type={"password"}
                             __next40pxDefaultSize
                             __nextHasNoMarginBottom
-                            help={__('Add your Algolia Search-Only API Key here. This is the only key that will be visible on your static site.', 'simply-static')}
+                            help={__('Add your Algolia Search-Only API Key here. This is the only key that will be visible on your static site.', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             value={settings.algolia_search_api_key}
                             onChange={(api_key) => {
@@ -469,11 +469,11 @@ function SearchSettings() {
                         />
 
                         <TextControl
-                            label={__('Name for your index', 'simply-static')}
+                            label={__('Name for your index', 'wp-static-export')}
                             type={"text"}
                             __next40pxDefaultSize
                             __nextHasNoMarginBottom
-                            help={__('Add your Algolia index name here.', 'simply-static')}
+                            help={__('Add your Algolia index name here.', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             value={settings.algolia_index}
                             onChange={(index) => {
@@ -481,11 +481,11 @@ function SearchSettings() {
                             }}
                         />
                         <TextControl
-                            label={__('CSS selector', 'simply-static')}
+                            label={__('CSS selector', 'wp-static-export')}
                             type={"text"}
                             __next40pxDefaultSize
                             __nextHasNoMarginBottom
-                            help={__('Add the CSS selector for the <form> element that contains your search input field.', 'simply-static')}
+                            help={__('Add the CSS selector for the <form> element that contains your search input field.', 'wp-static-export')}
                             disabled={('free' === options.plan || !isPro())}
                             value={settings.algolia_selector}
                             onChange={(selector) => {
@@ -493,7 +493,7 @@ function SearchSettings() {
                             }}
                         />
                         <Notice status="warning" isDismissible={false}>
-                            {__('If you have multiple search elements with different CSS selectors, separate them by a comma (,) such as: .search-form, .custom-search-form', 'simply-static')}
+                            {__('If you have multiple search elements with different CSS selectors, separate them by a comma (,) such as: .search-form, .custom-search-form', 'wp-static-export')}
                         </Notice>
                     </CardBody>
                 </Card>
@@ -506,7 +506,7 @@ function SearchSettings() {
                     {() => (
                         <Notice status="success" isDismissible={false}>
                             <p>
-                                {__('Settings saved successfully.', 'simply-static')}
+                                {__('Settings saved successfully.', 'wp-static-export')}
                             </p>
                         </Notice>
                     )}
@@ -517,7 +517,7 @@ function SearchSettings() {
         <div className={"save-settings"}>
             {'pro' === options.plan && isPro() &&
                 <Button onClick={setSavingSettings}
-                        variant="primary">{__('Save Settings', 'simply-static')}</Button>
+                        variant="primary">{__('Save Settings', 'wp-static-export')}</Button>
             }
         </div>
     </div>)

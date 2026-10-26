@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static\Crawler;
+namespace WP_Static_Export\Crawler;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,8 +24,8 @@ class Post_Type_Crawler extends Crawler {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->name        = __( 'Post Type URLs', 'simply-static' );
-		$this->description = __( 'Detects URLs for all public post types (posts, pages, etc.).', 'simply-static' );
+		$this->name        = __( 'Post Type URLs', 'wp-static-export' );
+		$this->description = __( 'Detects URLs for all public post types (posts, pages, etc.).', 'wp-static-export' );
 	}
 
 	/**
@@ -35,14 +35,14 @@ class Post_Type_Crawler extends Crawler {
 	 */
 	public function detect(): array {
 		$post_urls       = [];
-		$max_posts       = max( 1, min( 100000, (int) apply_filters( 'simply_static_post_type_detection_limit', 1000 ) ) );
-		$public_statuses = \Simply_Static\Util::get_public_post_statuses();
+		$max_posts       = max( 1, min( 100000, (int) apply_filters( 'wpse_post_type_detection_limit', 1000 ) ) );
+		$public_statuses = \WP_Static_Export\Util::get_public_post_statuses();
 
 		// Get all public post types
 		$post_types = get_post_types( [ 'public' => true ], 'names' );
 
 		// Filter post types to allow exclusion of specific post types
-		$post_types = apply_filters( 'simply_static_post_types_to_crawl', $post_types );
+		$post_types = apply_filters( 'wpse_post_types_to_crawl', $post_types );
 
 		// Exclude Elementor's element_library post type
 		if ( isset( $post_types['elementor_library'] ) ) {
@@ -55,7 +55,7 @@ class Post_Type_Crawler extends Crawler {
 		}
 
 		// Get selected post types from settings
-		$options = get_option( 'simply-static' );
+		$options = get_option( 'wp-static-export' );
 		$has_post_type_selection = isset( $options['post_types'] ) && is_array( $options['post_types'] ) && ( ! empty( $options['post_types_configured'] ) || ! empty( $options['post_types'] ) );
 		if ( $has_post_type_selection ) {
 			// Filter post types to only include those selected in settings
@@ -103,16 +103,16 @@ class Post_Type_Crawler extends Crawler {
 		global $wpdb;
 
 		$post_types      = $this->get_crawl_post_types();
-		$public_statuses = \Simply_Static\Util::get_public_post_statuses();
+		$public_statuses = \WP_Static_Export\Util::get_public_post_statuses();
 		$signature       = hash( 'sha256', serialize( array(
-			'archive_start_time' => \Simply_Static\Options::instance()->get( 'archive_start_time' ),
+			'archive_start_time' => \WP_Static_Export\Options::instance()->get( 'archive_start_time' ),
 			'post_types'         => $post_types,
 			'post_statuses'       => $public_statuses,
 		) ) );
 		$state       = $this->load_post_type_state( $signature );
-		$batch_size  = max( 1, min( 500, (int) apply_filters( 'simply_static_post_type_crawler_batch_size', 100 ) ) );
-		$entry_limit = max( $batch_size, min( 2000, (int) apply_filters( 'simply_static_post_type_crawler_max_entries_per_batch', 500 ) ) );
-		$seconds     = (float) apply_filters( 'simply_static_post_type_crawler_max_batch_seconds', 10 );
+		$batch_size  = max( 1, min( 500, (int) apply_filters( 'wpse_post_type_crawler_batch_size', 100 ) ) );
+		$entry_limit = max( $batch_size, min( 2000, (int) apply_filters( 'wpse_post_type_crawler_max_entries_per_batch', 500 ) ) );
+		$seconds     = (float) apply_filters( 'wpse_post_type_crawler_max_batch_seconds', 10 );
 		$deadline    = microtime( true ) + max( 0.5, min( 15, $seconds ) );
 		$processed   = 0;
 		$added_now   = 0;
@@ -164,7 +164,7 @@ class Post_Type_Crawler extends Crawler {
 		}
 
 		if ( 'cleanup' === $state['stage'] ) {
-			$table = $wpdb->prefix . 'simply_static_pages';
+			$table = $wpdb->prefix . 'wpse_pages';
 			$remaining = max( 1, $entry_limit - $processed );
 			$stale_rows = $wpdb->get_results( $wpdb->prepare(
 				"SELECT p.id, p.post_id, p.file_path, p.url
@@ -202,9 +202,9 @@ class Post_Type_Crawler extends Crawler {
 	/** @return string[] */
 	private function get_crawl_post_types() : array {
 		$post_types = get_post_types( array( 'public' => true ), 'names' );
-		$post_types = apply_filters( 'simply_static_post_types_to_crawl', $post_types );
+		$post_types = apply_filters( 'wpse_post_types_to_crawl', $post_types );
 		$post_types = array_values( array_diff( (array) $post_types, array( 'attachment', 'elementor_library', 'ssp-form' ) ) );
-		$options = get_option( 'simply-static' );
+		$options = get_option( 'wp-static-export' );
 		$has_selection = isset( $options['post_types'] ) && is_array( $options['post_types'] ) && ( ! empty( $options['post_types_configured'] ) || ! empty( $options['post_types'] ) );
 		if ( $has_selection ) {
 			$post_types = array_values( array_intersect( $post_types, $options['post_types'] ) );
@@ -244,7 +244,7 @@ class Post_Type_Crawler extends Crawler {
 
 	/** @return array<string,mixed> */
 	private function load_post_type_state( $signature ) : array {
-		$state = \Simply_Static\Options::instance()->get( 'post_type_crawler_state' );
+		$state = \WP_Static_Export\Options::instance()->get( 'post_type_crawler_state' );
 		if ( ! is_array( $state )
 			|| 1 !== ( $state['version'] ?? null )
 			|| $signature !== ( $state['signature'] ?? null )
@@ -297,7 +297,7 @@ class Post_Type_Crawler extends Crawler {
 		global $wpdb;
 
 		// Check if the Pro deletion-tracker table exists (single query, cached for the loop).
-		$tracker_table  = $wpdb->prefix . 'simply_static_delete_pages';
+		$tracker_table  = $wpdb->prefix . 'wpse_delete_pages';
 		$tracker_exists = ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $tracker_table ) ) === $tracker_table );
 
 		foreach ( $stale_rows as $row ) {
@@ -310,7 +310,7 @@ class Post_Type_Crawler extends Crawler {
 				continue;
 			}
 
-			\Simply_Static\Util::debug_log( sprintf( 'Queueing stale page for deletion: %s (post %d)', $url ?: $file_path, $post_id ) );
+			\WP_Static_Export\Util::debug_log( sprintf( 'Queueing stale page for deletion: %s (post %d)', $url ?: $file_path, $post_id ) );
 
 			if ( $tracker_exists ) {
 				$post         = $post_id > 0 ? get_post( $post_id ) : null;
@@ -340,7 +340,7 @@ class Post_Type_Crawler extends Crawler {
 				);
 			}
 
-			do_action( 'ss_cleanup_stale_static_page', $url, $file_path, $post_id );
+			do_action( 'wpse_cleanup_stale_static_page', $url, $file_path, $post_id );
 		}
 	}
 }

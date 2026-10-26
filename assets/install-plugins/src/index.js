@@ -79,7 +79,7 @@ const ssPluginInstall = {
             tooltipElement.classList.add('tooltiptext');
 
             tooltipElement.append(
-                __('This is known to work well with the Simply Static plugin.', 'simply-static')
+                __('This is known to work well with the Simply Static plugin.', 'wp-static-export')
             );
 
             messageElement.append(iconElement);

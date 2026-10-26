@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 use function Clue\StreamFilter\fun;
 
@@ -18,8 +18,8 @@ class Elementor_Integration extends Integration {
 	protected $extractor = null;
 
 	public function __construct() {
-		$this->name        = __( 'Elementor', 'simply-static' );
-		$this->description = __( 'Exports assets required for Elementor and Elementor Pro widgets and prepares data used by them.', 'simply-static' );
+		$this->name        = __( 'Elementor', 'wp-static-export' );
+		$this->description = __( 'Exports assets required for Elementor and Elementor Pro widgets and prepares data used by them.', 'wp-static-export' );
 	}
 
 	/**
@@ -46,7 +46,7 @@ class Elementor_Integration extends Integration {
 	 * @return void
 	 */
 	public function run() {
-		add_filter( 'ss_html_after_restored_attributes', [ $this, 'extract_elementor_settings' ], 20, 2 );
+		add_filter( 'wpse_html_after_restored_attributes', [ $this, 'extract_elementor_settings' ], 20, 2 );
 
 		// Register Elementor widgets
 		add_action( 'elementor/widgets/register', [ $this, 'register_widgets' ] );
@@ -64,22 +64,22 @@ class Elementor_Integration extends Integration {
 		// Register Elementor Pro specific functionality if available and if smart_crawl is not enabled
 		if ( $this->is_elementor_pro_active() ) {
 			if ( ! $options->get( 'smart_crawl' ) ) {
-				add_action( 'ss_after_setup_task', [ $this, 'register_lottie_files' ] );
+				add_action( 'wpse_after_setup_task', [ $this, 'register_lottie_files' ] );
 			}
 		}
 
 		// Register Elementor assets only if smart_crawl is not enabled
 		if ( ! $options->get( 'smart_crawl' ) ) {
-			add_action( 'ss_after_setup_task', [ $this, 'register_assets' ] );
+			add_action( 'wpse_after_setup_task', [ $this, 'register_assets' ] );
 		}
 
 		// Always register Google Fonts files regardless of smart_crawl to prevent
 		// CORS issues when the static site serves font CSS with unreplaced origin URLs.
-		add_action( 'ss_after_setup_task', [ $this, 'register_google_fonts' ] );
+		add_action( 'wpse_after_setup_task', [ $this, 'register_google_fonts' ] );
 
 		add_action( 'ssp_before_form_template_scripts', [ $this, 'dequeue_scripts' ] );
 
-		if ( class_exists( 'simply_static_pro\Single' ) ) {
+		if ( class_exists( 'wpse_pro\Single' ) ) {
 			add_filter( 'ssp_single_related_attachment_urls', [ $this, 'add_elementor_thumbnails' ], 10, 2 );
 		}
 	}
@@ -362,7 +362,7 @@ class Elementor_Integration extends Integration {
 		$file_urls = array_merge( $file_urls, $lib_urls, $css_urls, $js_urls );
 
 		// Add bundle files?
-		$add_bundle = apply_filters( 'ss_elementor_add_bundle_files', false );
+		$add_bundle = apply_filters( 'wpse_elementor_add_bundle_files', false );
 
 		if ( $add_bundle ) {
 			$bundle_urls = $this->get_bundle_files();
@@ -401,9 +401,9 @@ class Elementor_Integration extends Integration {
 
 		foreach ( $file_urls as $url ) {
 			Util::debug_log( 'Adding elementor bundle asset to queue: ' . $url );
-			/** @var \Simply_Static\Page $static_page */
+			/** @var \WP_Static_Export\Page $static_page */
 			$static_page = Page::query()->find_or_initialize_by( 'url', $url );
-			$static_page->set_status_message( __( 'Elementor Asset', 'simply-static' ) );
+			$static_page->set_status_message( __( 'Elementor Asset', 'wp-static-export' ) );
 			$static_page->found_on_id = 0;
 			$static_page->save();
 		}
@@ -436,9 +436,9 @@ class Elementor_Integration extends Integration {
 			$url      = $gf_base_url . $relative;
 
 			Util::debug_log( 'Adding Elementor Google Font asset to queue: ' . $url );
-			/** @var \Simply_Static\Page $static_page */
+			/** @var \WP_Static_Export\Page $static_page */
 			$static_page = Page::query()->find_or_initialize_by( 'url', $url );
-			$static_page->set_status_message( __( 'Elementor Google Font', 'simply-static' ) );
+			$static_page->set_status_message( __( 'Elementor Google Font', 'wp-static-export' ) );
 			$static_page->found_on_id = 0;
 			$static_page->save();
 		}
@@ -451,9 +451,9 @@ class Elementor_Integration extends Integration {
 	 */
 	public function register_widget_categories( $elements_manager ) {
 		$elements_manager->add_category(
-			'simply-static',
+			'wp-static-export',
 			[
-				'title' => __( 'WP Static Export', 'simply-static' ),
+				'title' => __( 'WP Static Export', 'wp-static-export' ),
 				'icon' => 'fa fa-plug',
 			]
 		);
@@ -486,9 +486,9 @@ class Elementor_Integration extends Integration {
 
 		foreach ( $files as $file_url ) {
 			Util::debug_log( 'Adding elementor pro Lottie File to queue: ' . $file_url );
-			/** @var \Simply_Static\Page $static_page */
+			/** @var \WP_Static_Export\Page $static_page */
 			$static_page = Page::query()->find_or_initialize_by( 'url', $file_url );
-			$static_page->set_status_message( __( 'Elementor Pro Lottie', 'simply-static' ) );
+			$static_page->set_status_message( __( 'Elementor Pro Lottie', 'wp-static-export' ) );
 			$static_page->found_on_id = 0;
 			$static_page->save();
 		}
@@ -504,7 +504,7 @@ class Elementor_Integration extends Integration {
 
 		$files        = array();
 		$last_meta_id = 0;
-		$batch_size   = (int) apply_filters( 'simply_static_elementor_meta_batch_size', 100 );
+		$batch_size   = (int) apply_filters( 'wpse_elementor_meta_batch_size', 100 );
 		$batch_size   = max( 1, min( 1000, $batch_size ) );
 
 		do {
@@ -597,7 +597,7 @@ class Elementor_Integration extends Integration {
 	 */
 	protected function set_elementor_default_options() {
 		// Prevent repeated overrides; run only once per site unless flag is removed.
-		if ( get_option( 'simply_static_elementor_defaults_set' ) ) {
+		if ( get_option( 'wpse_elementor_defaults_set' ) ) {
 			return;
 		}
 
@@ -610,7 +610,7 @@ class Elementor_Integration extends Integration {
 		update_option( 'elementor_experiment-e_optimized_markup', 'inactive' );
 
 		// Mark done
-		update_option( 'simply_static_elementor_defaults_set', 1 );
+		update_option( 'wpse_elementor_defaults_set', 1 );
 	}
 
 	/**

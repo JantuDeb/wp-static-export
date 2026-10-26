@@ -232,14 +232,14 @@ function SettingsPage() {
     return (
         <div className={"plugin-settings-container"} >
             <NavigatorProvider initialPath={initialPage} style={{minHeight: minHeight() + "px"}}>
-				<Button type="button" aria-expanded={showMobileNav} aria-controls="simply-static-mobile-nav" onClick={() => {
+				<Button type="button" aria-expanded={showMobileNav} aria-controls="wp-static-export-mobile-nav" onClick={() => {
                     setShowMobileNav(true);
-				}} className={"show-nav"}><Dashicon icon="align-center"/> {__('Toggle menu', 'simply-static')}</Button>
+				}} className={"show-nav"}><Dashicon icon="align-center"/> {__('Toggle menu', 'wp-static-export')}</Button>
                 {showMobileNav &&
-					<div id="simply-static-mobile-nav" className="mobile-nav-overlay" role="dialog" aria-modal="true" aria-label={__('WP Static Export menu', 'simply-static')}>
+					<div id="wp-static-export-mobile-nav" className="mobile-nav-overlay" role="dialog" aria-modal="true" aria-label={__('WP Static Export menu', 'wp-static-export')}>
                         <div className="mobile-nav-header">
-                            <span>{__('Menu', 'simply-static')}</span>
-							<Button isSmall variant="tertiary" aria-label={__('Close menu', 'simply-static')} onClick={() => setShowMobileNav(false)}>
+                            <span>{__('Menu', 'wp-static-export')}</span>
+							<Button isSmall variant="tertiary" aria-label={__('Close menu', 'wp-static-export')} onClick={() => setShowMobileNav(false)}>
                                 <Dashicon icon="no-alt" />
                             </Button>
                         </div>
@@ -269,8 +269,8 @@ function SettingsPage() {
                                         <Notice status="notice" isDismissible={false}
                                                 className={activeItem == '/' ? 'diagnostics-notice diagnostics-notice-generate' : 'diagnostics-notice'}>
                                             <p>
-                                                {__('There are errors in diagnostics that may negatively affect your static push.', 'simply-static')}<br></br>
-                                                {__('Please review them and get them fixed to avoid problems.', 'simply-static')}
+                                                {__('There are errors in diagnostics that may negatively affect your static push.', 'wp-static-export')}<br></br>
+                                                {__('Please review them and get them fixed to avoid problems.', 'wp-static-export')}
                                             </p>
                                             <NavigatorButton isSecondary onClick={() => {
                                                 selectActiveItem('/diagnostics')
@@ -279,29 +279,9 @@ function SettingsPage() {
                                                              className={activeItem === '/diagnostics' ? 'is-active-item' : ''}
                                                              path="/diagnostics">
                                                 <Dashicon
-                                                    icon="editor-help"/> {__('Visit Diagnostics', 'simply-static')}
+                                                    icon="editor-help"/> {__('Visit Diagnostics', 'wp-static-export')}
                                             </NavigatorButton>
                                         </Notice>
-                                    )}
-                                </Animate>
-                                :
-                                ''
-                            }
-                            {'pro' === options.plan && !isPro() ?
-                                <Animate type="slide-in" options={{origin: 'top'}}>
-                                    {() => (
-                                        <>
-                                            <Notice status="error" isDismissible={false}
-                                                    className={activeItem == '/' ? 'diagnostics-notice diagnostics-notice-generate' : 'diagnostics-notice'}>
-                                                <p>
-                                                    {__('You are using the pro version without a valid license.', 'simply-static')}<br></br>
-                                                    {__('We have temporarily disabled all the pro features now. Please contact our support to have the problem solved.', 'simply-static')}
-                                                </p>
-                                                <Button isPrimary href={"https://simplystatic.com/support/"}
-                                                        target="_blank">{__('Contact Support', 'simply-static')}</Button>
-                                            </Notice>
-                                            <Spacer margin={"5px"}/>
-                                        </>
                                     )}
                                 </Animate>
                                 :

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
 use ReflectionMethod;
-use Simply_Static\Admin_Rest;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Admin_Rest;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 final class AdminRestTest extends UnitTestCase {
 
@@ -23,7 +23,7 @@ final class AdminRestTest extends UnitTestCase {
 	}
 
 	public function test_settings_export_cannot_be_tricked_into_including_secrets(): void {
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'delivery_method'                 => 'zip',
 			'origin_url'                      => 'https://private-origin.example.test',
 			'local_dir'                       => '/srv/private-export',
@@ -47,7 +47,7 @@ final class AdminRestTest extends UnitTestCase {
 		);
 
 		add_filter(
-			'ss_export_excluded_options',
+			'wpse_export_excluded_options',
 			static function (): array {
 				return array();
 			}
@@ -84,7 +84,7 @@ final class AdminRestTest extends UnitTestCase {
 			)
 		);
 
-		$saved = WpEnv::$options['simply-static'];
+		$saved = WpEnv::$options['wp-static-export'];
 
 		self::assertSame( "https://one.test/\nhttps://two.test/path", $saved['additional_urls'] );
 		self::assertSame( "body {\n color: red;\n}", $saved['critical_css_custom'] );
@@ -117,7 +117,7 @@ final class AdminRestTest extends UnitTestCase {
 			)
 		);
 
-		$saved = WpEnv::$options['simply-static'];
+		$saved = WpEnv::$options['wp-static-export'];
 		self::assertSame( 21, $saved['ftp_port'] );
 		self::assertSame( 2222, $saved['sftp_port'] );
 		self::assertSame( 5, $saved['ftp_timeout'] );
@@ -149,7 +149,7 @@ final class AdminRestTest extends UnitTestCase {
 				),
 				array( 'search' => 'removenull', 'replace' => 'safevalue' ),
 			),
-			WpEnv::$options['simply-static']['custom_replacements']
+			WpEnv::$options['wp-static-export']['custom_replacements']
 		);
 	}
 
@@ -159,7 +159,7 @@ final class AdminRestTest extends UnitTestCase {
 	public function test_save_settings_rejects_private_and_invalid_webhook_urls( string $field, string $url ): void {
 		$this->saveSettings( array( $field => $url ) );
 
-		self::assertSame( '', WpEnv::$options['simply-static'][ $field ] );
+		self::assertSame( '', WpEnv::$options['wp-static-export'][ $field ] );
 	}
 
 	/** @return array<string,array{string,string}> */
@@ -177,7 +177,7 @@ final class AdminRestTest extends UnitTestCase {
 
 		self::assertSame(
 			'https://hooks.example.test/deploy',
-			WpEnv::$options['simply-static']['ss_webhook_url']
+			WpEnv::$options['wp-static-export']['ss_webhook_url']
 		);
 	}
 
@@ -188,7 +188,7 @@ final class AdminRestTest extends UnitTestCase {
 			'archive_deploy_id'               => 'deployment-123',
 			'deploy_manifest_schema_version' => 2,
 			'pages_status'                   => array( 'total' => 15, 'done' => 4 ),
-			'archive_name'                   => 'simply-static-1.zip',
+			'archive_name'                   => 'wp-static-export-1.zip',
 			'archive_start_time'             => '2026-07-12 10:00:00',
 			'archive_end_time'               => null,
 			'generate_type'                  => 'update',
@@ -198,7 +198,7 @@ final class AdminRestTest extends UnitTestCase {
 			'zip_files'                      => array( '/tmp/archive/a.html', '/tmp/archive/b.html' ),
 			'version'                        => '3.4.5',
 		);
-		WpEnv::$options['simply-static'] = $runtime + array( 'delivery_method' => 'zip' );
+		WpEnv::$options['wp-static-export'] = $runtime + array( 'delivery_method' => 'zip' );
 
 		$this->saveSettings( array(
 			'delivery_method'         => 'local',
@@ -214,9 +214,9 @@ final class AdminRestTest extends UnitTestCase {
 		) );
 
 		foreach ( $runtime as $key => $value ) {
-			self::assertSame( $value, WpEnv::$options['simply-static'][ $key ], $key );
+			self::assertSame( $value, WpEnv::$options['wp-static-export'][ $key ], $key );
 		}
-		self::assertSame( 'local', WpEnv::$options['simply-static']['delivery_method'] );
+		self::assertSame( 'local', WpEnv::$options['wp-static-export']['delivery_method'] );
 	}
 
 	public function test_cross_site_site_admin_is_denied_without_network_authorization(): void {
@@ -266,9 +266,9 @@ final class AdminRestTest extends UnitTestCase {
 
 	public function test_explicit_empty_integrations_remains_empty_after_save_and_read(): void {
 		$this->saveSettings( array( 'integrations' => array() ) );
-		WpEnv::$transients['simply_static_has_build_terms'] = 0;
+		WpEnv::$transients['wpse_has_build_terms'] = 0;
 
-		self::assertSame( array(), WpEnv::$options['simply-static']['integrations'] );
+		self::assertSame( array(), WpEnv::$options['wp-static-export']['integrations'] );
 		self::assertSame( array(), $this->rest->get_settings()['integrations'] );
 	}
 

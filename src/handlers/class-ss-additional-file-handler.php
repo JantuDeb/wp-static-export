@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 class Additional_File_Handler extends Page_Handler {
 	/**

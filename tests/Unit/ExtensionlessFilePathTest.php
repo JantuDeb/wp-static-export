@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
 use ReflectionClass;
-use Simply_Static\Additional_File_Handler;
-use Simply_Static\Options;
-use Simply_Static\Page;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Text_File_Handler;
-use Simply_Static\Url_Fetcher;
+use WP_Static_Export\Additional_File_Handler;
+use WP_Static_Export\Options;
+use WP_Static_Export\Page;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Text_File_Handler;
+use WP_Static_Export\Url_Fetcher;
 
 final class ExtensionlessFilePathTest extends UnitTestCase {
 

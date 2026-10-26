@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 namespace {
-	use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+	use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 	if ( ! function_exists( 'wp_remote_head' ) ) {
 		/**
@@ -26,11 +26,11 @@ namespace {
 	}
 }
 
-namespace Simply_Static\Tests\Unit {
+namespace WP_Static_Export\Tests\Unit {
 
-	use Simply_Static\Crawler\Sitemap_Crawler;
-	use Simply_Static\Tests\Support\UnitTestCase;
-	use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+	use WP_Static_Export\Crawler\Sitemap_Crawler;
+	use WP_Static_Export\Tests\Support\UnitTestCase;
+	use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 	final class SitemapCrawlerTest extends UnitTestCase {
 
@@ -157,7 +157,7 @@ namespace Simply_Static\Tests\Unit {
 
 		public function test_it_honors_the_depth_cap(): void {
 			add_filter(
-				'simply_static_sitemap_max_depth',
+				'wpse_sitemap_max_depth',
 				static function () {
 					return 0;
 				}
@@ -172,7 +172,7 @@ namespace Simply_Static\Tests\Unit {
 
 		public function test_it_honors_the_document_cap(): void {
 			add_filter(
-				'simply_static_sitemap_max_documents',
+				'wpse_sitemap_max_documents',
 				static function () {
 					return 2;
 				}
@@ -196,7 +196,7 @@ namespace Simply_Static\Tests\Unit {
 
 		public function test_it_honors_the_discovered_url_cap(): void {
 			add_filter(
-				'simply_static_sitemap_max_urls',
+				'wpse_sitemap_max_urls',
 				static function () {
 					return 2;
 				}
@@ -218,7 +218,7 @@ namespace Simply_Static\Tests\Unit {
 		}
 
 		public function test_it_stops_discovery_when_the_total_time_budget_is_exhausted(): void {
-			add_filter( 'simply_static_sitemap_max_scan_seconds', static function () {
+			add_filter( 'wpse_sitemap_max_scan_seconds', static function () {
 				return 1;
 			} );
 			$crawler = new class extends Sitemap_Crawler {
@@ -236,13 +236,13 @@ namespace Simply_Static\Tests\Unit {
 
 		public function test_it_applies_timeout_and_response_size_limits_and_rejects_oversized_bodies(): void {
 			add_filter(
-				'simply_static_sitemap_request_timeout',
+				'wpse_sitemap_request_timeout',
 				static function () {
 					return 2.5;
 				}
 			);
 			add_filter(
-				'simply_static_sitemap_max_response_size',
+				'wpse_sitemap_max_response_size',
 				static function () {
 					return 64;
 				}
@@ -289,7 +289,7 @@ namespace Simply_Static\Tests\Unit {
 
 		private function useOnlyCommonSitemap( string $url ): void {
 			add_filter(
-				'simply_static_sitemap_common_urls',
+				'wpse_sitemap_common_urls',
 				static function () use ( $url ) {
 					return array( $url );
 				}

@@ -13,45 +13,45 @@ function UAMSettings() {
         : {};
 
     const roleOptions = useMemo(() => ([
-        { label: __('Administrator', 'simply-static'), value: 'administrator' },
-        { label: __('Editor', 'simply-static'), value: 'editor' },
-        { label: __('Author', 'simply-static'), value: 'author' },
-        { label: __('Contributor', 'simply-static'), value: 'contributor' },
-        { label: __('Subscriber', 'simply-static'), value: 'subscriber' },
+        { label: __('Administrator', 'wp-static-export'), value: 'administrator' },
+        { label: __('Editor', 'wp-static-export'), value: 'editor' },
+        { label: __('Author', 'wp-static-export'), value: 'author' },
+        { label: __('Contributor', 'wp-static-export'), value: 'contributor' },
+        { label: __('Subscriber', 'wp-static-export'), value: 'subscriber' },
     ]), []);
 
     // Group pages by subsection for clearer UI
     const toolsPages = useMemo(() => ([
-        { key: 'activity', label: __('Activity Log', 'simply-static'), route: '/' },
-        { key: 'diagnostics', label: __('Diagnostics', 'simply-static'), route: '/diagnostics' },
+        { key: 'activity', label: __('Activity Log', 'wp-static-export'), route: '/' },
+        { key: 'diagnostics', label: __('Diagnostics', 'wp-static-export'), route: '/diagnostics' },
     ]), []);
 
     const settingsPages = useMemo(() => ([
-        { key: 'general', label: __('General', 'simply-static'), route: '/general' },
-        { key: 'deployment', label: __('Deploy', 'simply-static'), route: '/deployment' },
-        { key: 'forms', label: __('Forms', 'simply-static'), route: '/forms' },
-        { key: 'search', label: __('Search', 'simply-static'), route: '/search' },
-        { key: 'optimize', label: __('Optimize', 'simply-static'), route: '/optimize' },
-        { key: 'hide-wp', label: __('Hide WP', 'simply-static'), route: '/hide-wp' },
-        { key: 'workflow', label: __('Workflow', 'simply-static'), route: '/workflow' },
+        { key: 'general', label: __('General', 'wp-static-export'), route: '/general' },
+        { key: 'deployment', label: __('Deploy', 'wp-static-export'), route: '/deployment' },
+        { key: 'forms', label: __('Forms', 'wp-static-export'), route: '/forms' },
+        { key: 'search', label: __('Search', 'wp-static-export'), route: '/search' },
+        { key: 'optimize', label: __('Optimize', 'wp-static-export'), route: '/optimize' },
+        { key: 'hide-wp', label: __('Hide WP', 'wp-static-export'), route: '/hide-wp' },
+        { key: 'workflow', label: __('Workflow', 'wp-static-export'), route: '/workflow' },
     ]), []);
 
     const advancedPages = useMemo(() => ([
-        { key: 'integrations', label: __('Integrations', 'simply-static'), route: '/integrations' },
-        { key: 'utilities', label: __('Utilities', 'simply-static'), route: '/utilities' },
-        { key: 'debug', label: __('Debug', 'simply-static'), route: '/debug' },
-        { key: 'uam', label: __('UAM', 'simply-static'), route: '/uam' },
+        { key: 'integrations', label: __('Integrations', 'wp-static-export'), route: '/integrations' },
+        { key: 'utilities', label: __('Utilities', 'wp-static-export'), route: '/utilities' },
+        { key: 'debug', label: __('Debug', 'wp-static-export'), route: '/debug' },
+        { key: 'uam', label: __('UAM', 'wp-static-export'), route: '/uam' },
     ]), []);
 
     const menus = useMemo(() => {
         const base = [
-            { key: 'menu_generate', label: __('Generate', 'simply-static') },
-            { key: 'menu_settings', label: __('Settings', 'simply-static') },
-            { key: 'menu_diagnostics', label: __('Diagnostics', 'simply-static') },
-            { key: 'menu_form_connections', label: __('Form Connections', 'simply-static') },
+            { key: 'menu_generate', label: __('Generate', 'wp-static-export') },
+            { key: 'menu_settings', label: __('Settings', 'wp-static-export') },
+            { key: 'menu_diagnostics', label: __('Diagnostics', 'wp-static-export') },
+            { key: 'menu_form_connections', label: __('Form Connections', 'wp-static-export') },
         ];
         if (settings?.ss_use_builds) {
-            base.push({ key: 'menu_builds', label: __('Builds', 'simply-static') });
+            base.push({ key: 'menu_builds', label: __('Builds', 'wp-static-export') });
         }
         return base;
     }, [settings?.ss_use_builds]);
@@ -111,13 +111,13 @@ function UAMSettings() {
         <div className={"inner-settings"}>
             <Card>
                 <CardHeader>
-                    <b>{__('UAM (User Access Management)', 'simply-static')}</b>
+                    <b>{__('UAM (User Access Management)', 'wp-static-export')}</b>
                 </CardHeader>
                 <CardBody>
                     <p>
                         {__(
                             'Control who can access WP Static Export pages, menu entries, and selected features by assigning a minimum WordPress role.',
-                            'simply-static'
+                            'wp-static-export'
                         )}
                     </p>
                 </CardBody>
@@ -125,7 +125,7 @@ function UAMSettings() {
             <Spacer margin={5}/>
             <Card>
                 <CardHeader>
-                    <b>{__('Tools', 'simply-static')}</b>
+                    <b>{__('Tools', 'wp-static-export')}</b>
                 </CardHeader>
                 <CardBody>
                     <Flex direction="column" gap={3}>
@@ -147,7 +147,7 @@ function UAMSettings() {
             <Spacer margin={5}/>
             <Card>
                 <CardHeader>
-                    <b>{__('Settings', 'simply-static')}</b>
+                    <b>{__('Settings', 'wp-static-export')}</b>
                 </CardHeader>
                 <CardBody>
                     <Flex direction="column" gap={3}>
@@ -166,7 +166,7 @@ function UAMSettings() {
             <Spacer margin={5}/>
             <Card>
                 <CardHeader>
-                    <b>{__('Advanced', 'simply-static')}</b>
+                    <b>{__('Advanced', 'wp-static-export')}</b>
                 </CardHeader>
                 <CardBody>
                     <Flex direction="column" gap={3}>
@@ -185,7 +185,7 @@ function UAMSettings() {
             <Spacer margin={5}/>
             <Card>
                 <CardHeader>
-                    <b>{__('Menu', 'simply-static')}</b>
+                    <b>{__('Menu', 'wp-static-export')}</b>
                 </CardHeader>
                 <CardBody>
                     <Flex direction="column" gap={3}>
@@ -207,19 +207,19 @@ function UAMSettings() {
             <Spacer margin={5}/>
             <Card>
                 <CardHeader>
-                    <b>{__('Features', 'simply-static')}</b>
+                    <b>{__('Features', 'wp-static-export')}</b>
                 </CardHeader>
                 <CardBody>
                     <Flex direction="column" gap={3}>
                         <Row
                             id="uam-adminbar"
-                            label={__('Admin Bar', 'simply-static')}
+                            label={__('Admin Bar', 'wp-static-export')}
                             value={resolveRole('adminbar', 'editor')}
                             onChange={(val) => setRole('adminbar', val)}
                         />
                         <Row
                             id="uam-single-export"
-                            label={__('Single Export (Button)', 'simply-static')}
+                            label={__('Single Export (Button)', 'wp-static-export')}
                             value={resolveRole('single_export_button', 'editor')}
                             onChange={(val) => setRole('single_export_button', val)}
                         />
@@ -232,7 +232,7 @@ function UAMSettings() {
                         {() => (
                             <Notice status="success" isDismissible={false}>
                                 <p>
-                                    {__('Settings saved successfully.', 'simply-static')}
+                                    {__('Settings saved successfully.', 'wp-static-export')}
                                 </p>
                             </Notice>
                         )}
@@ -241,7 +241,7 @@ function UAMSettings() {
                 </>
             )}
             <div className={"save-settings"}>
-                <Button onClick={setSavingSettings} variant="primary">{__('Save Settings', 'simply-static')}</Button>
+                <Button onClick={setSavingSettings} variant="primary">{__('Save Settings', 'wp-static-export')}</Button>
             </div>
         </div>
     );

@@ -14,13 +14,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Author URI:        https://github.com/JantuDeb
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
- * Text Domain:       simply-static
+ * Text Domain:       wp-static-export
  * Domain Path:       /languages
  */
 
-define( 'SIMPLY_STATIC_PATH', plugin_dir_path( __FILE__ ) );
-define( 'SIMPLY_STATIC_URL', untrailingslashit( plugin_dir_url( __FILE__ ) ) );
-define( 'SIMPLY_STATIC_VERSION', '3.8.18' );
+define( 'WPSE_PATH', plugin_dir_path( __FILE__ ) );
+define( 'WPSE_URL', untrailingslashit( plugin_dir_url( __FILE__ ) ) );
+define( 'WPSE_VERSION', '3.8.18' );
 
 /**
  * Load bundled translations after WordPress has initialized the current locale.
@@ -30,59 +30,55 @@ define( 'SIMPLY_STATIC_VERSION', '3.8.18' );
  * Loading the bundled file directly also supports installations where Core is
  * embedded outside the standard plugins directory.
  */
-function simply_static_load_textdomain() {
-	$locale = apply_filters( 'plugin_locale', determine_locale(), 'simply-static' );
-	$mofile = SIMPLY_STATIC_PATH . 'languages/simply-static-' . $locale . '.mo';
+function wpse_load_textdomain() {
+	$locale = apply_filters( 'plugin_locale', determine_locale(), 'wp-static-export' );
+	$mofile = WPSE_PATH . 'languages/wp-static-export-' . $locale . '.mo';
 
 	if ( is_readable( $mofile ) ) {
-		load_textdomain( 'simply-static', $mofile );
+		load_textdomain( 'wp-static-export', $mofile );
 		return;
 	}
 
 	load_plugin_textdomain(
-		'simply-static',
+		'wp-static-export',
 		false,
 		dirname( plugin_basename( __FILE__ ) ) . '/languages'
 	);
 }
-add_action( 'init', 'simply_static_load_textdomain', 0 );
+add_action( 'init', 'wpse_load_textdomain', 0 );
 
 // Check PHP version.
 if ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
 	deactivate_plugins( plugin_basename( __FILE__ ) );
-	wp_die( esc_html__( 'WP Static Export requires PHP 7.4 or higher.', 'simply-static' ), esc_html__( 'Plugin dependency check', 'simply-static' ), array( 'back_link' => true ) );
+	wp_die( esc_html__( 'WP Static Export requires PHP 7.4 or higher.', 'wp-static-export' ), esc_html__( 'Plugin dependency check', 'wp-static-export' ), array( 'back_link' => true ) );
 }
 
 // Check WordPress version.
 if ( version_compare( get_bloginfo( 'version' ), '6.2', '<' ) ) {
 	deactivate_plugins( plugin_basename( __FILE__ ) );
-	wp_die( esc_html__( 'WP Static Export requires WordPress 6.2 or higher.', 'simply-static' ), esc_html__( 'Plugin dependency check', 'simply-static' ), array( 'back_link' => true ) );
+	wp_die( esc_html__( 'WP Static Export requires WordPress 6.2 or higher.', 'wp-static-export' ), esc_html__( 'Plugin dependency check', 'wp-static-export' ), array( 'back_link' => true ) );
 }
 
 // Run autoloader.
-if ( file_exists( __DIR__ . '/vendor/autoload.php' ) && ! class_exists( 'Simply_Static\Plugin' ) ) {
+if ( file_exists( __DIR__ . '/vendor/autoload.php' ) && ! class_exists( 'WP_Static_Export\Plugin' ) ) {
 	require __DIR__ . '/vendor/autoload.php';
 }
 
-// Block incompatible Pro integrations before either plugin boots.
-require_once SIMPLY_STATIC_PATH . 'src/class-ss-pro-compatibility.php';
-add_action( 'plugins_loaded', array( 'Simply_Static\Pro_Compatibility', 'enforce' ), 1 );
-
 // Boot WP Static Export.
-if ( ! function_exists( 'simply_static_run_plugin' ) ) {
-	add_action( 'plugins_loaded', 'simply_static_run_plugin' );
+if ( ! function_exists( 'wpse_run_plugin' ) ) {
+	add_action( 'plugins_loaded', 'wpse_run_plugin' );
 
 	/**
 	 * Run plugin
 	 *
 	 * @return void
 	 */
-	function simply_static_run_plugin() {
-		require_once SIMPLY_STATIC_PATH . 'src/class-ss-plugin.php';
+	function wpse_run_plugin() {
+		require_once WPSE_PATH . 'src/class-ss-plugin.php';
 
-		Simply_Static\Plugin::instance();
+		WP_Static_Export\Plugin::instance();
 
-		$options = get_option( 'simply-static' );
+		$options = get_option( 'wp-static-export' );
 
 		if ( ! is_array( $options ) ) {
 			$options = [];
@@ -96,12 +92,12 @@ if ( ! function_exists( 'simply_static_run_plugin' ) ) {
 		// Generate a secure unique key.
 		if ( ! isset( $options['encryption_key'] ) ) {
 			$options['encryption_key'] = bin2hex( random_bytes( 16 ) );
-			update_option( 'simply-static', $options );
+			update_option( 'wp-static-export', $options );
 		}
 	}
 }
 
-register_deactivation_hook( __FILE__, 'simply_static_plugin_deactivate' );
+register_deactivation_hook( __FILE__, 'wpse_plugin_deactivate' );
 
 /**
  * Stop scheduled work on deactivation without deleting user data.
@@ -109,8 +105,8 @@ register_deactivation_hook( __FILE__, 'simply_static_plugin_deactivate' );
  * WordPress deactivation is reversible. Generated files, logs, and page
  * records are removed only by the explicit uninstall flow.
  */
-function simply_static_plugin_deactivate() {
-	wp_clear_scheduled_hook( 'simply_static_site_export_cron' );
-	wp_clear_scheduled_hook( 'wp_archive_creation_job_cron' );
-	do_action( 'simply_static_deactivated' );
+function wpse_plugin_deactivate() {
+	wp_clear_scheduled_hook( 'wpse_site_export_cron' );
+	wp_clear_scheduled_hook( 'wpse_archive_creation_job_cron' );
+	do_action( 'wpse_deactivated' );
 }

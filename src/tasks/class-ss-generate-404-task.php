@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 /**
  * Class which handles fetch url task.
@@ -45,7 +45,7 @@ class Generate_404_Task extends Task {
 	 */
 	public function perform() {
 
-		$message = __( 'Generating 404 Page.', 'simply-static' );
+		$message = __( 'Generating 404 Page.', 'wp-static-export' );
 		$this->save_status_message( $message );
 
 		$custom_404_id  = intval( $this->options->get( 'custom_404_page' ) );
@@ -62,7 +62,7 @@ class Generate_404_Task extends Task {
 		}
 
 		if ( $generated ) {
-			$this->save_status_message( __( '404 Page generated', 'simply-static' ) );
+			$this->save_status_message( __( '404 Page generated', 'wp-static-export' ) );
 		}
 
 		return true;
@@ -177,7 +177,7 @@ class Generate_404_Task extends Task {
 	 * @return int
 	 */
 	private function get_scoped_post_id( int $custom_404_id ) : int {
-		$use_single = get_option( 'simply-static-use-single' );
+		$use_single = get_option( 'wp-static-export-use-single' );
 
 		if ( ! empty( $use_single ) ) {
 			$ids = array_values( array_filter( array_map( 'absint', explode( ',', (string) $use_single ) ) ) );
@@ -196,7 +196,7 @@ class Generate_404_Task extends Task {
 	 * @return int
 	 */
 	private function get_scoped_build_id() : int {
-		$use_build = get_option( 'simply-static-use-build' );
+		$use_build = get_option( 'wp-static-export-use-build' );
 
 		return ! empty( $use_build ) ? absint( $use_build ) : 0;
 	}
@@ -205,7 +205,7 @@ class Generate_404_Task extends Task {
 	/**
 	 * Process the response for a 200 response (success)
 	 *
-	 * @param Simply_Static\Page $static_page Record to update.
+	 * @param WP_Static_Export\Page $static_page Record to update.
 	 * @param boolean $save_file Save a static copy of the page.
 	 * @param boolean $follow_urls Save found URLs to database.
 	 *

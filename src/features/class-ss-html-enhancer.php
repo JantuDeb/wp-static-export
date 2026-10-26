@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -19,7 +19,7 @@ class Html_Enhancer {
 	const ASSET_DIR = 'ss-assets';
 
 	public static function init() {
-		add_filter( 'ss_after_replace_urls_in_html', array( __CLASS__, 'enhance' ), 15, 2 );
+		add_filter( 'wpse_after_replace_urls_in_html', array( __CLASS__, 'enhance' ), 15, 2 );
 	}
 
 	/**

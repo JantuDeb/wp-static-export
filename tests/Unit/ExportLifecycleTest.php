@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Options;
-use Simply_Static\Page_Handlers;
-use Simply_Static\Plugin;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Options;
+use WP_Static_Export\Page_Handlers;
+use WP_Static_Export\Plugin;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-plugin.php';
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-options.php';
@@ -90,7 +90,7 @@ final class ExportLifecycleTest extends UnitTestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		WpEnv::$options['simply-static'] = array( 'debugging_mode' => false );
+		WpEnv::$options['wp-static-export'] = array( 'debugging_mode' => false );
 		Options::reinstance();
 
 		$this->job    = new ExportLifecycleArchiveJob();
@@ -108,12 +108,12 @@ final class ExportLifecycleTest extends UnitTestCase {
 	 */
 	public function test_basic_auth_preflight_requires_both_credentials_before_start( $username, $password ): void {
 		$_SERVER['PHP_AUTH_USER'] = 'protected-site-user';
-		WpEnv::$options['simply-static']['http_basic_auth_username'] = $username;
-		WpEnv::$options['simply-static']['http_basic_auth_password'] = $password;
-		WpEnv::$transients['simply_static_checks'] = 'must-survive-preflight';
+		WpEnv::$options['wp-static-export']['http_basic_auth_username'] = $username;
+		WpEnv::$options['wp-static-export']['http_basic_auth_password'] = $password;
+		WpEnv::$transients['wpse_checks'] = 'must-survive-preflight';
 		$before_export_calls = 0;
 		add_action(
-			'ss_before_static_export',
+			'wpse_before_static_export',
 			static function () use ( &$before_export_calls ): void {
 				++$before_export_calls;
 			}
@@ -122,7 +122,7 @@ final class ExportLifecycleTest extends UnitTestCase {
 		self::assertFalse( $this->plugin->run_static_export( 1, 'export' ) );
 		self::assertSame( array(), $this->job->starts );
 		self::assertSame( 0, $before_export_calls );
-		self::assertSame( 'must-survive-preflight', WpEnv::$transients['simply_static_checks'] );
+		self::assertSame( 'must-survive-preflight', WpEnv::$transients['wpse_checks'] );
 		self::assertCount( 1, $this->job->status_messages );
 		self::assertSame( 'error', $this->job->status_messages[0][0] );
 	}
@@ -139,8 +139,8 @@ final class ExportLifecycleTest extends UnitTestCase {
 
 	public function test_complete_credentials_allow_start_and_zero_values_are_not_treated_as_empty(): void {
 		$_SERVER['REMOTE_USER'] = 'protected-site-user';
-		WpEnv::$options['simply-static']['http_basic_auth_username'] = '0';
-		WpEnv::$options['simply-static']['http_basic_auth_password'] = '0';
+		WpEnv::$options['wp-static-export']['http_basic_auth_username'] = '0';
+		WpEnv::$options['wp-static-export']['http_basic_auth_password'] = '0';
 
 		self::assertTrue( $this->plugin->run_static_export( 4, 'update' ) );
 		self::assertSame( array( array( 4, 'update' ) ), $this->job->starts );
@@ -178,7 +178,7 @@ final class ExportLifecycleTest extends UnitTestCase {
 			'token'      => 'another-request',
 			'created_at' => time(),
 		);
-		WpEnv::$options['simply-static-use-build'] = 17;
+		WpEnv::$options['wp-static-export-use-build'] = 17;
 		$prepare_calls = 0;
 
 		$started = $this->plugin->run_static_export(
@@ -186,14 +186,14 @@ final class ExportLifecycleTest extends UnitTestCase {
 			'export',
 			static function () use ( &$prepare_calls ) {
 				++$prepare_calls;
-				update_option( 'simply-static-use-build', 29, false );
+				update_option( 'wp-static-export-use-build', 29, false );
 				return 'export';
 			}
 		);
 
 		self::assertFalse( $started );
 		self::assertSame( 0, $prepare_calls );
-		self::assertSame( 17, WpEnv::$options['simply-static-use-build'] );
+		self::assertSame( 17, WpEnv::$options['wp-static-export-use-build'] );
 		self::assertSame( array(), $this->job->starts );
 	}
 
@@ -221,7 +221,7 @@ final class ExportLifecycleTest extends UnitTestCase {
 			'42',
 			static function () use ( &$gate_seen ) {
 				$gate_seen = array_key_exists( Plugin::EXPORT_START_LOCK_OPTION, WpEnv::$options );
-				update_option( 'simply-static-use-build', 42, false );
+				update_option( 'wp-static-export-use-build', 42, false );
 				return 'export';
 			}
 		);
@@ -229,31 +229,31 @@ final class ExportLifecycleTest extends UnitTestCase {
 		self::assertTrue( $started );
 		self::assertTrue( $gate_seen );
 		self::assertSame( array( array( 8, 'export' ) ), $this->job->starts );
-		self::assertSame( 42, WpEnv::$options['simply-static-use-build'] );
+		self::assertSame( 42, WpEnv::$options['wp-static-export-use-build'] );
 		self::assertArrayNotHasKey( Plugin::EXPORT_START_LOCK_OPTION, WpEnv::$options );
 	}
 
 	public function test_failed_start_rolls_back_prepared_scope_before_releasing_gate(): void {
 		$this->job->start_result = false;
-		WpEnv::$options['simply-static-use-single'] = '11';
+		WpEnv::$options['wp-static-export-use-single'] = '11';
 		$rollback_saw_gate = false;
 
 		$started = $this->plugin->run_static_export(
 			3,
 			'export',
 			static function () {
-				update_option( 'simply-static-use-single', '22', false );
+				update_option( 'wp-static-export-use-single', '22', false );
 				return 'export';
 			},
 			static function () use ( &$rollback_saw_gate ) {
 				$rollback_saw_gate = array_key_exists( Plugin::EXPORT_START_LOCK_OPTION, WpEnv::$options );
-				update_option( 'simply-static-use-single', '11', false );
+				update_option( 'wp-static-export-use-single', '11', false );
 			}
 		);
 
 		self::assertFalse( $started );
 		self::assertTrue( $rollback_saw_gate );
-		self::assertSame( '11', WpEnv::$options['simply-static-use-single'] );
+		self::assertSame( '11', WpEnv::$options['wp-static-export-use-single'] );
 		self::assertArrayNotHasKey( Plugin::EXPORT_START_LOCK_OPTION, WpEnv::$options );
 	}
 

@@ -66,7 +66,7 @@ function Workflow() {
         setUpdateXmlSitemap(!!settings.ss_single_export_add_xml_sitemap);
 
         // Pages
-        apiFetch({path: '/simplystatic/v1/pages'}).then((list) => {
+        apiFetch({path: '/wp-static-export/v1/pages'}).then((list) => {
             const labels = list.map(i => i.label);
             const map = {};
             list.forEach(i => map[i.label] = i.value);
@@ -85,7 +85,7 @@ function Workflow() {
         });
 
         // Taxonomies
-        apiFetch({path: '/simplystatic/v1/taxonomies'}).then((list) => {
+        apiFetch({path: '/wp-static-export/v1/taxonomies'}).then((list) => {
             // list: [{label, value: slug}]
             const labels = list.map(i => i.label);
             const map = {};
@@ -105,7 +105,7 @@ function Workflow() {
         });
 
         // Post types (for Auto Export selection)
-        apiFetch({path: '/simplystatic/v1/post-types', parse: true}).then((resp) => {
+        apiFetch({path: '/wp-static-export/v1/post-types', parse: true}).then((resp) => {
             if (typeof resp === 'string') {
                 try {
                     resp = JSON.parse(resp);
@@ -225,16 +225,16 @@ function Workflow() {
                 <CardHeader>
                     <Flex>
                         <FlexItem>
-                            <strong>{__('Single Push', 'simply-static')}</strong>
+                            <strong>{__('Single Push', 'wp-static-export')}</strong>
                         </FlexItem>
                     </Flex>
                 </CardHeader>
                 <CardBody>
                     <ToggleControl
-                        label={__('Use Single Push?', 'simply-static')}
+                        label={__('Use Single Push?', 'wp-static-export')}
                         help={useSingleExports
-                            ? __('Quickly push updates to your static site while editing pages/posts.', 'simply-static')
-                            : __('Do not allow quick updates while editing posts/pages.', 'simply-static')}
+                            ? __('Quickly push updates to your static site while editing pages/posts.', 'wp-static-export')
+                            : __('Do not allow quick updates while editing posts/pages.', 'wp-static-export')}
                         checked={!!useSingleExports}
                         disabled={!proEnabled}
                         onChange={(value) => {
@@ -246,10 +246,10 @@ function Workflow() {
                     {useSingleExports && (
                         <>
                             <ToggleControl
-                                label={__('Use Auto Push?', 'simply-static')}
+                                label={__('Use Auto Push?', 'wp-static-export')}
                                 help={autoExport
-                                    ? __('Automatically schedule a Single Push when a post/page is updated/published.', 'simply-static')
-                                    : __('Do not automatically run Single Push when a post/page is updated/published.', 'simply-static')}
+                                    ? __('Automatically schedule a Single Push when a post/page is updated/published.', 'wp-static-export')
+                                    : __('Do not automatically run Single Push when a post/page is updated/published.', 'wp-static-export')}
                                 checked={!!autoExport}
                                 disabled={!proEnabled}
                                 onChange={(value) => {
@@ -261,12 +261,12 @@ function Workflow() {
                             {autoExport && (
                                 <>
                                     <FormTokenField
-                                        label={__('Auto Push Post Types', 'simply-static')}
+                                        label={__('Auto Push Post Types', 'wp-static-export')}
                                         __next40pxDefaultSize
                                         value={selectedPostTypeLabels}
                                         suggestions={postTypeSuggestions}
                                         onChange={onChangePostTypeTokens}
-                                        help={__('Choose which public post types should trigger automatic single pushes when updated. If none is selected, all public post types are used.', 'simply-static')}
+                                        help={__('Choose which public post types should trigger automatic single pushes when updated. If none is selected, all public post types are used.', 'wp-static-export')}
                                         tokenizeOnSpace={false}
                                         __experimentalExpandOnFocus={true}
                                         __experimentalShowHowTo={false}
@@ -275,14 +275,14 @@ function Workflow() {
                                         disabled={!proEnabled}
                                     />
                                     <p className={'description'}>
-                                        {__('Choose which public post types should trigger automatic single pushes when updated. If none is selected, all public post types are used.', 'simply-static')}
+                                        {__('Choose which public post types should trigger automatic single pushes when updated. If none is selected, all public post types are used.', 'wp-static-export')}
                                     </p>
                                 </>
                             )}
                             {autoExport && (
                                 <InputControl
-                                    label={__('Auto push delay (seconds)', 'simply-static')}
-                                    help={__('Delay before the automatic Single Push starts after a change is detected.', 'simply-static')}
+                                    label={__('Auto push delay (seconds)', 'wp-static-export')}
+                                    help={__('Delay before the automatic Single Push starts after a change is detected.', 'wp-static-export')}
                                     type="number"
                                     min={0}
                                     value={autoExportDelay}
@@ -297,13 +297,13 @@ function Workflow() {
                                 />
                             )}
                             <FormTokenField
-                                label={__('Pages to update', 'simply-static')}
+                                label={__('Pages to update', 'wp-static-export')}
                                 __next40pxDefaultSize
                                 __nextHasNoMarginBottom
                                 value={selectedPageLabels}
                                 suggestions={pageSuggestions}
                                 onChange={onChangeTokens}
-                                help={__('Select which pages should start a Single Push. If none selected, we use your homepage.', 'simply-static')}
+                                help={__('Select which pages should start a Single Push. If none selected, we use your homepage.', 'wp-static-export')}
                                 tokenizeOnSpace={false}
                                 __experimentalExpandOnFocus={true}
                                 __experimentalShowHowTo={false}
@@ -312,17 +312,17 @@ function Workflow() {
                                 disabled={!proEnabled}
                             />
                             <p className={'description'}>
-                                {__('Choose which pages/files should be updated when running a Single Push.', 'simply-static')}
+                                {__('Choose which pages/files should be updated when running a Single Push.', 'wp-static-export')}
                             </p>
                             <Spacer margin={2}/>
                             <FormTokenField
-                                label={__('Taxonomy Archives', 'simply-static')}
+                                label={__('Taxonomy Archives', 'wp-static-export')}
                                 __next40pxDefaultSize
                                 __nextHasNoMarginBottom
                                 value={selectedTaxonomyLabels}
                                 suggestions={taxonomySuggestions}
                                 onChange={onChangeTaxonomyTokens}
-                                help={__('Choose which taxonomy archives to include for selected pages/posts (e.g., Categories, Tags, or custom taxonomies).', 'simply-static')}
+                                help={__('Choose which taxonomy archives to include for selected pages/posts (e.g., Categories, Tags, or custom taxonomies).', 'wp-static-export')}
                                 tokenizeOnSpace={false}
                                 __experimentalExpandOnFocus={true}
                                 __experimentalShowHowTo={false}
@@ -331,14 +331,14 @@ function Workflow() {
                                 disabled={!proEnabled}
                             />
                             <p className={'description'}>
-                                {__('Choose which taxonomies should be updated when running a Single Push.', 'simply-static')}
+                                {__('Choose which taxonomies should be updated when running a Single Push.', 'wp-static-export')}
                             </p>
                             <Spacer margin={2}/>
                             <ToggleControl
-                                label={__('Update archives (author/date/post_type)', 'simply-static')}
+                                label={__('Update archives (author/date/post_type)', 'wp-static-export')}
                                 help={incArchives
-                                    ? __('Update archive URLs when running a Single Push.', 'simply-static')
-                                    : __('Do not update archive URLs.', 'simply-static')}
+                                    ? __('Update archive URLs when running a Single Push.', 'wp-static-export')
+                                    : __('Do not update archive URLs.', 'wp-static-export')}
                                 checked={!!incArchives}
                                 disabled={!proEnabled}
                                 onChange={(value) => {
@@ -348,10 +348,10 @@ function Workflow() {
                                 }}
                             />
                             <ToggleControl
-                                label={__('Update pagination', 'simply-static')}
+                                label={__('Update pagination', 'wp-static-export')}
                                 help={incPagination
-                                    ? __('Update pagination URLs when running a Single Push.', 'simply-static')
-                                    : __('Do not update pagination URLs.', 'simply-static')}
+                                    ? __('Update pagination URLs when running a Single Push.', 'wp-static-export')
+                                    : __('Do not update pagination URLs.', 'wp-static-export')}
                                 checked={!!incPagination}
                                 disabled={!proEnabled}
                                 onChange={(value) => {
@@ -361,10 +361,10 @@ function Workflow() {
                                 }}
                             />
                             <ToggleControl
-                                label={__('Update XML sitemap', 'simply-static')}
+                                label={__('Update XML sitemap', 'wp-static-export')}
                                 help={updateXmlSitemap
-                                    ? __('Update XML sitemaps when running a Single Push.', 'simply-static')
-                                    : __('Do not update XML sitemaps.', 'simply-static')}
+                                    ? __('Update XML sitemaps when running a Single Push.', 'wp-static-export')
+                                    : __('Do not update XML sitemaps.', 'wp-static-export')}
                                 checked={!!updateXmlSitemap}
                                 disabled={!proEnabled}
                                 onChange={(value) => {
@@ -382,16 +382,16 @@ function Workflow() {
                 <CardHeader>
                     <Flex>
                         <FlexItem>
-                            <strong>{__('Builds', 'simply-static')}</strong>
+                            <strong>{__('Builds', 'wp-static-export')}</strong>
                         </FlexItem>
                     </Flex>
                 </CardHeader>
                 <CardBody>
                     <ToggleControl
-                        label={__('Enable Builds', 'simply-static')}
+                        label={__('Enable Builds', 'wp-static-export')}
                         help={useBuilds
-                            ? __('Use builds to quickly update a list of pages and files on your static site.', 'simply-static')
-                            : __('Builds are disabled.', 'simply-static')}
+                            ? __('Use builds to quickly update a list of pages and files on your static site.', 'wp-static-export')
+                            : __('Builds are disabled.', 'wp-static-export')}
                         checked={!!useBuilds}
                         disabled={!proEnabled}
                         onChange={(value) => {
@@ -407,16 +407,16 @@ function Workflow() {
                 <CardHeader>
                     <Flex>
                         <FlexItem>
-                            <strong>{__('Tools Submenu', 'simply-static')}</strong>
+                            <strong>{__('Tools Submenu', 'wp-static-export')}</strong>
                         </FlexItem>
                     </Flex>
                 </CardHeader>
                 <CardBody>
                     <ToggleControl
-                        label={__('Move menu to Tools submenu', 'simply-static')}
+                        label={__('Move menu to Tools submenu', 'wp-static-export')}
                         help={toolsSubmenu
-                            ? __('The WP Static Export menu is placed under the Tools menu in the admin sidebar.', 'simply-static')
-                            : __('The WP Static Export menu is shown as a top-level item in the admin sidebar.', 'simply-static')}
+                            ? __('The WP Static Export menu is placed under the Tools menu in the admin sidebar.', 'wp-static-export')
+                            : __('The WP Static Export menu is shown as a top-level item in the admin sidebar.', 'wp-static-export')}
                         checked={!!toolsSubmenu}
                         disabled={!proEnabled}
                         onChange={(value) => {
@@ -432,13 +432,13 @@ function Workflow() {
                 <CardHeader>
                     <Flex>
                         <FlexItem>
-                            <strong>{__('Webhook', 'simply-static')}</strong>
+                            <strong>{__('Webhook', 'wp-static-export')}</strong>
                         </FlexItem>
                     </Flex>
                 </CardHeader>
                 <CardBody>
                     <TextControl
-                        label={__('Webhook URL', 'simply-static')}
+                        label={__('Webhook URL', 'wp-static-export')}
                         placeholder={'https://example.com/webhook-endpoint'}
                         value={webhookUrl}
                         disabled={!proEnabled}
@@ -447,17 +447,17 @@ function Workflow() {
                             setWebhookUrl(value);
                             updateSetting('ss_webhook_url', value);
                         }}
-                        help={__('WP Static Export will POST a JSON payload to this URL after pushes finish.', 'simply-static')}
+                        help={__('WP Static Export will POST a JSON payload to this URL after pushes finish.', 'wp-static-export')}
                     />
-                    <p className={'description'}>{__('Fire for these push types:', 'simply-static')}</p>
+                    <p className={'description'}>{__('Fire for these push types:', 'wp-static-export')}</p>
                     <div className="ss-webhook-types">
                         {['export', 'update', 'build', 'single'].map((type) => (
                             <ToggleControl
                                 key={type}
                                 label={
-                                    type === 'export' ? __('Full Site', 'simply-static') :
-                                        type === 'update' ? __('Update', 'simply-static') :
-                                            type === 'build' ? __('Build', 'simply-static') : __('Single', 'simply-static')
+                                    type === 'export' ? __('Full Site', 'wp-static-export') :
+                                        type === 'update' ? __('Update', 'wp-static-export') :
+                                            type === 'build' ? __('Build', 'wp-static-export') : __('Single', 'wp-static-export')
                                 }
                                 checked={webhookEnabledTypes.includes(type)}
                                 disabled={!proEnabled}
@@ -473,7 +473,7 @@ function Workflow() {
                         ))}
                     </div>
                     <p className={'description'}>
-                        {__('Payload includes event, site_url, export_type, identifiers (when available), timestamp, and success.', 'simply-static')}
+                        {__('Payload includes event, site_url, export_type, identifiers (when available), timestamp, and success.', 'wp-static-export')}
                     </p>
                 </CardBody>
             </Card>
@@ -483,7 +483,7 @@ function Workflow() {
                         {() => (
                             <Notice status="success" isDismissible={false}>
                                 <p>
-                                    {__('Settings saved successfully.', 'simply-static')}
+                                    {__('Settings saved successfully.', 'wp-static-export')}
                                 </p>
                             </Notice>
                         )}
@@ -503,7 +503,7 @@ function Workflow() {
                         }}
                         variant="primary"
                     >
-                        {__('Save Settings', 'simply-static')}
+                        {__('Save Settings', 'wp-static-export')}
                     </Button>
                 </div>
             )}

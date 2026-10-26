@@ -1,8 +1,8 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
-use Simply_Static\Options;
+use WP_Static_Export\Options;
 
 class Yoast_Sitemap_Handler extends Page_Handler {
 

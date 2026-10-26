@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 /**
  * Class to handle meta for Admin_Meta.
@@ -31,7 +31,7 @@ class Admin_Meta {
 	 * Constructor for Admin_Meta.
 	 */
 	public function __construct() {
-		if ( ! defined( 'SIMPLY_STATIC_PRO_VERSION' ) ) {
+		if ( ! defined( 'WPSE_PRO_VERSION' ) ) {
 			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_single_push_teaser' ) );
 		}
 	}
@@ -49,7 +49,7 @@ class Admin_Meta {
 		}
 
 		$post_types = get_post_types( array( 'public' => true, 'exclude_from_search' => false ), 'names' );
-		$post_types = apply_filters( 'ss_single_export_post_types', $post_types );
+		$post_types = apply_filters( 'wpse_single_export_post_types', $post_types );
 
 		$current_post_type = get_post_type();
 		if ( ! $current_post_type ) {
@@ -60,16 +60,16 @@ class Admin_Meta {
 			return;
 		}
 
-		$capability = apply_filters( 'ss_user_capability', 'publish_pages', 'generate' );
+		$capability = apply_filters( 'wpse_user_capability', 'publish_pages', 'generate' );
 		if ( ! current_user_can( $capability ) ) {
 			return;
 		}
 
 		wp_enqueue_script(
 			'ss-single-push-teaser',
-			SIMPLY_STATIC_URL . '/assets/ss-single-push-teaser.js',
+			WPSE_URL . '/assets/ss-single-push-teaser.js',
 			array(),
-			SIMPLY_STATIC_VERSION,
+			WPSE_VERSION,
 			true
 		);
 	}

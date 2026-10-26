@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static\Crawler;
+namespace WP_Static_Export\Crawler;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,8 +24,8 @@ class Author_Crawler extends Crawler {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->name = __( 'Author URLs', 'simply-static' );
-		$this->description = __( 'Detects author archive URLs.', 'simply-static' );
+		$this->name = __( 'Author URLs', 'wp-static-export' );
+		$this->description = __( 'Detects author archive URLs.', 'wp-static-export' );
 	}
 
 	/**
@@ -35,7 +35,7 @@ class Author_Crawler extends Crawler {
 	 */
 	public function detect() : array {
 		$author_urls = [];
-		$max_users = max( 1, min( 100000, (int) apply_filters( 'simply_static_author_detection_limit', 1000 ) ) );
+		$max_users = max( 1, min( 100000, (int) apply_filters( 'wpse_author_detection_limit', 1000 ) ) );
 		$users = get_users( array( 'number' => $max_users, 'orderby' => 'ID', 'order' => 'ASC' ) );
 
 		foreach ( $users as $author ) {
@@ -59,15 +59,15 @@ class Author_Crawler extends Crawler {
 	 */
 	public function add_urls_to_queue() : int {
 		$signature = hash( 'sha256', serialize( array(
-			'archive_start_time' => \Simply_Static\Options::instance()->get( 'archive_start_time' ),
+			'archive_start_time' => \WP_Static_Export\Options::instance()->get( 'archive_start_time' ),
 			'blog_id'            => get_current_blog_id(),
 		) ) );
-		$state = \Simply_Static\Options::instance()->get( 'author_crawler_state' );
+		$state = \WP_Static_Export\Options::instance()->get( 'author_crawler_state' );
 		if ( ! is_array( $state ) || 1 !== ( $state['version'] ?? null ) || $signature !== ( $state['signature'] ?? null ) || ! is_int( $state['offset'] ?? null ) || $state['offset'] < 0 ) {
 			$state = array( 'version' => 1, 'signature' => $signature, 'offset' => 0, 'added' => 0, 'scanned' => 0 );
 		}
 
-		$batch_size = max( 1, min( 500, (int) apply_filters( 'simply_static_author_crawler_batch_size', 100 ) ) );
+		$batch_size = max( 1, min( 500, (int) apply_filters( 'wpse_author_crawler_batch_size', 100 ) ) );
 		$user_ids   = get_users( array(
 			'fields'  => 'ID',
 			'number'  => $batch_size,

@@ -17,7 +17,7 @@ function GenerateButtons(props) {
         >
             {canGenerate && <>
                 <Dashicon icon="update"/>
-                {buttonLabel || __('Push', 'simply-static')}
+                {buttonLabel || __('Push', 'wp-static-export')}
             </>}
 
             {canGenerate && isDelayed>0 && <> {isDelayed}s</>}
@@ -26,26 +26,26 @@ function GenerateButtons(props) {
         </Button>}
         {!canGenerate && <>
             {!isPaused && hasPauseFeature && <Button
-                label={__('Pause', 'simply-static')}
+                label={__('Pause', 'wp-static-export')}
                 className={"ss-generate-media-button"}
-                aria-label={__('Pause', 'simply-static')}
+                aria-label={__('Pause', 'wp-static-export')}
                 onClick={() => pauseExport()}>
                 <Dashicon icon={"controls-pause"}/>
             </Button>
             }
             {isPaused && hasResumeFeature && <Button
-                label={__('Resume', 'simply-static')}
+                label={__('Resume', 'wp-static-export')}
                 className={"ss-generate-media-button"}
-                aria-label={__('Resume', 'simply-static')}
+                aria-label={__('Resume', 'wp-static-export')}
                 onClick={() => resumeExport()}>
                 <Dashicon icon={"controls-play"}/>
             </Button>
             }
             { hasCancelFeature && <Button
                 onClick={() => cancelExport()}
-                label={__('Cancel', 'simply-static')}
+                label={__('Cancel', 'wp-static-export')}
                 className={"ss-generate-cancel-button"}
-                aria-label={__('Cancel', 'simply-static')}
+                aria-label={__('Cancel', 'wp-static-export')}
             >
                 <Dashicon icon={'no'}/>
             </Button> }

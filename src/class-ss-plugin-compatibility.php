@@ -1,14 +1,14 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 class Plugin_Compatibility {
 	/**
-	 * Slug for simply-static-compatible.
+	 * Slug for wp-static-export-compatible.
 	 *
 	 * @var string
 	 */
-	const SS_COMPATIBLE = 'simply-static-compatible';
+	const SS_COMPATIBLE = 'wp-static-export-compatible';
 
 	/**
 	 * Assets handle.
@@ -69,7 +69,7 @@ class Plugin_Compatibility {
 	public function get_plugins() {
 
 		if ( count( $this->plugins ) === 0 ) {
-			$plugins = apply_filters( 'ss_compatible_plugins', Compatibility_API_Client::get_plugins() );
+			$plugins = apply_filters( 'wpse_compatible_plugins', Compatibility_API_Client::get_plugins() );
 			$this->plugins = array_map(
 				static function ( $plugin ) {
 					return self::normalize_plugin_data( $plugin );
@@ -158,28 +158,28 @@ class Plugin_Compatibility {
 			'plugin-install',
 			'plugin-install-network'
 		], true ) ) {
-			$asset_file = SIMPLY_STATIC_PATH . '/assets/install-plugins/build/index.asset.php';
+			$asset_file = WPSE_PATH . '/assets/install-plugins/build/index.asset.php';
 			$asset      = file_exists( $asset_file )
 				? require $asset_file
-				: array( 'dependencies' => array( 'wp-dom-ready', 'wp-i18n' ), 'version' => SIMPLY_STATIC_VERSION );
+				: array( 'dependencies' => array( 'wp-dom-ready', 'wp-i18n' ), 'version' => WPSE_VERSION );
 
 			wp_enqueue_script(
 				self::ASSET_HANDLE,
-				SIMPLY_STATIC_URL . '/assets/install-plugins/build/index.js',
+				WPSE_URL . '/assets/install-plugins/build/index.js',
 				isset( $asset['dependencies'] ) ? $asset['dependencies'] : array( 'wp-dom-ready', 'wp-i18n' ),
-				isset( $asset['version'] ) ? $asset['version'] : SIMPLY_STATIC_VERSION,
+				isset( $asset['version'] ) ? $asset['version'] : WPSE_VERSION,
 				true
 			);
 
 			if ( function_exists( 'wp_set_script_translations' ) ) {
-				wp_set_script_translations( self::ASSET_HANDLE, 'simply-static', SIMPLY_STATIC_PATH . '/languages' );
+				wp_set_script_translations( self::ASSET_HANDLE, 'wp-static-export', WPSE_PATH . '/languages' );
 			}
 
 			wp_enqueue_style(
 				'ss-admin',
-				SIMPLY_STATIC_URL . '/assets/install-plugins/build/style-index.css',
+				WPSE_URL . '/assets/install-plugins/build/style-index.css',
 				[],
-				SIMPLY_STATIC_VERSION
+				WPSE_VERSION
 			);
 
 			$js_data = [
@@ -238,10 +238,10 @@ class Plugin_Compatibility {
 					esc_url( $plugin['homepage'] ),
 					esc_attr(
 					/* translators: %s: Plugin name */
-						sprintf( __( 'Site link of %s', 'simply-static' ), $plugin['name'] )
+						sprintf( __( 'Site link of %s', 'wp-static-export' ), $plugin['name'] )
 					),
-					esc_html__( 'Visit site', 'simply-static' ),
-					esc_html__( '(opens in a new tab)', 'simply-static' ),
+					esc_html__( 'Visit site', 'wp-static-export' ),
+					esc_html__( '(opens in a new tab)', 'wp-static-export' ),
 					$external_icon
 				);
 			}
@@ -270,8 +270,8 @@ class Plugin_Compatibility {
 		if ( ! empty( $plugin_data['slug'] ) && isset( $ss_plugins[ $plugin_data['slug'] ] ) ) {
 			$record        = $ss_plugins[ $plugin_data['slug'] ];
 			$plugin_meta[] = 'compatible_with_config' === $record['status']
-				? esc_html__( 'WP Static Export Compatible with configuration', 'simply-static' )
-				: esc_html__( 'WP Static Export Compatible', 'simply-static' );
+				? esc_html__( 'WP Static Export Compatible with configuration', 'wp-static-export' )
+				: esc_html__( 'WP Static Export Compatible', 'wp-static-export' );
 		}
 
 		return $plugin_meta;

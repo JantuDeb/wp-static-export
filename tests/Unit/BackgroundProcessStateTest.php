@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Background_Process;
-use Simply_Static\Options;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Background_Process;
+use WP_Static_Export\Options;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-plugin.php';
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-options.php';
@@ -505,7 +505,7 @@ final class BackgroundProcessStateTest extends UnitTestCase {
 
 	protected function setUp(): void {
 		parent::setUp();
-		WpEnv::$options['simply-static'] = array( 'debugging_mode' => false );
+		WpEnv::$options['wp-static-export'] = array( 'debugging_mode' => false );
 		Options::reinstance();
 		$this->wpdb       = new BackgroundStateWpdb();
 		$GLOBALS['wpdb'] = $this->wpdb;
@@ -752,7 +752,7 @@ final class BackgroundProcessStateTest extends UnitTestCase {
 		$site_two_query = $this->wpdb->queries[0];
 
 		self::assertNotSame( $site_one_query, $site_two_query );
-		self::assertMatchesRegularExpression( "/GET_LOCK\\('simply_static_[a-f0-9]{48}', 0\\)/", $site_one_query );
+		self::assertMatchesRegularExpression( "/GET_LOCK\\('wpse_[a-f0-9]{48}', 0\\)/", $site_one_query );
 		self::assertStringNotContainsString( $this->wpdb->dbname, $site_one_query );
 		self::assertStringNotContainsString( WpEnv::$home_url, $site_one_query );
 	}
@@ -843,7 +843,7 @@ final class BackgroundProcessStateTest extends UnitTestCase {
 		self::assertFalse( WpEnv::$remote_requests[0]['args']['sslverify'] );
 		self::assertStringContainsString( 'action=wp_state_process', WpEnv::$remote_requests[0]['url'] );
 		self::assertSame( 'nonce-wp_state_process', WpEnv::$remote_requests[0]['args']['body']['nonce'] );
-		self::assertSame( '1', WpEnv::$remote_requests[0]['args']['body']['simply_static_probe'] );
+		self::assertSame( '1', WpEnv::$remote_requests[0]['args']['body']['wpse_probe'] );
 		self::assertTrue( WpEnv::$remote_requests[0]['args']['blocking'] );
 		self::assertSame( 0, WpEnv::$remote_requests[0]['args']['redirection'] );
 
@@ -882,10 +882,10 @@ final class BackgroundProcessStateTest extends UnitTestCase {
 	public function test_maybe_handle_routes_processing_cancel_pause_empty_and_ready_states(): void {
 		$process = new BackgroundMaybeHandleProcess();
 		$_REQUEST['nonce'] = 'background-nonce';
-		$_REQUEST['simply_static_probe'] = '1';
+		$_REQUEST['wpse_probe'] = '1';
 		self::assertSame( 'handled', $process->maybe_handle() );
 		self::assertSame( 0, $process->handle_calls );
-		unset( $_REQUEST['simply_static_probe'] );
+		unset( $_REQUEST['wpse_probe'] );
 		$process->processing = true;
 		self::assertSame( 'handled', $process->maybe_handle() );
 		self::assertSame( 0, $process->handle_calls );
@@ -1023,9 +1023,9 @@ final class BackgroundProcessStateTest extends UnitTestCase {
 
 		$process->schedule_for_test();
 		$process->schedule_for_test();
-		self::assertCount( 1, $GLOBALS['simply_static_test_scheduled_hooks']['wp_cron_process_cron'] );
+		self::assertCount( 1, $GLOBALS['wpse_test_scheduled_hooks']['wp_cron_process_cron'] );
 		$process->clear_for_test();
-		self::assertArrayNotHasKey( 'wp_cron_process_cron', $GLOBALS['simply_static_test_scheduled_hooks'] );
+		self::assertArrayNotHasKey( 'wp_cron_process_cron', $GLOBALS['wpse_test_scheduled_hooks'] );
 
 		add_filter(
 			'wp_cron_process_cron_interval',

@@ -9,16 +9,16 @@ function SidebarMultisite( props = null ) {
 
     return (<Card className={"plugin-nav"}>
         <div className={"plugin-logo"}>
-            <img alt={__('WP Static Export logo', 'simply-static')}
+            <img alt={__('WP Static Export logo', 'wp-static-export')}
                  src={options.logo}/>
         </div>
         <Spacer margin={5}/>
         <Spacer margin={5}/>
-        <Button href="https://simplystatic.com/changelogs/" target="_blank">
-            <Dashicon icon="editor-ul"/> {__('Changelog', 'simply-static')}
+        <Button href="https://github.com/JantuDeb/wp-static-export/releases" target="_blank">
+            <Dashicon icon="editor-ul"/> {__('Changelog', 'wp-static-export')}
         </Button>
-        <Button href="https://docs.simplystatic.com" target="_blank">
-            <Dashicon icon="admin-links"/> {__('Documentation', 'simply-static')}
+        <Button href="https://github.com/JantuDeb/wp-static-export#readme" target="_blank">
+            <Dashicon icon="admin-links"/> {__('Documentation', 'wp-static-export')}
         </Button>
         <VersionInfo/>
     </Card>);

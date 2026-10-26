@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 /**
  * Pushes the finished export to the configured remote (GitHub, Netlify, Cloudflare Pages,
@@ -38,7 +38,7 @@ class Deploy_Task extends Task {
 				$this->save_status_message(
 					sprintf(
 						/* translators: 1: done, 2: total, 3: what (files/objects/...) */
-						__( 'Uploaded %1$d of %2$d %3$s', 'simply-static' ),
+						__( 'Uploaded %1$d of %2$d %3$s', 'wp-static-export' ),
 						(int) $event['done'],
 						(int) $event['total'],
 						(string) ( $event['label'] ?? '' )
@@ -48,7 +48,7 @@ class Deploy_Task extends Task {
 		);
 
 		if ( is_wp_error( $step ) ) {
-			return new \WP_Error( 'ss_deploy_failed', sprintf( /* translators: %s: error */ __( 'Deploy failed: %s', 'simply-static' ), $step->get_error_message() ) );
+			return new \WP_Error( 'ss_deploy_failed', sprintf( /* translators: %s: error */ __( 'Deploy failed: %s', 'wp-static-export' ), $step->get_error_message() ) );
 		}
 		if ( 'running' === $step['state'] ) {
 			return false;
@@ -57,15 +57,15 @@ class Deploy_Task extends Task {
 		$result  = $step['result'];
 		$message = sprintf(
 			/* translators: 1: status, 2: uploaded count, 3: deleted count */
-			__( '%1$s (%2$d uploaded, %3$d removed)', 'simply-static' ),
-			$result['message'] ?? __( 'Deploy finished', 'simply-static' ),
+			__( '%1$s (%2$d uploaded, %3$d removed)', 'wp-static-export' ),
+			$result['message'] ?? __( 'Deploy finished', 'wp-static-export' ),
 			(int) ( $result['uploaded'] ?? 0 ),
 			(int) ( $result['deleted'] ?? 0 )
 		);
-		$link = ! empty( $result['url'] ) ? array( 'url' => esc_url_raw( $result['url'] ), 'label' => __( 'View deployment', 'simply-static' ) ) : null;
+		$link = ! empty( $result['url'] ) ? array( 'url' => esc_url_raw( $result['url'] ), 'label' => __( 'View deployment', 'wp-static-export' ) ) : null;
 		$this->save_status_message( $message, null, $link );
 
-		do_action( 'ss_after_deploy', $method, $result );
+		do_action( 'wpse_after_deploy', $method, $result );
 
 		return true;
 	}
@@ -76,12 +76,12 @@ class Deploy_Task extends Task {
 	 */
 	protected function build_job( $method ) {
 		if ( ! Deploy_Config::is_deploy_method( $method ) ) {
-			return new \WP_Error( 'ss_deploy_method', sprintf( /* translators: %s: method */ __( 'Unknown deploy target "%s".', 'simply-static' ), $method ) );
+			return new \WP_Error( 'ss_deploy_method', sprintf( /* translators: %s: method */ __( 'Unknown deploy target "%s".', 'wp-static-export' ), $method ) );
 		}
 
 		$archive_dir = rtrim( $this->options->get_archive_dir(), '/\\' );
 		if ( ! is_dir( $archive_dir ) ) {
-			return new \WP_Error( 'ss_deploy_no_archive', __( 'There is no exported site to deploy.', 'simply-static' ) );
+			return new \WP_Error( 'ss_deploy_no_archive', __( 'There is no exported site to deploy.', 'wp-static-export' ) );
 		}
 
 		$config = Deploy_Config::build( $method, $this->options );
@@ -91,13 +91,13 @@ class Deploy_Task extends Task {
 			'stateFile'   => Deploy_Runner::state_dir() . Deploy_Config::target_key( $method, $config ) . '.json',
 			'scope'       => Process_Config::scope(),
 			'force'       => (bool) $this->options->get( 'deploy_force_full' ),
-			'concurrency' => (int) apply_filters( 'ss_deploy_concurrency', 8 ),
+			'concurrency' => (int) apply_filters( 'wpse_deploy_concurrency', 8 ),
 			'ignore'      => Deploy_Runner::ignore_patterns(),
 			'config'      => $config,
 		);
 
-		$this->save_status_message( sprintf( /* translators: %s: target */ __( 'Deploying to %s', 'simply-static' ), $method ) );
+		$this->save_status_message( sprintf( /* translators: %s: target */ __( 'Deploying to %s', 'wp-static-export' ), $method ) );
 
-		return apply_filters( 'ss_deploy_job', $job, $method );
+		return apply_filters( 'wpse_deploy_job', $job, $method );
 	}
 }

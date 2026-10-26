@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Query;
-use Simply_Static\Tests\Support\UnitTestCase;
+use WP_Static_Export\Query;
+use WP_Static_Export\Tests\Support\UnitTestCase;
 
 final class QuerySecurityTestModel {
 	public static function table_name(): string {
-		return 'wp_simply_static_test';
+		return 'wp_wpse_test';
 	}
 }
 
@@ -29,7 +29,7 @@ final class QuerySecurityTest extends UnitTestCase {
 		$query = ( new Query( QuerySecurityTestModel::class ) )->limit( $limit )->offset( $offset );
 
 		self::assertSame(
-			'SELECT * FROM  wp_simply_static_test' . $expected_suffix,
+			'SELECT * FROM  wp_wpse_test' . $expected_suffix,
 			$query->get_raw_sql( '*' )
 		);
 	}

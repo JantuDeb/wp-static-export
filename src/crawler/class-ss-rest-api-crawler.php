@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static\Crawler;
+namespace WP_Static_Export\Crawler;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -25,8 +25,8 @@ class Rest_Api_Crawler extends Crawler {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->name = __( 'REST API', 'simply-static' );
-		$this->description = __( 'Detects WordPress REST API endpoints.', 'simply-static' );
+		$this->name = __( 'REST API', 'wp-static-export' );
+		$this->description = __( 'Detects WordPress REST API endpoints.', 'wp-static-export' );
 	}
 
 	/**
@@ -36,7 +36,7 @@ class Rest_Api_Crawler extends Crawler {
 	 * @return boolean
 	 */
 	public function is_active() {
-		$options = \Simply_Static\Options::instance();
+		$options = \WP_Static_Export\Options::instance();
 
 		// Only active if the add_rest_api option is enabled
 		if ( ! $options->get( 'add_rest_api' ) ) {
@@ -64,12 +64,12 @@ class Rest_Api_Crawler extends Crawler {
 		// Get all registered REST routes
 		$rest_server = rest_get_server();
 		$routes = $rest_server->get_routes();
-		$max_routes = max( 1, min( 50000, (int) apply_filters( 'simply_static_rest_api_max_routes', 5000 ) ) );
+		$max_routes = max( 1, min( 50000, (int) apply_filters( 'wpse_rest_api_max_routes', 5000 ) ) );
 
 		// Add URLs for each route
 		foreach ( $routes as $route => $handlers ) {
 			if ( count( $rest_urls ) >= $max_routes ) {
-				\Simply_Static\Util::debug_log( sprintf( 'REST API crawler stopped at its %d-route safety limit.', $max_routes ) );
+				\WP_Static_Export\Util::debug_log( sprintf( 'REST API crawler stopped at its %d-route safety limit.', $max_routes ) );
 				break;
 			}
 			// Skip internal WordPress routes that aren't typically needed

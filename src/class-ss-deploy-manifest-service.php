@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -47,7 +47,7 @@ class Deploy_Manifest_Service {
 	 */
 	protected function __construct() {
 		$this->options = Options::instance();
-		add_action( 'ss_completed', array( $this, 'store_current_manifest' ), 20, 2 );
+		add_action( 'wpse_completed', array( $this, 'store_current_manifest' ), 20, 2 );
 	}
 
 	/**
@@ -128,7 +128,7 @@ class Deploy_Manifest_Service {
 			'finished_at'      => $finished_at,
 			'duration_seconds' => $duration,
 			'status'           => $status,
-			'plugin_version'   => defined( 'SIMPLY_STATIC_VERSION' ) ? SIMPLY_STATIC_VERSION : null,
+			'plugin_version'   => defined( 'WPSE_VERSION' ) ? WPSE_VERSION : null,
 			'studio_version'   => defined( 'SSS_VERSION' ) ? SSS_VERSION : null,
 			'wp_version'       => get_bloginfo( 'version' ),
 			'php_version'      => PHP_VERSION,
@@ -144,7 +144,7 @@ class Deploy_Manifest_Service {
 			'urls'             => $records,
 		);
 
-		return apply_filters( 'ss_deploy_manifest', $manifest, $records, $this );
+		return apply_filters( 'wpse_deploy_manifest', $manifest, $records, $this );
 	}
 
 	/**
@@ -459,7 +459,7 @@ class Deploy_Manifest_Service {
 			'updated_at',
 		);
 		$column_sql = '`' . implode( '`, `', $columns ) . '`';
-		$batch_size = max( 1, min( 500, (int) apply_filters( 'ss_deploy_manifest_insert_batch_size', 200 ) ) );
+		$batch_size = max( 1, min( 500, (int) apply_filters( 'wpse_deploy_manifest_insert_batch_size', 200 ) ) );
 
 		foreach ( array_chunk( $records, $batch_size ) as $batch ) {
 			$value_sql = array();
@@ -723,8 +723,8 @@ class Deploy_Manifest_Service {
 	 * @return array
 	 */
 	protected function get_export_scope() {
-		$use_single         = get_option( 'simply-static-use-single' );
-		$use_build          = get_option( 'simply-static-use-build' );
+		$use_single         = get_option( 'wp-static-export-use-single' );
+		$use_build          = get_option( 'wp-static-export-use-build' );
 		$generate_type      = $this->options->get( 'generate_type' );
 		$archive_start_time = $this->options->get( 'archive_start_time' );
 
@@ -1037,7 +1037,7 @@ class Deploy_Manifest_Service {
 			$builders[] = 'Oxygen';
 		}
 
-		return array_values( array_unique( apply_filters( 'ss_deploy_manifest_detected_builders', $builders ) ) );
+		return array_values( array_unique( apply_filters( 'wpse_deploy_manifest_detected_builders', $builders ) ) );
 	}
 
 	/**

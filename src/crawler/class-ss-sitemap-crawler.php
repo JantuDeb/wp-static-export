@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static\Crawler;
+namespace WP_Static_Export\Crawler;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -25,8 +25,8 @@ class Sitemap_Crawler extends Crawler {
 	 * Constructor.
 	 */
 	public function __construct() {
-		$this->name        = __( 'Sitemap URLs', 'simply-static' );
-		$this->description = __( 'Detects URLs from XML sitemaps.', 'simply-static' );
+		$this->name        = __( 'Sitemap URLs', 'wp-static-export' );
+		$this->description = __( 'Detects URLs from XML sitemaps.', 'wp-static-export' );
 	}
 
 	/**
@@ -35,10 +35,10 @@ class Sitemap_Crawler extends Crawler {
 	 * @return array List of local URLs from sitemaps.
 	 */
 	public function detect() : array {
-		$max_depth       = $this->get_non_negative_limit( 'simply_static_sitemap_max_depth', 5 );
-		$max_documents   = $this->get_positive_limit( 'simply_static_sitemap_max_documents', 1000 );
-		$max_urls        = $this->get_positive_limit( 'simply_static_sitemap_max_urls', 250000 );
-		$max_bytes       = $this->get_positive_limit( 'simply_static_sitemap_max_response_size', 5 * 1024 * 1024 );
+		$max_depth       = $this->get_non_negative_limit( 'wpse_sitemap_max_depth', 5 );
+		$max_documents   = $this->get_positive_limit( 'wpse_sitemap_max_documents', 1000 );
+		$max_urls        = $this->get_positive_limit( 'wpse_sitemap_max_urls', 250000 );
+		$max_bytes       = $this->get_positive_limit( 'wpse_sitemap_max_response_size', 5 * 1024 * 1024 );
 		$request_timeout = $this->get_request_timeout();
 		$max_scan_time   = $this->get_max_scan_time();
 		$deadline        = $this->now() + $max_scan_time;
@@ -159,7 +159,7 @@ class Sitemap_Crawler extends Crawler {
 		$sitemap_urls = array();
 
 		$common_sitemaps = (array) apply_filters(
-			'simply_static_sitemap_common_urls',
+			'wpse_sitemap_common_urls',
 			array(
 				home_url( '/sitemap.xml' ),
 				home_url( '/sitemap_index.xml' ),
@@ -181,7 +181,7 @@ class Sitemap_Crawler extends Crawler {
 				array(
 					'timeout'     => min( $request_timeout, max( 0.1, $deadline - $this->now() ) ),
 					'redirection' => 0,
-					'sslverify'   => (bool) apply_filters( 'ss_remote_get_sslverify', \Simply_Static\Util::should_verify_ssl( $sitemap_url ), $sitemap_url ),
+					'sslverify'   => (bool) apply_filters( 'wpse_remote_get_sslverify', \WP_Static_Export\Util::should_verify_ssl( $sitemap_url ), $sitemap_url ),
 				)
 			);
 
@@ -234,7 +234,7 @@ class Sitemap_Crawler extends Crawler {
 			array(
 				'timeout'             => $request_timeout,
 				'redirection'         => 0,
-				'sslverify'           => (bool) apply_filters( 'ss_remote_get_sslverify', \Simply_Static\Util::should_verify_ssl( $sitemap_url ), $sitemap_url ),
+				'sslverify'           => (bool) apply_filters( 'wpse_remote_get_sslverify', \WP_Static_Export\Util::should_verify_ssl( $sitemap_url ), $sitemap_url ),
 				'limit_response_size' => $response_limit,
 			)
 		);
@@ -343,7 +343,7 @@ class Sitemap_Crawler extends Crawler {
 			}
 
 			$href = html_entity_decode( trim( $matches[2] ), ENT_QUOTES | ENT_XML1, 'UTF-8' );
-			$url  = \Simply_Static\Util::relative_to_absolute_url( $href, $document_url );
+			$url  = \WP_Static_Export\Util::relative_to_absolute_url( $href, $document_url );
 
 			if ( is_string( $url ) && '' !== $url ) {
 				$urls[] = $url;
@@ -416,13 +416,13 @@ class Sitemap_Crawler extends Crawler {
 		}
 
 		$url = trim( $url );
-		if ( ! \Simply_Static\Util::is_local_url( $url ) ) {
+		if ( ! \WP_Static_Export\Util::is_local_url( $url ) ) {
 			return false;
 		}
 
 		$same_origin = false;
-		foreach ( \Simply_Static\Util::local_url_bases() as $base ) {
-			if ( \Simply_Static\Util::is_same_origin_url( $url, $base ) ) {
+		foreach ( \WP_Static_Export\Util::local_url_bases() as $base ) {
+			if ( \WP_Static_Export\Util::is_same_origin_url( $url, $base ) ) {
 				$same_origin = true;
 				break;
 			}
@@ -430,7 +430,7 @@ class Sitemap_Crawler extends Crawler {
 
 		// Integrations may veto a local sitemap URL, but cannot use this filter to
 		// promote a remote URL past the same-origin security check above.
-		return $same_origin && (bool) apply_filters( 'simply_static_sitemap_allow_local_url', true, $url );
+		return $same_origin && (bool) apply_filters( 'wpse_sitemap_allow_local_url', true, $url );
 	}
 
 	/**
@@ -478,7 +478,7 @@ class Sitemap_Crawler extends Crawler {
 	 * @return array{configured:bool,selected:array}
 	 */
 	private function get_post_type_selection() {
-		$options = get_option( 'simply-static' );
+		$options = get_option( 'wp-static-export' );
 		$options = is_array( $options ) ? $options : array();
 
 		$configured = isset( $options['post_types'] )
@@ -548,7 +548,7 @@ class Sitemap_Crawler extends Crawler {
 	 * @return float
 	 */
 	private function get_request_timeout() {
-		$timeout = (float) apply_filters( 'simply_static_sitemap_request_timeout', 10 );
+		$timeout = (float) apply_filters( 'wpse_sitemap_request_timeout', 10 );
 
 		return $timeout > 0 ? $timeout : 10;
 	}
@@ -559,7 +559,7 @@ class Sitemap_Crawler extends Crawler {
 	 * @return float
 	 */
 	private function get_max_scan_time() {
-		$seconds = (float) apply_filters( 'simply_static_sitemap_max_scan_seconds', 30 );
+		$seconds = (float) apply_filters( 'wpse_sitemap_max_scan_seconds', 30 );
 
 		return max( 1, min( 300, $seconds ) );
 	}

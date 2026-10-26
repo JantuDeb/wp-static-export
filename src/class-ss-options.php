@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Options {
 	/**
 	 * Singleton instance
-	 * @var \Simply_Static\Options
+	 * @var \WP_Static_Export\Options
 	 */
 	protected static $instance = null;
 
@@ -54,8 +54,8 @@ class Options {
 	}
 
 	/**
-	 * Return an instance of Simply_Static\Options
-	 * @return Simply_Static
+	 * Return an instance of WP_Static_Export\Options
+	 * @return WP_Static_Export
 	 */
 	public static function instance() {
 		if ( null === self::$instance ) {
@@ -67,8 +67,8 @@ class Options {
 	}
 
 	/**
-	 * Return a fresh instance of Simply_Static\Options
-	 * @return Simply_Static
+	 * Return a fresh instance of WP_Static_Export\Options
+	 * @return WP_Static_Export
 	 */
 	public static function reinstance() {
 		self::$instance = null;
@@ -82,7 +82,7 @@ class Options {
 	 * @param string $name The option name
 	 * @param mixed $value The option value
 	 *
-	 * @return \Simply_Static\Options
+	 * @return \WP_Static_Export\Options
 	 */
 	public function set( $name, $value ) {
 		$this->options[ $name ] = $value;
@@ -97,7 +97,7 @@ class Options {
 	 *
 	 * @param array $options All options.
 	 *
-	 * @return \Simply_Static\Options
+	 * @return \WP_Static_Export\Options
 	 */
 	public function set_options( $options ) {
 		$this->options     = is_array( $options ) ? $options : array();
@@ -114,8 +114,8 @@ class Options {
 	 * Also checks if option exists in wp-config.php, and uses it to override the database value
 	 *
 	 * Fore example:
-	 * SIMPLY_STATIC_TEMP_FILES_DIR     in wp-config.php overrides temp_files_dir loaded from database
-	 * SIMPLY_STATIC_DELIVERY_METHOD    in wp-config.php overrides delivery_method loaded from database
+	 * WPSE_TEMP_FILES_DIR     in wp-config.php overrides temp_files_dir loaded from database
+	 * WPSE_DELIVERY_METHOD    in wp-config.php overrides delivery_method loaded from database
 	 *
 	 * @param string $name The option name
 	 *
@@ -123,7 +123,7 @@ class Options {
 	 */
 	public function get( $name = '' ) {
 		$normalized_name = strtoupper( $name );
-		$constant_name   = 'SIMPLY_STATIC_' . $normalized_name;
+		$constant_name   = 'WPSE_' . $normalized_name;
 
 		// Constants are runtime configuration and do not need a placeholder key
 		// in wp_options. This also keeps secret overrides out of database exports.
@@ -135,7 +135,7 @@ class Options {
 			return null;
 		}
 
-		return apply_filters( 'ss_get_option_' . strtolower( $name ), $this->options[ $name ], $this );
+		return apply_filters( 'wpse_get_option_' . strtolower( $name ), $this->options[ $name ], $this );
 	}
 
 	/**
@@ -215,7 +215,7 @@ class Options {
 	 */
 	protected static function load_runtime_options( $network = false ) {
 		$db_options = $network ? get_site_option( Plugin::SLUG ) : get_option( Plugin::SLUG );
-		$options    = apply_filters( 'ss_get_options', $db_options );
+		$options    = apply_filters( 'wpse_get_options', $db_options );
 
 		return is_array( $options ) ? $options : array();
 	}
@@ -270,7 +270,7 @@ class Options {
 	public function get_archive_dir() {
 		$temp_files_dir = Util::get_temp_dir();
 
-		return Util::add_trailing_directory_separator( $temp_files_dir . apply_filters( 'ss_archive_file_name', $this->get( 'archive_name' ) ) );
+		return Util::add_trailing_directory_separator( $temp_files_dir . apply_filters( 'wpse_archive_file_name', $this->get( 'archive_name' ) ) );
 	}
 
 	/**

@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 /**
  * Class which handles URL discovery using the crawler system.
@@ -42,7 +42,7 @@ class Discover_Urls_Task extends Task {
 		parent::__construct();
 
 		// Load the Crawlers class
-		require_once SIMPLY_STATIC_PATH . 'src/crawler/class-ss-crawlers.php';
+		require_once WPSE_PATH . 'src/crawler/class-ss-crawlers.php';
 	}
 
 	/**
@@ -51,7 +51,7 @@ class Discover_Urls_Task extends Task {
 	 * @return boolean|WP_Error true if done, false if not done, WP_Error if error.
 	 */
 	public function perform() {
-		$this->save_status_message( __( 'Discovering URLs', 'simply-static' ) );
+		$this->save_status_message( __( 'Discovering URLs', 'wp-static-export' ) );
 
 		// Get the crawler manager
 		$crawlers = Crawlers::instance();
@@ -91,7 +91,7 @@ class Discover_Urls_Task extends Task {
 		$this->save_status_message(
 			sprintf(
 				/* translators: 1: crawler name, 2: current crawler number, 3: total number of crawlers. */
-				__( 'Discovering URLs with %1$s Crawler (%2$d of %3$d)', 'simply-static' ),
+				__( 'Discovering URLs with %1$s Crawler (%2$d of %3$d)', 'wp-static-export' ),
 				$crawler_name,
 				$crawler_number,
 				$crawler_count
@@ -118,7 +118,7 @@ class Discover_Urls_Task extends Task {
 			$this->save_status_message(
 				sprintf(
 					/* translators: 1: crawler name, 2: current crawler number, 3: total crawlers, 4: files queued, 5: entries scanned. */
-					__( 'Discovering URLs with %1$s Crawler (%2$d of %3$d): %4$d files queued, %5$d entries scanned', 'simply-static' ),
+					__( 'Discovering URLs with %1$s Crawler (%2$d of %3$d): %4$d files queued, %5$d entries scanned', 'wp-static-export' ),
 					$crawler_name,
 					$crawler_number,
 					$crawler_count,
@@ -136,7 +136,7 @@ class Discover_Urls_Task extends Task {
 		if ( $generate_type === 'export' ) {
 			$message = sprintf(
 				/* translators: 1: number of URLs, 2: crawler name. */
-				_n( 'Added %1$d URL via %2$s Crawler', 'Added %1$d URLs via %2$s Crawler', $crawler_total, 'simply-static' ),
+				_n( 'Added %1$d URL via %2$s Crawler', 'Added %1$d URLs via %2$s Crawler', $crawler_total, 'wp-static-export' ),
 				$crawler_total,
 				$crawler_name
 			);
@@ -166,7 +166,7 @@ class Discover_Urls_Task extends Task {
 		$total_urls_added = (int) $this->options->get( $this->total_added_option );
 
 		// Trigger an action after URL discovery
-		do_action( 'ss_after_discover_urls', $total_urls_added );
+		do_action( 'wpse_after_discover_urls', $total_urls_added );
 
 		// Count URLs that will be processed in this export after running crawlers
 		$urls_for_current_export = Page::query()->where( 'last_checked_at < ? OR last_checked_at IS NULL', $archive_start_time )->count();
@@ -178,7 +178,7 @@ class Discover_Urls_Task extends Task {
 			// Save the final status message
 			$message = sprintf(
 				/* translators: %d: number of URLs added by crawlers. */
-				_n( 'Added %d URL via Crawler', 'Added %d URLs via Crawler', $new_urls_for_export, 'simply-static' ),
+				_n( 'Added %d URL via Crawler', 'Added %d URLs via Crawler', $new_urls_for_export, 'wp-static-export' ),
 				$new_urls_for_export
 			);
 			$this->save_status_message( $message );
@@ -195,7 +195,7 @@ class Discover_Urls_Task extends Task {
 	 * @return void
 	 */
 	private function yield_after_current_crawler() {
-		$filter = 'wp_archive_creation_job_should_continue';
+		$filter = 'wpse_archive_creation_job_should_continue';
 		$job    = Plugin::instance()->get_archive_creation_job();
 
 		if ( $job && method_exists( $job, 'get_identifier' ) ) {

@@ -1,5 +1,5 @@
 <?php
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 /**
  * Class which handles task abstraction.
@@ -16,7 +16,7 @@ abstract class Task {
 	/**
 	 * An instance of the options structure containing all options for this plugin.
 	 *
-	 * @var \Simply_Static\Options
+	 * @var \WP_Static_Export\Options
 	 */
 	protected $options = null;
 

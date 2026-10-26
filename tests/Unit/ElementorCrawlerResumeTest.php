@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Crawler\Elementor_Crawler;
-use Simply_Static\Options;
-use Simply_Static\Tests\Support\UnitTestCase;
+use WP_Static_Export\Crawler\Elementor_Crawler;
+use WP_Static_Export\Options;
+use WP_Static_Export\Tests\Support\UnitTestCase;
 
 final class ElementorCrawlerResumeWpdb {
 
@@ -102,13 +102,13 @@ final class ElementorCrawlerResumeTest extends UnitTestCase {
 		) );
 		$GLOBALS['wpdb'] = $database;
 		Options::instance()->set( 'archive_start_time', '2026-08-19 12:00:00' )->save();
-		add_filter( 'simply_static_elementor_crawler_max_entries_per_batch', static function () {
+		add_filter( 'wpse_elementor_crawler_max_entries_per_batch', static function () {
 			return 2;
 		} );
-		add_filter( 'simply_static_elementor_meta_batch_size', static function () {
+		add_filter( 'wpse_elementor_meta_batch_size', static function () {
 			return 1;
 		} );
-		add_filter( 'simply_static_elementor_meta_max_entries_per_batch', static function () {
+		add_filter( 'wpse_elementor_meta_max_entries_per_batch', static function () {
 			return 1;
 		} );
 

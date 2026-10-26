@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -16,7 +16,7 @@ class Crawlers {
 
 	/**
 	 * Singleton instance
-	 * @var Simply_Static\Crawlers
+	 * @var WP_Static_Export\Crawlers
 	 */
 	protected static $instance = null;
 
@@ -49,8 +49,8 @@ class Crawlers {
 	}
 
 	/**
-	 * Return an instance of Simply_Static\Crawlers
-	 * @return Simply_Static\Crawlers
+	 * Return an instance of WP_Static_Export\Crawlers
+	 * @return WP_Static_Export\Crawlers
 	 */
 	public static function instance() {
 		if ( null === self::$instance ) {
@@ -66,10 +66,10 @@ class Crawlers {
 	 */
 	protected function load_crawlers() {
 		// Load the base crawler class
-		require_once SIMPLY_STATIC_PATH . 'src/crawler/class-ss-crawler.php';
+		require_once WPSE_PATH . 'src/crawler/class-ss-crawler.php';
 
 		// Load all crawler implementations (with ss- prefix in filenames)
-		$crawler_files = glob( SIMPLY_STATIC_PATH . 'src/crawler/class-ss-*-crawler.php' );
+		$crawler_files = glob( WPSE_PATH . 'src/crawler/class-ss-*-crawler.php' );
 
 		Util::debug_log( "Found " . count( $crawler_files ) . " crawler files" );
 
@@ -86,7 +86,7 @@ class Crawlers {
 			$class_name = ucwords( $class_name, '_' );
 
 			// Create the fully qualified class name
-			$fq_class_name = 'Simply_Static\\Crawler\\' . $class_name;
+			$fq_class_name = 'WP_Static_Export\\Crawler\\' . $class_name;
 
 			// Create an instance of the crawler
 			if ( class_exists( $fq_class_name ) ) {
@@ -98,7 +98,7 @@ class Crawlers {
 		}
 
 		// Allow plugins to add their own crawlers
-		$this->crawlers = apply_filters( 'simply_static_crawlers', $this->crawlers );
+		$this->crawlers = apply_filters( 'wpse_crawlers', $this->crawlers );
 	}
 
 	/**

@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -48,15 +48,15 @@ class Admin_Dashboard_Widget {
 	 * @return void
 	 */
 	public function register_widget() {
-		$capability = apply_filters( 'ss_user_capability', 'publish_pages', 'generate' );
+		$capability = apply_filters( 'wpse_user_capability', 'publish_pages', 'generate' );
 
 		if ( ! current_user_can( $capability ) ) {
 			return;
 		}
 
 		wp_add_dashboard_widget(
-			'simply_static_dashboard_widget',
-			__( 'WP Static Export — Latest Export', 'simply-static' ),
+			'wpse_dashboard_widget',
+			__( 'WP Static Export — Latest Export', 'wp-static-export' ),
 			array( $this, 'render_widget' )
 		);
 	}
@@ -88,43 +88,43 @@ class Admin_Dashboard_Widget {
 	private function render_styles() {
 		?>
 		<style>
-			#simply_static_dashboard_widget .ss-widget-stats {
+			#wpse_dashboard_widget .ss-widget-stats {
 				display: grid;
 				grid-template-columns: 1fr 1fr;
 				gap: 12px;
 				margin-bottom: 16px;
 			}
-			#simply_static_dashboard_widget .ss-widget-stat {
+			#wpse_dashboard_widget .ss-widget-stat {
 				background: #f6f7f7;
 				border-radius: 4px;
 				padding: 12px;
 			}
-			#simply_static_dashboard_widget .ss-widget-stat .ss-stat-label {
+			#wpse_dashboard_widget .ss-widget-stat .ss-stat-label {
 				font-size: 11px;
 				text-transform: uppercase;
 				color: #646970;
 				margin: 0 0 4px;
 				letter-spacing: 0.5px;
 			}
-			#simply_static_dashboard_widget .ss-widget-stat .ss-stat-value {
+			#wpse_dashboard_widget .ss-widget-stat .ss-stat-value {
 				font-size: 18px;
 				font-weight: 600;
 				color: #1d2327;
 				margin: 0;
 			}
-			#simply_static_dashboard_widget .ss-widget-no-export {
+			#wpse_dashboard_widget .ss-widget-no-export {
 				text-align: center;
 				padding: 20px 0;
 				color: #646970;
 			}
-			#simply_static_dashboard_widget .ss-widget-no-export .dashicons {
+			#wpse_dashboard_widget .ss-widget-no-export .dashicons {
 				font-size: 36px;
 				width: 36px;
 				height: 36px;
 				color: #c3c4c7;
 				margin-bottom: 8px;
 			}
-			#simply_static_dashboard_widget .ss-widget-status {
+			#wpse_dashboard_widget .ss-widget-status {
 				display: inline-block;
 				padding: 2px 8px;
 				border-radius: 3px;
@@ -132,15 +132,15 @@ class Admin_Dashboard_Widget {
 				font-weight: 500;
 				margin-bottom: 12px;
 			}
-			#simply_static_dashboard_widget .ss-widget-status.ss-status-complete {
+			#wpse_dashboard_widget .ss-widget-status.ss-status-complete {
 				background: #d1fadf;
 				color: #0a7227;
 			}
-			#simply_static_dashboard_widget .ss-widget-status.ss-status-running {
+			#wpse_dashboard_widget .ss-widget-status.ss-status-running {
 				background: #fef0c7;
 				color: #93370d;
 			}
-			#simply_static_dashboard_widget .ss-widget-actions {
+			#wpse_dashboard_widget .ss-widget-actions {
 				margin-top: 12px;
 				text-align: right;
 			}
@@ -157,9 +157,9 @@ class Admin_Dashboard_Widget {
 		?>
 		<div class="ss-widget-no-export">
 			<span class="dashicons dashicons-media-default"></span>
-			<p><?php esc_html_e( 'No export has been run yet.', 'simply-static' ); ?></p>
-			<a href="<?php echo esc_url( admin_url( 'admin.php?page=simply-static-generate' ) ); ?>" class="button button-primary">
-				<?php esc_html_e( 'Run Your First Export', 'simply-static' ); ?>
+			<p><?php esc_html_e( 'No export has been run yet.', 'wp-static-export' ); ?></p>
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=wp-static-export-generate' ) ); ?>" class="button button-primary">
+				<?php esc_html_e( 'Run Your First Export', 'wp-static-export' ); ?>
 			</a>
 		</div>
 		<?php
@@ -197,33 +197,33 @@ class Admin_Dashboard_Widget {
 		?>
 		<div>
 			<?php if ( $is_complete ) : ?>
-				<span class="ss-widget-status ss-status-complete"><?php esc_html_e( 'Completed', 'simply-static' ); ?></span>
+				<span class="ss-widget-status ss-status-complete"><?php esc_html_e( 'Completed', 'wp-static-export' ); ?></span>
 			<?php else : ?>
-				<span class="ss-widget-status ss-status-running"><?php esc_html_e( 'In Progress', 'simply-static' ); ?></span>
+				<span class="ss-widget-status ss-status-running"><?php esc_html_e( 'In Progress', 'wp-static-export' ); ?></span>
 			<?php endif; ?>
 
 			<div class="ss-widget-stats">
 				<div class="ss-widget-stat">
-					<p class="ss-stat-label"><?php esc_html_e( 'Pages', 'simply-static' ); ?></p>
+					<p class="ss-stat-label"><?php esc_html_e( 'Pages', 'wp-static-export' ); ?></p>
 					<p class="ss-stat-value"><?php echo esc_html( number_format_i18n( $total_pages ) ); ?></p>
 				</div>
 				<div class="ss-widget-stat">
-					<p class="ss-stat-label"><?php esc_html_e( 'Duration', 'simply-static' ); ?></p>
+					<p class="ss-stat-label"><?php esc_html_e( 'Duration', 'wp-static-export' ); ?></p>
 					<p class="ss-stat-value"><?php echo esc_html( $duration_string ); ?></p>
 				</div>
 				<div class="ss-widget-stat">
-					<p class="ss-stat-label"><?php esc_html_e( 'Date', 'simply-static' ); ?></p>
+					<p class="ss-stat-label"><?php esc_html_e( 'Date', 'wp-static-export' ); ?></p>
 					<p class="ss-stat-value" style="font-size:13px;"><?php echo esc_html( $date_display ); ?></p>
 				</div>
 				<div class="ss-widget-stat">
-					<p class="ss-stat-label"><?php esc_html_e( 'Delivery', 'simply-static' ); ?></p>
+					<p class="ss-stat-label"><?php esc_html_e( 'Delivery', 'wp-static-export' ); ?></p>
 					<p class="ss-stat-value" style="font-size:13px;"><?php echo esc_html( $delivery_label ); ?></p>
 				</div>
 			</div>
 		</div>
 		<div class="ss-widget-actions">
-			<a href="<?php echo esc_url( admin_url( 'admin.php?page=simply-static-generate' ) ); ?>" class="button button-primary">
-				<?php esc_html_e( 'View Export', 'simply-static' ); ?>
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=wp-static-export-generate' ) ); ?>" class="button button-primary">
+				<?php esc_html_e( 'View Export', 'wp-static-export' ); ?>
 			</a>
 		</div>
 		<?php
@@ -237,18 +237,18 @@ class Admin_Dashboard_Widget {
 	 * @return string
 	 */
 	private function get_delivery_label( $method ) {
-		$labels = apply_filters( 'ss_dashboard_widget_delivery_labels', array(
-			'zip'          => __( 'ZIP Archive', 'simply-static' ),
-			'local'        => __( 'Local Directory', 'simply-static' ),
-			'github'       => __( 'GitHub', 'simply-static' ),
-			'cdn'          => __( 'CDN', 'simply-static' ),
-			'bunnycdn'     => __( 'BunnyCDN', 'simply-static' ),
-			'tiiny'        => __( 'Tiiny Host', 'simply-static' ),
-			'simply-cdn'   => __( 'Simply CDN', 'simply-static' ),
-			'aws-s3'       => __( 'Amazon S3', 'simply-static' ),
-			'digitalocean' => __( 'DigitalOcean', 'simply-static' ),
+		$labels = apply_filters( 'wpse_dashboard_widget_delivery_labels', array(
+			'zip'          => __( 'ZIP Archive', 'wp-static-export' ),
+			'local'        => __( 'Local Directory', 'wp-static-export' ),
+			'github'       => __( 'GitHub', 'wp-static-export' ),
+			'cdn'          => __( 'CDN', 'wp-static-export' ),
+			'bunnycdn'     => __( 'BunnyCDN', 'wp-static-export' ),
+			'tiiny'        => __( 'Tiiny Host', 'wp-static-export' ),
+			'simply-cdn'   => __( 'Simply CDN', 'wp-static-export' ),
+			'aws-s3'       => __( 'Amazon S3', 'wp-static-export' ),
+			'digitalocean' => __( 'DigitalOcean', 'wp-static-export' ),
 		) );
 
-		return isset( $labels[ $method ] ) ? $labels[ $method ] : __( 'Unknown', 'simply-static' );
+		return isset( $labels[ $method ] ) ? $labels[ $method ] : __( 'Unknown', 'wp-static-export' );
 	}
 }

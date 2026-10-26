@@ -2,28 +2,28 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
 use DOMDocument;
-use Simply_Static\AIO_SEO_Integration;
-use Simply_Static\AIO_SEO_Sitemap_Handler;
-use Simply_Static\Options;
-use Simply_Static\Page;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\AIO_SEO_Integration;
+use WP_Static_Export\AIO_SEO_Sitemap_Handler;
+use WP_Static_Export\Options;
+use WP_Static_Export\Page;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 use XSLTProcessor;
 
-$simply_static_root = dirname( __DIR__, 2 );
-require_once $simply_static_root . '/src/class-ss-plugin.php';
-require_once $simply_static_root . '/src/class-ss-options.php';
-require_once $simply_static_root . '/src/class-ss-util.php';
-require_once $simply_static_root . '/src/class-ss-query.php';
-require_once $simply_static_root . '/src/models/class-ss-model.php';
-require_once $simply_static_root . '/src/models/class-ss-page.php';
-require_once $simply_static_root . '/src/handlers/class-ss-page-handler.php';
-require_once $simply_static_root . '/src/integrations/class-ss-integration.php';
-require_once $simply_static_root . '/src/handlers/class-ss-aio-seo-sitemap-handler.php';
-require_once $simply_static_root . '/src/integrations/class-ss-aio-seo-integration.php';
+$wpse_root = dirname( __DIR__, 2 );
+require_once $wpse_root . '/src/class-ss-plugin.php';
+require_once $wpse_root . '/src/class-ss-options.php';
+require_once $wpse_root . '/src/class-ss-util.php';
+require_once $wpse_root . '/src/class-ss-query.php';
+require_once $wpse_root . '/src/models/class-ss-model.php';
+require_once $wpse_root . '/src/models/class-ss-page.php';
+require_once $wpse_root . '/src/handlers/class-ss-page-handler.php';
+require_once $wpse_root . '/src/integrations/class-ss-integration.php';
+require_once $wpse_root . '/src/handlers/class-ss-aio-seo-sitemap-handler.php';
+require_once $wpse_root . '/src/integrations/class-ss-aio-seo-integration.php';
 
 final class AioSeoSitemapWpdb {
 
@@ -59,7 +59,7 @@ final class AioSeoSitemapHandlerTest extends UnitTestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->archive_dir = sys_get_temp_dir() . '/simply-static-aioseo-' . str_replace( '.', '', uniqid( '', true ) );
+		$this->archive_dir = sys_get_temp_dir() . '/wp-static-export-aioseo-' . str_replace( '.', '', uniqid( '', true ) );
 		mkdir( $this->archive_dir, 0777, true );
 
 		Options::instance()
@@ -178,8 +178,8 @@ final class AioSeoSitemapHandlerTest extends UnitTestCase {
 		$integration = new AIO_SEO_Integration();
 
 		self::assertSame(
-			array( 'existing', 'simply_static_page' ),
-			$integration->allowed_query_args( array( 'existing', 'simply_static_page' ) )
+			array( 'existing', 'wpse_page' ),
+			$integration->allowed_query_args( array( 'existing', 'wpse_page' ) )
 		);
 	}
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static\Crawler;
+namespace WP_Static_Export\Crawler;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,8 +24,8 @@ class Divi_Crawler extends Crawler {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->name        = __( 'Divi Assets', 'simply-static' );
-		$this->description = __( 'Detects Divi theme cache and asset files.', 'simply-static' );
+		$this->name        = __( 'Divi Assets', 'wp-static-export' );
+		$this->description = __( 'Detects Divi theme cache and asset files.', 'wp-static-export' );
 	}
 
 	/**
@@ -111,14 +111,14 @@ class Divi_Crawler extends Crawler {
 				$directory_urls = $this->scan_directory_for_assets( $directory['basedir'], $directory['baseurl'] );
 				$asset_urls     = array_merge( $asset_urls, $directory_urls );
 			} else {
-				\Simply_Static\Util::debug_log( 'Directory does not exist: ' . $directory['basedir'] );
+				\WP_Static_Export\Util::debug_log( 'Directory does not exist: ' . $directory['basedir'] );
 			}
 		}
 
 		// Unique URLs only
 		$asset_urls = array_values( array_unique( $asset_urls ) );
 
-		\Simply_Static\Util::debug_log( sprintf( 'Divi crawler detected %d asset URLs', count( $asset_urls ) ) );
+		\WP_Static_Export\Util::debug_log( sprintf( 'Divi crawler detected %d asset URLs', count( $asset_urls ) ) );
 
 		return $asset_urls;
 	}
@@ -133,9 +133,9 @@ class Divi_Crawler extends Crawler {
 			'divi_crawler_state',
 			$this->get_scan_directories(),
 			array( 'css', 'js', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'woff', 'woff2', 'ttf', 'eot', 'otf', 'ico', 'mp4', 'webm' ),
-			(array) apply_filters( 'ss_skip_crawl_divi_directories', array( '.git', 'node_modules', 'vendor/bin', 'vendor/composer', 'tests' ) ),
-			'simply_static_divi_crawler_max_entries_per_batch',
-			'simply_static_divi_crawler_max_batch_seconds'
+			(array) apply_filters( 'wpse_skip_crawl_divi_directories', array( '.git', 'node_modules', 'vendor/bin', 'vendor/composer', 'tests' ) ),
+			'wpse_divi_crawler_max_entries_per_batch',
+			'wpse_divi_crawler_max_batch_seconds'
 		);
 	}
 
@@ -180,7 +180,7 @@ class Divi_Crawler extends Crawler {
 		 * @param string $version     Detected Divi parent-theme version.
 		 */
 		return (array) apply_filters(
-			'ss_divi_crawler_directories',
+			'wpse_divi_crawler_directories',
 			$directories,
 			$legacy,
 			$version
@@ -202,7 +202,7 @@ class Divi_Crawler extends Crawler {
 			$legacy = (int) $matches[1] < 5;
 		}
 
-		return (bool) apply_filters( 'ss_divi_use_legacy_asset_crawl', $legacy, $version );
+		return (bool) apply_filters( 'wpse_divi_use_legacy_asset_crawl', $legacy, $version );
 	}
 
 	/**
@@ -250,18 +250,18 @@ class Divi_Crawler extends Crawler {
 	 */
 	private function scan_directory_for_assets( $dir, $url_base ): array {
 		$urls = [];
-		$max_entries = max( 1, min( 100000, (int) apply_filters( 'simply_static_divi_detection_max_entries', 5000 ) ) );
-		$deadline    = microtime( true ) + max( 0.5, min( 15, (float) apply_filters( 'simply_static_divi_detection_max_seconds', 5 ) ) );
+		$max_entries = max( 1, min( 100000, (int) apply_filters( 'wpse_divi_detection_max_entries', 5000 ) ) );
+		$deadline    = microtime( true ) + max( 0.5, min( 15, (float) apply_filters( 'wpse_divi_detection_max_seconds', 5 ) ) );
 		$scanned     = 0;
 
 		$asset_extensions = [
 			'css','js','png','jpg','jpeg','gif','svg','webp','woff','woff2','ttf','eot','otf','ico','mp4','webm'
 		];
 
-		$skip_dirs = apply_filters( 'ss_skip_crawl_divi_directories', [ '.git','node_modules','vendor/bin','vendor/composer','tests' ] );
+		$skip_dirs = apply_filters( 'wpse_skip_crawl_divi_directories', [ '.git','node_modules','vendor/bin','vendor/composer','tests' ] );
 
 		if ( ! is_dir( $dir ) ) {
-			\Simply_Static\Util::debug_log( "Directory does not exist: $dir" );
+			\WP_Static_Export\Util::debug_log( "Directory does not exist: $dir" );
 			return $urls;
 		}
 
@@ -276,7 +276,7 @@ class Divi_Crawler extends Crawler {
 					break;
 				}
 				if ( $file->isDir() ) { continue; }
-				$relative_path = \Simply_Static\Util::safe_relative_path( $dir, $file->getPathname() );
+				$relative_path = \WP_Static_Export\Util::safe_relative_path( $dir, $file->getPathname() );
 				$skip = false;
 				foreach ( (array) $skip_dirs as $sd ) {
 					if ( $sd && strpos( $relative_path, '/' . $sd . '/' ) !== false ) { $skip = true; break; }
@@ -284,11 +284,11 @@ class Divi_Crawler extends Crawler {
 				if ( $skip ) { continue; }
 				$extension = strtolower( pathinfo( $relative_path, PATHINFO_EXTENSION ) );
 				if ( in_array( $extension, $asset_extensions, true ) ) {
-					$urls[] = \Simply_Static\Util::safe_join_url( $url_base, $relative_path );
+					$urls[] = \WP_Static_Export\Util::safe_join_url( $url_base, $relative_path );
 				}
 			}
 		} catch ( \Exception $e ) {
-			\Simply_Static\Util::debug_log( "Error scanning directory $dir: " . $e->getMessage() );
+			\WP_Static_Export\Util::debug_log( "Error scanning directory $dir: " . $e->getMessage() );
 		}
 
 		return $urls;

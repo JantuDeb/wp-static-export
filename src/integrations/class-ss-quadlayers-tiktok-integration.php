@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 use DOMDocument;
 use DOMElement;
@@ -59,8 +59,8 @@ class Quadlayers_Tiktok_Integration extends Integration {
 	);
 
 	public function __construct() {
-		$this->name        = __( 'QuadLayers TikTok Feed', 'simply-static' );
-		$this->description = __( 'Replaces dynamic TikTok feeds with static, locally cached snapshots.', 'simply-static' );
+		$this->name        = __( 'QuadLayers TikTok Feed', 'wp-static-export' );
+		$this->description = __( 'Replaces dynamic TikTok feeds with static, locally cached snapshots.', 'wp-static-export' );
 	}
 
 	/**
@@ -69,7 +69,7 @@ class Quadlayers_Tiktok_Integration extends Integration {
 	 * @return void
 	 */
 	public function run() {
-		add_action( 'ss_after_extract_and_replace_urls_in_html', array( $this, 'snapshot_feeds' ), 20, 2 );
+		add_action( 'wpse_after_extract_and_replace_urls_in_html', array( $this, 'snapshot_feeds' ), 20, 2 );
 	}
 
 	/**
@@ -214,7 +214,7 @@ class Quadlayers_Tiktok_Integration extends Integration {
 	protected function request_feed_items( $settings ) {
 		$source = isset( $settings['source'] ) && is_scalar( $settings['source'] ) ? sanitize_key( $settings['source'] ) : 'account';
 		if ( ! isset( $this->routes[ $source ] ) ) {
-			return new \WP_Error( 'ss_tiktok_unknown_source', __( 'The TikTok feed source is not supported.', 'simply-static' ) );
+			return new \WP_Error( 'ss_tiktok_unknown_source', __( 'The TikTok feed source is not supported.', 'wp-static-export' ) );
 		}
 
 		$route = $this->routes[ $source ];
@@ -222,14 +222,14 @@ class Quadlayers_Tiktok_Integration extends Integration {
 			? rest_url( $route )
 			: home_url( '/wp-json/' . $route );
 
-		$max_bytes = max( 1024, (int) apply_filters( 'simply_static_tiktok_response_max_bytes', 2 * 1024 * 1024 ) );
+		$max_bytes = max( 1024, (int) apply_filters( 'wpse_tiktok_response_max_bytes', 2 * 1024 * 1024 ) );
 		$payload = array(
 			'feedSettings' => $settings,
 			'createTime'   => '',
 		);
 		$body    = wp_json_encode( $payload );
 		if ( false === $body ) {
-			return new \WP_Error( 'ss_tiktok_encode_failed', __( 'The TikTok feed settings could not be encoded.', 'simply-static' ) );
+			return new \WP_Error( 'ss_tiktok_encode_failed', __( 'The TikTok feed settings could not be encoded.', 'wp-static-export' ) );
 		}
 
 		// Prefer an in-process REST dispatch. Managed WordPress environments may
@@ -243,7 +243,7 @@ class Quadlayers_Tiktok_Integration extends Integration {
 			$response = $this->auth_remote_post(
 				$url,
 				array(
-					'timeout'             => max( 1, (int) apply_filters( 'simply_static_tiktok_request_timeout', 20 ) ),
+					'timeout'             => max( 1, (int) apply_filters( 'wpse_tiktok_request_timeout', 20 ) ),
 					'headers'             => array(
 						'Accept'       => 'application/json',
 						'Content-Type' => 'application/json',
@@ -258,12 +258,12 @@ class Quadlayers_Tiktok_Integration extends Integration {
 				return $response;
 			}
 			if ( 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
-				return new \WP_Error( 'ss_tiktok_http_error', __( 'The TikTok feed endpoint returned an error.', 'simply-static' ) );
+				return new \WP_Error( 'ss_tiktok_http_error', __( 'The TikTok feed endpoint returned an error.', 'wp-static-export' ) );
 			}
 
 			$response_body = wp_remote_retrieve_body( $response );
 			if ( ! is_string( $response_body ) || '' === $response_body || strlen( $response_body ) > $max_bytes ) {
-				return new \WP_Error( 'ss_tiktok_invalid_response', __( 'The TikTok feed endpoint returned an invalid response.', 'simply-static' ) );
+				return new \WP_Error( 'ss_tiktok_invalid_response', __( 'The TikTok feed endpoint returned an invalid response.', 'wp-static-export' ) );
 			}
 
 			$decoded = json_decode( $response_body, true );
@@ -272,7 +272,7 @@ class Quadlayers_Tiktok_Integration extends Integration {
 			$decoded = $decoded['data'];
 		}
 		if ( ! is_array( $decoded ) ) {
-			return new \WP_Error( 'ss_tiktok_invalid_json', __( 'The TikTok feed endpoint did not return valid JSON.', 'simply-static' ) );
+			return new \WP_Error( 'ss_tiktok_invalid_json', __( 'The TikTok feed endpoint did not return valid JSON.', 'wp-static-export' ) );
 		}
 
 		return $this->normalize_feed_items( $decoded, $settings );
@@ -322,18 +322,18 @@ class Quadlayers_Tiktok_Integration extends Integration {
 			$data   = $response->get_data();
 			$status = (int) $response->get_status();
 		} else {
-			return new \WP_Error( 'ss_tiktok_invalid_response', __( 'The TikTok feed endpoint returned an invalid response.', 'simply-static' ) );
+			return new \WP_Error( 'ss_tiktok_invalid_response', __( 'The TikTok feed endpoint returned an invalid response.', 'wp-static-export' ) );
 		}
 		if ( 404 === $status && is_array( $data ) && 'rest_no_route' === ( $data['code'] ?? '' ) ) {
 			return null;
 		}
 		if ( 200 !== $status ) {
-			return new \WP_Error( 'ss_tiktok_http_error', __( 'The TikTok feed endpoint returned an error.', 'simply-static' ) );
+			return new \WP_Error( 'ss_tiktok_http_error', __( 'The TikTok feed endpoint returned an error.', 'wp-static-export' ) );
 		}
 
 		$encoded = wp_json_encode( $data );
 		if ( false === $encoded || strlen( $encoded ) > $max_bytes ) {
-			return new \WP_Error( 'ss_tiktok_invalid_response', __( 'The TikTok feed endpoint returned an invalid response.', 'simply-static' ) );
+			return new \WP_Error( 'ss_tiktok_invalid_response', __( 'The TikTok feed endpoint returned an invalid response.', 'wp-static-export' ) );
 		}
 
 		return $data;
@@ -402,7 +402,7 @@ class Quadlayers_Tiktok_Integration extends Integration {
 	 * @return array<int,array<string,mixed>>
 	 */
 	protected function normalize_feed_items( $items, $settings ) {
-		$max_items = max( 1, min( 100, (int) apply_filters( 'simply_static_tiktok_max_items', 24 ) ) );
+		$max_items = max( 1, min( 100, (int) apply_filters( 'wpse_tiktok_max_items', 24 ) ) );
 		if ( isset( $settings['limit'] ) && is_scalar( $settings['limit'] ) && (int) $settings['limit'] > 0 ) {
 			$max_items = min( $max_items, (int) $settings['limit'] );
 		}
@@ -465,11 +465,11 @@ class Quadlayers_Tiktok_Integration extends Integration {
 			return '';
 		}
 
-		$max_bytes = max( 1024, (int) apply_filters( 'simply_static_tiktok_image_max_bytes', 2 * 1024 * 1024 ) );
+		$max_bytes = max( 1024, (int) apply_filters( 'wpse_tiktok_image_max_bytes', 2 * 1024 * 1024 ) );
 		$response  = wp_safe_remote_get(
 			$url,
 			array(
-				'timeout'             => max( 1, (int) apply_filters( 'simply_static_tiktok_image_timeout', 20 ) ),
+				'timeout'             => max( 1, (int) apply_filters( 'wpse_tiktok_image_timeout', 20 ) ),
 				'redirection'         => 3,
 				'sslverify'           => true,
 				'headers'             => array( 'Accept' => 'image/avif,image/webp,image/png,image/jpeg,image/gif' ),
@@ -564,7 +564,7 @@ class Quadlayers_Tiktok_Integration extends Integration {
 		if ( empty( $items ) ) {
 			$container->setAttribute( 'class', 'ss-tiktok-feed ss-tiktok-feed--unavailable' );
 			$message = $dom->createElement( 'p' );
-			$message->appendChild( $dom->createTextNode( __( 'TikTok posts are temporarily unavailable.', 'simply-static' ) ) );
+			$message->appendChild( $dom->createTextNode( __( 'TikTok posts are temporarily unavailable.', 'wp-static-export' ) ) );
 			$container->appendChild( $message );
 
 			return $container;
@@ -576,7 +576,7 @@ class Quadlayers_Tiktok_Integration extends Integration {
 			$link->setAttribute( 'href', $item['share_url'] );
 			$link->setAttribute( 'target', '_blank' );
 			$link->setAttribute( 'rel', 'noopener noreferrer' );
-			$link->setAttribute( 'aria-label', '' !== $item['title'] ? $item['title'] : __( 'View TikTok video', 'simply-static' ) );
+			$link->setAttribute( 'aria-label', '' !== $item['title'] ? $item['title'] : __( 'View TikTok video', 'wp-static-export' ) );
 
 			$media = $dom->createElement( 'span' );
 			$media->setAttribute( 'class', 'ss-tiktok-feed__media' );
@@ -588,7 +588,7 @@ class Quadlayers_Tiktok_Integration extends Integration {
 
 				$image = $dom->createElement( 'img' );
 				$image->setAttribute( 'src', $image_url );
-				$image->setAttribute( 'alt', '' !== $item['title'] ? $item['title'] : __( 'TikTok video', 'simply-static' ) );
+				$image->setAttribute( 'alt', '' !== $item['title'] ? $item['title'] : __( 'TikTok video', 'wp-static-export' ) );
 				$image->setAttribute( 'loading', 'lazy' );
 				$image->setAttribute( 'decoding', 'async' );
 				if ( ! empty( $item['width'] ) && ! empty( $item['height'] ) ) {
@@ -665,12 +665,12 @@ class Quadlayers_Tiktok_Integration extends Integration {
 	 * @return void
 	 */
 	protected function add_snapshot_styles( $dom ) {
-		if ( $dom->getElementById( 'simply-static-tiktok-snapshot-css' ) ) {
+		if ( $dom->getElementById( 'wp-static-export-tiktok-snapshot-css' ) ) {
 			return;
 		}
 
 		$style = $dom->createElement( 'style' );
-		$style->setAttribute( 'id', 'simply-static-tiktok-snapshot-css' );
+		$style->setAttribute( 'id', 'wp-static-export-tiktok-snapshot-css' );
 		$style->appendChild(
 			$dom->createTextNode(
 				'.ss-tiktok-feed{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}'
@@ -719,7 +719,7 @@ class Quadlayers_Tiktok_Integration extends Integration {
 			return array();
 		}
 
-		$relative  = 'simply-static/tiktok/' . $feed_hash;
+		$relative  = 'wp-static-export/tiktok/' . $feed_hash;
 		$directory = trailingslashit( $uploads['basedir'] ) . $relative;
 		if ( ! is_dir( $directory ) && ! wp_mkdir_p( $directory ) ) {
 			return array();
@@ -743,7 +743,7 @@ class Quadlayers_Tiktok_Integration extends Integration {
 			return array();
 		}
 
-		$max_bytes = max( 1024, (int) apply_filters( 'simply_static_tiktok_manifest_max_bytes', 512 * 1024 ) );
+		$max_bytes = max( 1024, (int) apply_filters( 'wpse_tiktok_manifest_max_bytes', 512 * 1024 ) );
 		$size      = filesize( $location['manifest'] );
 		if ( false === $size || $size <= 0 || $size > $max_bytes ) {
 			return array();
@@ -842,7 +842,7 @@ class Quadlayers_Tiktok_Integration extends Integration {
 			return isset( $manifest['export_token'] ) && is_scalar( $manifest['export_token'] ) && hash_equals( $token, (string) $manifest['export_token'] );
 		}
 
-		$freshness = max( 0, (int) apply_filters( 'simply_static_tiktok_snapshot_freshness', 10 * MINUTE_IN_SECONDS ) );
+		$freshness = max( 0, (int) apply_filters( 'wpse_tiktok_snapshot_freshness', 10 * MINUTE_IN_SECONDS ) );
 
 		return $freshness > 0
 			&& ! empty( $manifest['captured_at'] )
@@ -948,7 +948,7 @@ class Quadlayers_Tiktok_Integration extends Integration {
 			&& empty( $parts['user'] )
 			&& empty( $parts['pass'] )
 			&& ( ! isset( $parts['port'] ) || 443 === (int) $parts['port'] );
-		$valid = (bool) apply_filters( 'simply_static_tiktok_allowed_media_url', $valid, $url );
+		$valid = (bool) apply_filters( 'wpse_tiktok_allowed_media_url', $valid, $url );
 
 		return $valid ? esc_url_raw( trim( $url ) ) : '';
 	}

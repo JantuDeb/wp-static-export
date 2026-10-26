@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -15,14 +15,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Single_Export {
 
-	const FLAG        = 'simply-static-use-single';
+	const FLAG        = 'wp-static-export-use-single';
 	const CRON_HOOK   = 'ss_single_auto_export';
 	const MAX_RETRIES = 20;
 
 	public static function init() {
 		// The flag is one-shot state. Core's wrap-up does not clear it, so an export that left it
 		// behind would turn every later export into a single-page export.
-		add_action( 'ss_completed', array( __CLASS__, 'clear_flag' ), 5 );
+		add_action( 'wpse_completed', array( __CLASS__, 'clear_flag' ), 5 );
 
 		add_filter( 'post_row_actions', array( __CLASS__, 'row_actions' ), 10, 2 );
 		add_filter( 'page_row_actions', array( __CLASS__, 'row_actions' ), 10, 2 );
@@ -67,18 +67,18 @@ class Single_Export {
 	public static function start( $ids ) {
 		$ids = self::normalize_ids( $ids );
 		if ( ! $ids ) {
-			return new \WP_Error( 'ss_single_no_ids', __( 'No post given.', 'simply-static' ) );
+			return new \WP_Error( 'ss_single_no_ids', __( 'No post given.', 'wp-static-export' ) );
 		}
 		foreach ( $ids as $id ) {
 			$post = get_post( $id );
 			if ( ! $post || 'publish' !== $post->post_status || ! is_post_type_viewable( $post->post_type ) ) {
-				return new \WP_Error( 'ss_single_not_public', sprintf( /* translators: %d: post ID */ __( 'Post %d is not published.', 'simply-static' ), $id ) );
+				return new \WP_Error( 'ss_single_not_public', sprintf( /* translators: %d: post ID */ __( 'Post %d is not published.', 'wp-static-export' ), $id ) );
 			}
 		}
 
 		$job = Plugin::instance()->get_archive_creation_job();
 		if ( $job->is_running() || $job->is_paused() ) {
-			return new \WP_Error( 'ss_single_busy', __( 'Another export is running.', 'simply-static' ) );
+			return new \WP_Error( 'ss_single_busy', __( 'Another export is running.', 'wp-static-export' ) );
 		}
 
 		$previous = get_option( self::FLAG, null );
@@ -87,9 +87,9 @@ class Single_Export {
 			foreach ( $ids as $id ) {
 				self::ensure_page_record( $id );
 			}
-			delete_option( 'simply-static-404-only' );
-			delete_option( 'simply-static-use-build' );
-			delete_option( 'simply-static-use-language' );
+			delete_option( 'wp-static-export-404-only' );
+			delete_option( 'wp-static-export-use-build' );
+			delete_option( 'wp-static-export-use-language' );
 			update_option( self::FLAG, implode( ',', $ids ), false );
 
 			return 'export';
@@ -100,7 +100,7 @@ class Single_Export {
 
 		return Plugin::instance()->run_static_export( 0, 'export', $prepare, $restore )
 			? true
-			: new \WP_Error( 'ss_single_not_started', __( 'The export could not be started.', 'simply-static' ) );
+			: new \WP_Error( 'ss_single_not_started', __( 'The export could not be started.', 'wp-static-export' ) );
 	}
 
 	/**
@@ -133,7 +133,7 @@ class Single_Export {
 		if ( 'publish' === $post->post_status && current_user_can( 'edit_post', $post->ID ) && is_post_type_viewable( $post->post_type ) ) {
 			$url = wp_nonce_url( admin_url( 'admin-post.php?action=ss_single_export&post=' . (int) $post->ID ), 'ss_single_export_' . $post->ID );
 
-			$actions['ss_single_export'] = '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Publish to static site', 'simply-static' ) . '</a>';
+			$actions['ss_single_export'] = '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Publish to static site', 'wp-static-export' ) . '</a>';
 		}
 
 		return $actions;
@@ -143,7 +143,7 @@ class Single_Export {
 		$id = isset( $_GET['post'] ) ? absint( $_GET['post'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		check_admin_referer( 'ss_single_export_' . $id );
 		if ( ! $id || ! current_user_can( 'edit_post', $id ) ) {
-			wp_die( esc_html__( 'You are not allowed to do that.', 'simply-static' ), 403 );
+			wp_die( esc_html__( 'You are not allowed to do that.', 'wp-static-export' ), 403 );
 		}
 
 		$result = self::start( array( $id ) );
@@ -167,7 +167,7 @@ class Single_Export {
 		printf(
 			'<div class="notice notice-%1$s is-dismissible"><p>%2$s</p></div>',
 			esc_attr( $ok ? 'success' : 'error' ),
-			esc_html( $ok ? __( 'Publishing to the static site has started.', 'simply-static' ) : sanitize_text_field( rawurldecode( (string) ( $_GET['ss_msg'] ?? '' ) ) ) ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			esc_html( $ok ? __( 'Publishing to the static site has started.', 'wp-static-export' ) : sanitize_text_field( rawurldecode( (string) ( $_GET['ss_msg'] ?? '' ) ) ) ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		);
 	}
 

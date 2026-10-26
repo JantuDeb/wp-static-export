@@ -38,7 +38,7 @@ function Integration({integration, settings, toggleIntegration}) {
                     )}
                 </FlexBlock>
                 <FlexBlock style={{ flex: '0 0 30%', maxWidth: '30%' }} className={'ss-align-right ss-no-shrink'}>
-                    {!canRun && <span><em>{__('Missing plugin', 'simply-static')}</em></span>}
+                    {!canRun && <span><em>{__('Missing plugin', 'wp-static-export')}</em></span>}
                     {(canRun && canUse && !alwaysActive) &&
                         <Flex justify="flex-end" direction="column" style={{ alignItems: 'flex-end' }}>
                             <ToggleControl
@@ -50,12 +50,12 @@ function Integration({integration, settings, toggleIntegration}) {
                                     toggleIntegration(integration.id, value);
                                 }}
                             />
-                            {forceDisabled && <em style={{ fontSize: '12px', color: '#757575' }}>{__('Disabled by Command Center', 'simply-static')}</em>}
+                            {forceDisabled && <em style={{ fontSize: '12px', color: '#757575' }}>{__('Disabled by Command Center', 'wp-static-export')}</em>}
                         </Flex>
                     }
-                    {(canRun && canUse && alwaysActive) && <em>{__('Always active', 'simply-static')}</em>}
+                    {(canRun && canUse && alwaysActive) && <em>{__('Always active', 'wp-static-export')}</em>}
                     {(canRun && !canUse) &&
-                        <em>{__('Not available', 'simply-static')}</em>
+                        <em>{__('Not available', 'wp-static-export')}</em>
                     }
                 </FlexBlock>
             </Flex>

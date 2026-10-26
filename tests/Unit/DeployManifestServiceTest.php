@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
 use RuntimeException;
-use Simply_Static\Deploy_Manifest_Service;
-use Simply_Static\Page;
-use Simply_Static\Tests\Support\UnitTestCase;
+use WP_Static_Export\Deploy_Manifest_Service;
+use WP_Static_Export\Page;
+use WP_Static_Export\Tests\Support\UnitTestCase;
 
 final class DeployManifestServiceTest extends UnitTestCase {
 
@@ -80,7 +80,7 @@ final class DeployManifestServiceTest extends UnitTestCase {
 		$service->persist( $this->manifestFixture() );
 
 		self::assertSame( 'START TRANSACTION', $wpdb->queries[0] );
-		self::assertStringStartsWith( 'INSERT INTO `wp_simply_static_deploy_manifest_urls`', $wpdb->queries[1] );
+		self::assertStringStartsWith( 'INSERT INTO `wp_wpse_deploy_manifest_urls`', $wpdb->queries[1] );
 		self::assertSame( 'COMMIT', $wpdb->queries[2] );
 		self::assertCount( 2, $wpdb->deletes );
 		self::assertCount( 1, $wpdb->inserts );

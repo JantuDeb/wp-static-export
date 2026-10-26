@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
-use Simply_Static\Util;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Util;
 
 final class PublicPostStatusTest extends UnitTestCase {
 
@@ -29,7 +29,7 @@ final class PublicPostStatusTest extends UnitTestCase {
 
 	public function test_filter_can_add_an_explicit_exportable_status(): void {
 		add_filter(
-			'simply_static_public_post_statuses',
+			'wpse_public_post_statuses',
 			static function ( array $statuses ): array {
 				$statuses[] = 'externally-visible';
 

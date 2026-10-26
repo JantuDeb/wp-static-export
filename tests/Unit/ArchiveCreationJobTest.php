@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Archive_Creation_Job;
-use Simply_Static\Background_Process;
-use Simply_Static\Multisite;
-use Simply_Static\Options;
-use Simply_Static\Pause_Exception;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Archive_Creation_Job;
+use WP_Static_Export\Background_Process;
+use WP_Static_Export\Multisite;
+use WP_Static_Export\Options;
+use WP_Static_Export\Pause_Exception;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 $admin_include = ABSPATH . 'wp-admin/includes/admin.php';
 if ( ! file_exists( $admin_include ) ) {
@@ -97,7 +97,7 @@ final class ArchiveCancelTaskDouble {
 
 	public function perform(): bool {
 		++$this->perform_calls;
-		$this->status_seen = get_option( 'wp_archive_creation_job_status' );
+		$this->status_seen = get_option( 'wpse_archive_creation_job_status' );
 		return true;
 	}
 }
@@ -164,9 +164,9 @@ final class ArchiveCreationJobHarness extends Archive_Creation_Job {
 
 	public function __construct( Options $options ) {
 		$this->options                  = $options;
-		$this->identifier               = 'wp_archive_creation_job';
-		$this->cron_hook_identifier     = 'wp_archive_creation_job_cron';
-		$this->cron_interval_identifier = 'wp_archive_creation_job_cron_interval';
+		$this->identifier               = 'wpse_archive_creation_job';
+		$this->cron_hook_identifier     = 'wpse_archive_creation_job_cron';
+		$this->cron_interval_identifier = 'wpse_archive_creation_job_cron_interval';
 	}
 
 	/** @return mixed */
@@ -236,12 +236,12 @@ final class ArchiveCreationJobHarness extends Archive_Creation_Job {
 
 	public function is_paused() {
 		return $this->paused_for_test
-			|| Background_Process::STATUS_PAUSED === get_option( 'wp_archive_creation_job_status' );
+			|| Background_Process::STATUS_PAUSED === get_option( 'wpse_archive_creation_job_status' );
 	}
 
 	public function is_cancelled() {
 		return $this->cancelled_for_test
-			|| Background_Process::STATUS_CANCELLED === get_option( 'wp_archive_creation_job_status' );
+			|| Background_Process::STATUS_CANCELLED === get_option( 'wpse_archive_creation_job_status' );
 	}
 
 	public function get_chain_id() {
@@ -321,11 +321,11 @@ final class ArchiveFailureLifecycleHarness extends Archive_Creation_Job {
 
 	public function __construct( Options $options ) {
 		$this->options                  = $options;
-		$this->identifier               = 'wp_archive_creation_job';
-		$this->cron_hook_identifier     = 'wp_archive_creation_job_cron';
-		$this->cron_interval_identifier = 'wp_archive_creation_job_cron_interval';
+		$this->identifier               = 'wpse_archive_creation_job';
+		$this->cron_hook_identifier     = 'wpse_archive_creation_job_cron';
+		$this->cron_interval_identifier = 'wpse_archive_creation_job_cron_interval';
 		$this->batch = (object) array(
-			'key'  => 'wp_archive_creation_job_batch_test',
+			'key'  => 'wpse_archive_creation_job_batch_test',
 			'data' => array( 'fetch_urls' ),
 		);
 	}
@@ -399,7 +399,7 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 
 	protected function setUp(): void {
 		parent::setUp();
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'debugging_mode'          => false,
 			'delivery_method'         => 'zip',
 			'archive_status_messages' => array(),
@@ -414,10 +414,10 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 		$job = new Archive_Creation_Job();
 
 		self::assertInstanceOf( Archive_Creation_Job::class, $job );
-		self::assertArrayHasKey( 'wp_ajax_wp_archive_creation_job', WpEnv::$filters );
-		self::assertArrayHasKey( 'wp_ajax_nopriv_wp_archive_creation_job', WpEnv::$filters );
-		self::assertArrayHasKey( 'wp_archive_creation_job_cron', WpEnv::$filters );
-		self::assertArrayHasKey( 'wp_archive_creation_job_query_args', WpEnv::$filters );
+		self::assertArrayHasKey( 'wp_ajax_wpse_archive_creation_job', WpEnv::$filters );
+		self::assertArrayHasKey( 'wp_ajax_nopriv_wpse_archive_creation_job', WpEnv::$filters );
+		self::assertArrayHasKey( 'wpse_archive_creation_job_cron', WpEnv::$filters );
+		self::assertArrayHasKey( 'wpse_archive_creation_job_query_args', WpEnv::$filters );
 		$allowed_property = new \ReflectionProperty( Archive_Creation_Job::class, 'allowed_batch_data_classes' );
 		$allowed_property->setAccessible( true );
 		self::assertFalse( $allowed_property->getValue( $job ) );
@@ -430,7 +430,7 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 	public function test_task_list_filter_receives_delivery_method_and_status_markers_are_persisted(): void {
 		$received_delivery = null;
 		add_filter(
-			'simplystatic.archive_creation_job.task_list',
+			'wpse.archive_creation_job.task_list',
 			static function ( array $tasks, string $delivery ) use ( &$received_delivery ): array {
 				$received_delivery = $delivery;
 				return array( 'setup', 'fetch_urls' );
@@ -460,7 +460,7 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 			->set( 'zip_files', array( '/tmp/old' ) );
 		$type_seen_by_filter = null;
 		add_filter(
-			'simplystatic.archive_creation_job.task_list',
+			'wpse.archive_creation_job.task_list',
 			function ( array $tasks ) use ( &$type_seen_by_filter ): array {
 				$type_seen_by_filter = $this->options->get( 'generate_type' );
 				return array( 'setup', 'fetch_urls' );
@@ -487,20 +487,20 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 
 	public function test_full_export_gets_a_fresh_archive_name(): void {
 		add_filter(
-			'simplystatic.archive_creation_job.task_list',
+			'wpse.archive_creation_job.task_list',
 			static function (): array {
 				return array( 'setup' );
 			}
 		);
 
 		self::assertTrue( $this->job->start( 9, 'export' ) );
-		self::assertStringStartsWith( 'simply-static-9-', $this->options->get( 'archive_name' ) );
+		self::assertStringStartsWith( 'wp-static-export-9-', $this->options->get( 'archive_name' ) );
 	}
 
 	public function test_active_export_uses_immutable_persisted_task_snapshot(): void {
 		$live_tasks = array( 'setup', 'fetch_urls', 'create_zip_archive', 'wrapup' );
 		add_filter(
-			'simplystatic.archive_creation_job.task_list',
+			'wpse.archive_creation_job.task_list',
 			static function () use ( &$live_tasks ): array {
 				return $live_tasks;
 			}
@@ -532,7 +532,7 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 
 	public function test_queue_persistence_failure_rolls_back_active_archive_state(): void {
 		add_filter(
-			'simplystatic.archive_creation_job.task_list',
+			'wpse.archive_creation_job.task_list',
 			static function (): array {
 				return array( 'setup' );
 			}
@@ -550,12 +550,12 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 			'queue could not be saved',
 			$this->options->get( 'archive_status_messages' )['error']['message']
 		);
-		self::assertContains( 'ss_archive_creation_job_start_failed', WpEnv::$action_log );
+		self::assertContains( 'wpse_archive_creation_job_start_failed', WpEnv::$action_log );
 	}
 
 	public function test_dispatch_failure_rolls_back_queue_instead_of_reporting_start_success(): void {
 		add_filter(
-			'simplystatic.archive_creation_job.task_list',
+			'wpse.archive_creation_job.task_list',
 			static function (): array {
 				return array( 'setup' );
 			}
@@ -572,7 +572,7 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 			'worker could not be dispatched',
 			$this->options->get( 'archive_status_messages' )['error']['message']
 		);
-		self::assertContains( 'ss_archive_creation_job_start_failed', WpEnv::$action_log );
+		self::assertContains( 'wpse_archive_creation_job_start_failed', WpEnv::$action_log );
 	}
 
 	public function test_empty_task_failure_removes_multisite_marker_and_restores_original_blog(): void {
@@ -585,7 +585,7 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 		self::assertSame( 1, WpEnv::$current_blog_id );
 		self::assertSame( array(), WpEnv::$blog_stack );
 		self::assertArrayNotHasKey( 'simply-static_multisite_export_running', WpEnv::$site_options );
-		self::assertContains( 'ss_archive_creation_job_start_failed', WpEnv::$action_log );
+		self::assertContains( 'wpse_archive_creation_job_start_failed', WpEnv::$action_log );
 	}
 
 	public function test_multisite_export_claim_is_atomic_and_preserves_another_sites_owner(): void {
@@ -609,7 +609,7 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 		WpEnv::$multisite       = true;
 		WpEnv::$current_blog_id = 1;
 		add_filter(
-			'simplystatic.archive_creation_job.task_list',
+			'wpse.archive_creation_job.task_list',
 			static function (): array {
 				throw new \RuntimeException( 'Task list failed' );
 			}
@@ -625,7 +625,7 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 		self::assertSame( 1, WpEnv::$current_blog_id );
 		self::assertSame( array(), WpEnv::$blog_stack );
 		self::assertArrayNotHasKey( 'simply-static_multisite_export_running', WpEnv::$site_options );
-		self::assertContains( 'ss_archive_creation_job_start_failed', WpEnv::$action_log );
+		self::assertContains( 'wpse_archive_creation_job_start_failed', WpEnv::$action_log );
 	}
 
 	public function test_pre_switched_multisite_context_is_not_nested_or_restored_twice_on_failure(): void {
@@ -635,7 +635,7 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 		switch_to_blog( 7 );
 		self::assertSame( array( 1 ), WpEnv::$blog_stack );
 		add_filter(
-			'simplystatic.archive_creation_job.task_list',
+			'wpse.archive_creation_job.task_list',
 			static function (): array {
 				throw new \RuntimeException( 'Task list failed after outer switch' );
 			}
@@ -665,12 +665,12 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 
 		self::assertFalse( $this->job->start( 1, 'export' ) );
 		self::assertSame( array(), $this->job->queued );
-		self::assertContains( 'ss_archive_creation_job_already_running', WpEnv::$action_log );
+		self::assertContains( 'wpse_archive_creation_job_already_running', WpEnv::$action_log );
 	}
 
 	public function test_start_gate_rejects_live_or_contended_process_lock_before_state_mutation(): void {
 		add_filter(
-			'simplystatic.archive_creation_job.task_list',
+			'wpse.archive_creation_job.task_list',
 			static function (): array {
 				return array( 'setup', 'fetch_urls' );
 			}
@@ -694,7 +694,7 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 	public function test_parent_task_resolution_uses_filter_and_missing_class_records_an_error(): void {
 		$resolved = new ArchiveTaskDouble();
 		add_filter(
-			'simply_static_class_name',
+			'wpse_class_name',
 			static function ( string $class_name, string $task_name ) use ( $resolved ): string {
 				return 'mapped' === $task_name ? get_class( $resolved ) : $class_name;
 			},
@@ -733,7 +733,7 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 			'fetch_urls' => $next,
 		);
 		add_filter(
-			'simplystatic.archive_creation_job.task_list',
+			'wpse.archive_creation_job.task_list',
 			static function (): array {
 				return array( 'setup', 'fetch_urls' );
 			}
@@ -762,12 +762,12 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 			'Crawler exploded',
 			$this->options->get( 'archive_status_messages' )['error']['message']
 		);
-		self::assertContains( 'ss_completed', WpEnv::$action_log );
+		self::assertContains( 'wpse_completed', WpEnv::$action_log );
 	}
 
 	public function test_task_constructor_type_errors_enter_terminal_exception_path(): void {
 		add_filter(
-			'simply_static_class_name',
+			'wpse_class_name',
 			static function ( string $class_name, string $task_name ): string {
 				return 'constructor_failure' === $task_name ? ArchiveConstructorThrows::class : $class_name;
 			},
@@ -793,7 +793,7 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 			'fetch_urls' => $next,
 		);
 		add_filter(
-			'simplystatic.archive_creation_job.task_list',
+			'wpse.archive_creation_job.task_list',
 			static function (): array {
 				return array( 'setup', 'fetch_urls' );
 			}
@@ -841,7 +841,7 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 		);
 		$completion_results = array();
 		add_action(
-			'ss_completed',
+			'wpse_completed',
 			static function ( string $result ) use ( &$completion_results ): void {
 				$completion_results[] = $result;
 			},
@@ -872,7 +872,7 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 		$job->task_objects = array( 'cancel' => $cancel_task );
 		$completion_results = array();
 		add_action(
-			'ss_completed',
+			'wpse_completed',
 			static function ( string $result ) use ( &$completion_results ): void {
 				$completion_results[] = $result;
 			}
@@ -901,7 +901,7 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 		$countable->total_pages     = 100;
 		$this->job->task_objects['fetch_urls'] = $countable;
 		add_filter(
-			'simplystatic.archive_creation_job.task_list',
+			'wpse.archive_creation_job.task_list',
 			static function (): array {
 				return array( 'setup', 'fetch_urls', 'create_zip_archive', 'wrapup' );
 			}
@@ -971,7 +971,7 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 
 		self::assertSame( 1, $cancel_task->perform_calls );
 		self::assertSame( Background_Process::STATUS_CANCELLED, $cancel_task->status_seen );
-		self::assertSame( Background_Process::STATUS_CANCELLED, WpEnv::$options['wp_archive_creation_job_status'] );
+		self::assertSame( Background_Process::STATUS_CANCELLED, WpEnv::$options['wpse_archive_creation_job_status'] );
 		self::assertSame( 0, $this->job->schedule_calls );
 		self::assertSame( 1, $this->job->dispatch_calls );
 		self::assertSame( array(), $this->options->get( 'archive_task_list' ) );
@@ -986,7 +986,7 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 		$this->job->cancel_task_for_test = new ArchiveCancelTaskDouble();
 		$this->job->cancel();
 		add_filter(
-			'simplystatic.archive_creation_job.task_list',
+			'wpse.archive_creation_job.task_list',
 			static function (): array {
 				return array( 'setup', 'fetch_urls', 'wrapup' );
 			}
@@ -995,15 +995,15 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 		self::assertFalse( $this->job->start( 1, 'export' ) );
 		self::assertSame( array(), $this->job->queued );
 		self::assertSame( 1, $this->job->dispatch_calls );
-		self::assertSame( Background_Process::STATUS_CANCELLED, WpEnv::$options['wp_archive_creation_job_status'] );
-		self::assertContains( 'ss_archive_creation_job_already_running', WpEnv::$action_log );
+		self::assertSame( Background_Process::STATUS_CANCELLED, WpEnv::$options['wpse_archive_creation_job_status'] );
+		self::assertContains( 'wpse_archive_creation_job_already_running', WpEnv::$action_log );
 	}
 
 	public function test_completion_records_duration_clears_status_and_emits_lifecycle_actions(): void {
 		$this->options
 			->set( 'archive_start_time', '2026-07-12 10:00:00' )
 			->set( 'archive_end_time', null );
-		WpEnv::$options['wp_archive_creation_job_status'] = 2;
+		WpEnv::$options['wpse_archive_creation_job_status'] = 2;
 
 		$this->job->finish_for_test();
 
@@ -1013,16 +1013,16 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 			'02:00:00',
 			$this->options->get( 'archive_status_messages' )['done']['message']
 		);
-		self::assertArrayNotHasKey( 'wp_archive_creation_job_status', WpEnv::$options );
+		self::assertArrayNotHasKey( 'wpse_archive_creation_job_status', WpEnv::$options );
 		self::assertSame( 1, $this->job->clear_event_calls );
-		self::assertContains( 'wp_archive_creation_job_completed', WpEnv::$action_log );
-		self::assertContains( 'ss_completed', WpEnv::$action_log );
+		self::assertContains( 'wpse_archive_creation_job_completed', WpEnv::$action_log );
+		self::assertContains( 'wpse_completed', WpEnv::$action_log );
 		self::assertSame( array(), $this->options->get( 'archive_task_list' ) );
 	}
 
 	public function test_next_task_runtime_reset_shutdown_guard_and_die_override_are_deterministic(): void {
 		add_filter(
-			'simplystatic.archive_creation_job.task_list',
+			'wpse.archive_creation_job.task_list',
 			static function (): array {
 				return array( 'setup', 'fetch_urls' );
 			}
@@ -1046,9 +1046,9 @@ final class ArchiveCreationJobTest extends UnitTestCase {
 
 	private function register_multisite_start_hooks(): Multisite {
 		$multisite = ( new \ReflectionClass( Multisite::class ) )->newInstanceWithoutConstructor();
-		add_action( 'ss_archive_creation_job_before_start', array( $multisite, 'switch_to_blog' ), 10, 2 );
-		add_action( 'ss_archive_creation_job_before_start', array( $multisite, 'add_export' ), 40, 2 );
-		add_action( 'ss_archive_creation_job_start_failed', array( $multisite, 'handle_start_failure' ), 99, 2 );
+		add_action( 'wpse_archive_creation_job_before_start', array( $multisite, 'switch_to_blog' ), 10, 2 );
+		add_action( 'wpse_archive_creation_job_before_start', array( $multisite, 'add_export' ), 40, 2 );
+		add_action( 'wpse_archive_creation_job_start_failed', array( $multisite, 'handle_start_failure' ), 99, 2 );
 
 		return $multisite;
 	}

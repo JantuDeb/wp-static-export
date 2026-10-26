@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -27,8 +27,8 @@ class Beaver_Builder_Integration extends Integration {
 	 * Constructor.
 	 */
 	public function __construct() {
-		$this->name        = __( 'Beaver Builder', 'simply-static' );
-		$this->description = __( 'Includes Beaver Builder cache files when exporting static sites.', 'simply-static' );
+		$this->name        = __( 'Beaver Builder', 'wp-static-export' );
+		$this->description = __( 'Includes Beaver Builder cache files when exporting static sites.', 'wp-static-export' );
 	}
 
 	/**
@@ -59,9 +59,9 @@ class Beaver_Builder_Integration extends Integration {
 			return;
 		}
 
-		add_filter( 'ss_get_option_crawlers', [ $this, 'include_beaver_builder_crawler' ] );
-		add_filter( 'ss_get_settings', [ $this, 'include_beaver_builder_crawler_in_settings' ] );
-		add_filter( 'ss_additional_files', [ $this, 'include_beaver_builder_cache_directory' ] );
+		add_filter( 'wpse_get_option_crawlers', [ $this, 'include_beaver_builder_crawler' ] );
+		add_filter( 'wpse_get_settings', [ $this, 'include_beaver_builder_crawler_in_settings' ] );
+		add_filter( 'wpse_additional_files', [ $this, 'include_beaver_builder_cache_directory' ] );
 	}
 
 	/**

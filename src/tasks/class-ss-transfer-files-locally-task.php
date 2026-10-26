@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 /**
  * Class which handles transfer files task.
@@ -38,7 +38,7 @@ class Transfer_Files_Locally_Task extends Task {
 	 * @return boolean true if done, false if not done.
 	 */
 	public function perform() {
-		$this->destination_dir = apply_filters( 'ss_local_dir', $this->options->get( 'local_dir' ) );
+		$this->destination_dir = apply_filters( 'wpse_local_dir', $this->options->get( 'local_dir' ) );
 		$this->archive_dir     = $this->options->get_archive_dir();
 
 		$create_dir = $this->maybe_create_local_directory();
@@ -46,7 +46,7 @@ class Transfer_Files_Locally_Task extends Task {
 		if ( ! $create_dir ) {
 			return new \WP_Error(
 				'ss_local_destination_unavailable',
-				__( 'Unable to create the configured local destination directory.', 'simply-static' )
+				__( 'Unable to create the configured local destination directory.', 'wp-static-export' )
 			);
 		}
 
@@ -73,12 +73,12 @@ class Transfer_Files_Locally_Task extends Task {
 			 * @param string               $archive_dir     Absolute path to archive (temp) directory.
 			 * @param Transfer_Files_Locally_Task $task     The current task instance.
 			 */
-			do_action( 'ss_before_finish_transferring_files_locally', $this->destination_dir, $this->archive_dir, $this );
+			do_action( 'wpse_before_finish_transferring_files_locally', $this->destination_dir, $this->archive_dir, $this );
 
 			if ( $this->options->get( 'destination_url_type' ) == 'absolute' ) {
 				$destination_url = trailingslashit( $this->options->get_destination_url() );
 				$this->save_status_message(
-					__( 'Destination URL:', 'simply-static' ),
+					__( 'Destination URL:', 'wp-static-export' ),
 					'destination_url',
 					array(
 						'url'   => $destination_url,
@@ -88,19 +88,19 @@ class Transfer_Files_Locally_Task extends Task {
 			}
 
 			// If this is a 404-only export, ensure the activity/export log reflects a single transferred file.
-			$only_404 = get_option( 'simply-static-404-only' );
+			$only_404 = get_option( 'wp-static-export-404-only' );
 			if ( ! empty( $only_404 ) ) {
 				$this->save_status_message(
 					sprintf(
 						/* translators: 1: number of files transferred, 2: total number of files. */
-						__( 'Transferred %1$d of %2$d files', 'simply-static' ),
+						__( 'Transferred %1$d of %2$d files', 'wp-static-export' ),
 						1,
 						1
 					)
 				);
 			}
 
-			do_action( 'ss_finished_transferring_files_locally', $this->destination_dir );
+			do_action( 'wpse_finished_transferring_files_locally', $this->destination_dir );
 
 			self::delete_total_pages();
 		}
@@ -151,12 +151,12 @@ class Transfer_Files_Locally_Task extends Task {
 	protected function processed_pages_message( $processed, $total ) {
 		Util::debug_log( '[Transfer] Total Pages:' . $total . '. Processed Pages: ' . $processed );
 		if ( ! $total && 'update' === $this->get_generate_type() ) {
-			return __( 'No new/updated pages to transfer', 'simply-static' );
+			return __( 'No new/updated pages to transfer', 'wp-static-export' );
 		}
 
 		return sprintf(
 			/* translators: 1: number of files transferred, 2: total number of files. */
-			__( 'Transferred %1$d of %2$d files', 'simply-static' ),
+			__( 'Transferred %1$d of %2$d files', 'wp-static-export' ),
 			$processed,
 			$total
 		);
@@ -197,7 +197,7 @@ class Transfer_Files_Locally_Task extends Task {
 		$static_page->save();
 		Util::debug_log( 'Successfully transferred: ' . $path );
 
-		do_action( 'simply_static_page_file_transferred', $static_page, $this->destination_dir );
+		do_action( 'wpse_page_file_transferred', $static_page, $this->destination_dir );
 	}
 
 	/**
@@ -258,7 +258,7 @@ class Transfer_Files_Locally_Task extends Task {
 			Util::debug_log( 'Unable to transfer feed redirect to local destination: ' . $destination_file_path );
 			return new \WP_Error(
 				'ss_feed_transfer_failed',
-				__( 'Unable to transfer the feed redirect to the local destination.', 'simply-static' )
+				__( 'Unable to transfer the feed redirect to the local destination.', 'wp-static-export' )
 			);
 		}
 

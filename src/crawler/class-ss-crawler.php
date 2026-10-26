@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static\Crawler;
+namespace WP_Static_Export\Crawler;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -63,7 +63,7 @@ abstract class Crawler {
 	 * @return boolean
 	 */
 	public function is_active() {
-		$options  = \Simply_Static\Options::instance();
+		$options  = \WP_Static_Export\Options::instance();
 		$crawlers = $options->get( 'crawlers' );
 
 		// Distinguish between "not set" (null) and "set to array" (which may be empty).
@@ -127,10 +127,10 @@ abstract class Crawler {
 	 */
 	protected function enqueue_urls( array $urls ) : int {
 		$count = 0;
-		$batch_size = max( 1, min( 1000, (int) apply_filters( 'simply_static_crawler_batch_size', 100 ) ) );
+		$batch_size = max( 1, min( 1000, (int) apply_filters( 'wpse_crawler_batch_size', 100 ) ) );
 
 		// Determine excluded URL if a custom 404 page is selected
-		$opts = \Simply_Static\Options::instance();
+		$opts = \WP_Static_Export\Options::instance();
 		$exclude_url = '';
 		if ( $opts->get( 'generate_404' ) && (int) $opts->get( 'custom_404_page' ) ) {
 			$permalink = get_permalink( (int) $opts->get( 'custom_404_page' ) );
@@ -143,7 +143,7 @@ abstract class Crawler {
 		$batches = array_chunk( $urls, $batch_size );
 
 		foreach ( $batches as $batch ) {
-			\Simply_Static\Util::debug_log( sprintf( 'Processing batch of %d URLs for %s crawler', count( $batch ), $this->name ) );
+			\WP_Static_Export\Util::debug_log( sprintf( 'Processing batch of %d URLs for %s crawler', count( $batch ), $this->name ) );
 
 			foreach ( $batch as $url ) {
 				if ( ! is_string( $url ) ) {
@@ -151,40 +151,40 @@ abstract class Crawler {
 				}
 
 				$discovered_url = $url;
-				$url            = trim( \Simply_Static\Util::remove_fragment( $url ) );
+				$url            = trim( \WP_Static_Export\Util::remove_fragment( $url ) );
 
 				// Fragments are browser-side navigation state, not separate
 				// resources. A fragment-only value such as "#/page/2/" has no
 				// server URL to crawl, while an absolute URL with a fragment
 				// is queued once under its fragment-free page URL.
 				if ( '' === $url ) {
-					\Simply_Static\Util::debug_log( sprintf( 'Base crawler skipping fragment-only URL: %s', $discovered_url ) );
+					\WP_Static_Export\Util::debug_log( sprintf( 'Base crawler skipping fragment-only URL: %s', $discovered_url ) );
 					continue;
 				}
 
 				// Normalize URL to handle posts with URL-encoded post_name values
-				$url = \Simply_Static\Util::normalize_url( $url );
+				$url = \WP_Static_Export\Util::normalize_url( $url );
 
 				// Skip excluded URLs to avoid adding to DB
-				if ( \Simply_Static\Util::is_url_excluded( $url ) ) {
-					\Simply_Static\Util::debug_log( sprintf( 'Base crawler skipping excluded URL: %s', $url ) );
+				if ( \WP_Static_Export\Util::is_url_excluded( $url ) ) {
+					\WP_Static_Export\Util::debug_log( sprintf( 'Base crawler skipping excluded URL: %s', $url ) );
 					continue;
 				}
 				// Skip selected custom 404 page from regular crawl/export
 				if ( ! empty( $exclude_url ) ) {
 					$normalized = untrailingslashit( $url );
 					if ( 0 === strcasecmp( $normalized, $exclude_url ) ) {
-						\Simply_Static\Util::debug_log( sprintf( 'Skipping custom 404 page URL "%s" from %s crawler', $url, $this->name ) );
+						\WP_Static_Export\Util::debug_log( sprintf( 'Skipping custom 404 page URL "%s" from %s crawler', $url, $this->name ) );
 						continue;
 					}
 				}
 
-				// Create a new Simply_Static\Page for each URL
-				$static_page = \Simply_Static\Page::query()->find_or_initialize_by( 'url', $url );
+				// Create a new WP_Static_Export\Page for each URL
+				$static_page = \WP_Static_Export\Page::query()->find_or_initialize_by( 'url', $url );
 				$static_page->set_status_message(
 					sprintf(
 						/* translators: %s: crawler name. */
-						__( 'Added by %s Crawler', 'simply-static' ),
+						__( 'Added by %s Crawler', 'wp-static-export' ),
 						$this->name
 					)
 				);
@@ -196,7 +196,7 @@ abstract class Crawler {
 
 			// Allow other processes to run
 			if ( count( $batches ) > 1 ) {
-				\Simply_Static\Util::debug_log( 'Yielding to allow other processes to run' );
+				\WP_Static_Export\Util::debug_log( 'Yielding to allow other processes to run' );
 				usleep( 100000 ); // 0.1 seconds in microseconds
 			}
 		}
@@ -235,13 +235,13 @@ abstract class Crawler {
 
 		$this->complete = true;
 		$signature      = hash( 'sha256', serialize( array(
-			'archive_start_time' => \Simply_Static\Options::instance()->get( 'archive_start_time' ),
+			'archive_start_time' => \WP_Static_Export\Options::instance()->get( 'archive_start_time' ),
 			'scan_directories'   => $scan_directories,
 			'extensions'         => $extensions,
 			'skip_directories'   => $skip_directories,
 		) ) );
 		$state          = $this->load_directory_crawler_state( $state_option, $signature );
-		$queue_batch    = max( 1, min( 1000, (int) apply_filters( 'simply_static_crawler_batch_size', 100 ) ) );
+		$queue_batch    = max( 1, min( 1000, (int) apply_filters( 'wpse_crawler_batch_size', 100 ) ) );
 		$entry_limit    = max( 1, min( 10000, (int) apply_filters( $entry_limit_filter, 500 ) ) );
 		$seconds        = (float) apply_filters( $time_limit_filter, 10 );
 		$deadline       = microtime( true ) + max( 0.5, min( 15, $seconds ) );
@@ -265,7 +265,7 @@ abstract class Crawler {
 
 			$directory = $this->resolve_crawler_directory( $scan['basedir'], $state['current_dir'] );
 			if ( false === $directory ) {
-				\Simply_Static\Util::debug_log( sprintf( '%s crawler skipped a missing or unsafe directory cursor.', $this->name ) );
+				\WP_Static_Export\Util::debug_log( sprintf( '%s crawler skipped a missing or unsafe directory cursor.', $this->name ) );
 				$state['current_dir']  = null;
 				$state['entry_offset'] = 0;
 				continue;
@@ -277,7 +277,7 @@ abstract class Crawler {
 					$iterator->seek( $state['entry_offset'] );
 				}
 			} catch ( \UnexpectedValueException $exception ) {
-				\Simply_Static\Util::debug_log( sprintf( '%s crawler could not read directory: %s', $this->name, $exception->getMessage() ) );
+				\WP_Static_Export\Util::debug_log( sprintf( '%s crawler could not read directory: %s', $this->name, $exception->getMessage() ) );
 				$state['current_dir']  = null;
 				$state['entry_offset'] = 0;
 				continue;
@@ -294,7 +294,7 @@ abstract class Crawler {
 				$processed++;
 
 				if ( $file instanceof \SplFileInfo && ! $file->isLink() ) {
-					$relative_path = ltrim( \Simply_Static\Util::safe_relative_path( $scan['basedir'], $file->getPathname() ), '/' );
+					$relative_path = ltrim( \WP_Static_Export\Util::safe_relative_path( $scan['basedir'], $file->getPathname() ), '/' );
 					if ( $file->isDir() ) {
 						if ( ! $this->should_skip_crawler_path( $relative_path, $skip_directories ) ) {
 							if ( count( $state['pending_dirs'] ) >= 50000 ) {
@@ -305,7 +305,7 @@ abstract class Crawler {
 					} elseif ( $file->isFile() && ! $this->should_skip_crawler_path( $relative_path, $skip_directories ) ) {
 						$extension = strtolower( pathinfo( $relative_path, PATHINFO_EXTENSION ) );
 						if ( 'php' !== $extension && ( empty( $extensions ) || in_array( $extension, $extensions, true ) ) ) {
-							$buffer[] = \Simply_Static\Util::safe_join_url( $scan['baseurl'], $relative_path );
+							$buffer[] = \WP_Static_Export\Util::safe_join_url( $scan['baseurl'], $relative_path );
 							if ( count( $buffer ) >= $queue_batch ) {
 								$added          = $this->enqueue_urls( $buffer );
 								$added_now     += $added;
@@ -345,7 +345,7 @@ abstract class Crawler {
 			'scanned' => $state['scanned'],
 		);
 		$this->clear_crawler_state( $state_option );
-		\Simply_Static\Util::debug_log( sprintf( '%s crawler added %d URLs across resumable batches.', $this->name, $state['added'] ) );
+		\WP_Static_Export\Util::debug_log( sprintf( '%s crawler added %d URLs across resumable batches.', $this->name, $state['added'] ) );
 
 		return $added_now;
 	}
@@ -383,7 +383,7 @@ abstract class Crawler {
 	/** @param string[] $skip_directories */
 	private function should_skip_crawler_path( $relative_path, array $skip_directories ) : bool {
 		$path = trim( str_replace( '\\', '/', (string) $relative_path ), '/' );
-		if ( \Simply_Static\Util::is_private_backup_path( $path ) ) {
+		if ( \WP_Static_Export\Util::is_private_backup_path( $path ) ) {
 			return true;
 		}
 		foreach ( $skip_directories as $skip_directory ) {
@@ -426,7 +426,7 @@ abstract class Crawler {
 
 	/** @return array<string,mixed> */
 	private function load_directory_crawler_state( $state_option, $signature ) : array {
-		$state = \Simply_Static\Options::instance()->get( $state_option );
+		$state = \WP_Static_Export\Options::instance()->get( $state_option );
 		if ( ! is_array( $state ) || 1 !== ( $state['version'] ?? null ) || $signature !== ( $state['signature'] ?? null ) ) {
 			return $this->new_directory_crawler_state( $signature );
 		}
@@ -474,20 +474,20 @@ abstract class Crawler {
 			'scanned' => $state['scanned'],
 		);
 		$this->save_crawler_state( $state_option, $state );
-		\Simply_Static\Util::debug_log( sprintf( '%s crawler checkpointed after %d entries with %d URLs queued.', $this->name, $state['scanned'], $state['added'] ) );
+		\WP_Static_Export\Util::debug_log( sprintf( '%s crawler checkpointed after %d entries with %d URLs queued.', $this->name, $state['scanned'], $state['added'] ) );
 
 		return (int) $added_now;
 	}
 
 	/** @param array<string,mixed> $state */
 	protected function save_crawler_state( $state_option, array $state ) : void {
-		if ( ! \Simply_Static\Options::instance()->set( $state_option, $state )->save() ) {
+		if ( ! \WP_Static_Export\Options::instance()->set( $state_option, $state )->save() ) {
 			throw new \RuntimeException( sprintf( 'Unable to save the %s crawler checkpoint.', $this->name ) );
 		}
 	}
 
 	protected function clear_crawler_state( $state_option ) : void {
-		$options = \Simply_Static\Options::instance();
+		$options = \WP_Static_Export\Options::instance();
 		$options->destroy( $state_option );
 		if ( ! $options->save() ) {
 			throw new \RuntimeException( sprintf( 'Unable to clear the %s crawler checkpoint.', $this->name ) );
@@ -497,7 +497,7 @@ abstract class Crawler {
 	/**
 	 * Allow a crawler to configure its Page record before it is queued.
 	 *
-	 * @param \Simply_Static\Page $static_page Page record being queued.
+	 * @param \WP_Static_Export\Page $static_page Page record being queued.
 	 * @param string               $url         Detected URL.
 	 *
 	 * @return void

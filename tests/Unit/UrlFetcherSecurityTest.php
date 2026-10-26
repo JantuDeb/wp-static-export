@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Options;
-use Simply_Static\Page;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
-use Simply_Static\Url_Fetcher;
+use WP_Static_Export\Options;
+use WP_Static_Export\Page;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Url_Fetcher;
 
 final class UrlFetcherSecurityTest extends UnitTestCase {
 
@@ -24,7 +24,7 @@ final class UrlFetcherSecurityTest extends UnitTestCase {
 		$this->requireSource( 'src/handlers/class-ss-page-handler.php' );
 		$this->requireSource( 'src/class-ss-url-fetcher.php' );
 
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'http_basic_auth_username' => 'crawler',
 			'http_basic_auth_password' => 'secret',
 			'debugging_mode'           => false,
@@ -53,16 +53,16 @@ final class UrlFetcherSecurityTest extends UnitTestCase {
 	}
 
 	public function test_ssl_filter_can_override_automatic_detection(): void {
-		add_filter( 'ss_remote_get_sslverify', '__return_true' );
+		add_filter( 'wpse_remote_get_sslverify', '__return_true' );
 		Url_Fetcher::remote_get( 'https://example.test/page' );
 		self::assertTrue( WpEnv::$remote_requests[0]['args']['sslverify'] );
 
-		remove_filter( 'ss_remote_get_sslverify', '__return_true' );
+		remove_filter( 'wpse_remote_get_sslverify', '__return_true' );
 		WpEnv::$remote_requests = array();
 		WpEnv::$home_url        = 'https://example.com';
 		WpEnv::$site_url        = 'https://example.com';
 		Options::reinstance();
-		add_filter( 'ss_remote_get_sslverify', '__return_false' );
+		add_filter( 'wpse_remote_get_sslverify', '__return_false' );
 
 		Url_Fetcher::remote_get( 'https://example.com/page' );
 		self::assertFalse( WpEnv::$remote_requests[0]['args']['sslverify'] );
@@ -73,14 +73,14 @@ final class UrlFetcherSecurityTest extends UnitTestCase {
 		$port     = Url_Fetcher::remote_get( 'https://example.test:8443/page' );
 
 		self::assertInstanceOf( \WP_Error::class, $external );
-		self::assertSame( 'simply_static_unsafe_url', $external->get_error_code() );
+		self::assertSame( 'wpse_unsafe_url', $external->get_error_code() );
 		self::assertInstanceOf( \WP_Error::class, $port );
 		self::assertCount( 0, WpEnv::$remote_requests );
 	}
 
 	public function test_empty_credentials_do_not_emit_an_empty_basic_header(): void {
-		WpEnv::$options['simply-static']['http_basic_auth_username'] = '';
-		WpEnv::$options['simply-static']['http_basic_auth_password'] = '';
+		WpEnv::$options['wp-static-export']['http_basic_auth_username'] = '';
+		WpEnv::$options['wp-static-export']['http_basic_auth_password'] = '';
 		Options::reinstance();
 
 		Url_Fetcher::remote_get( 'https://example.test/page' );

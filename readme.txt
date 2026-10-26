@@ -1,5 +1,5 @@
 === WP Static Export ===
-Contributors: patrickposner
+Contributors: jantudeb
 Tags: jamstack, performance, security, static site generator
 Requires at least: 6.2
 Tested up to: 7.1
@@ -118,6 +118,40 @@ Static sites don't support user authentication or member-only areas.
 
 If your site relies heavily on the plugins listed above, WP Static Export may not be the right solution. For questions about specific plugin compatibility, ask in the support forum.
 
+
+= External services =
+This plugin works without contacting any service the plugin author runs, and it sends nothing to the plugin author. It only talks to the services below, and only when you turn the matching feature on. You choose the destination for your files, your form submissions, your search and your comments, and these services receive that data under their own terms.
+
+**Deployment targets** (data is sent from your web server when you export; choose one under Deploy & Features)
+
+* GitHub (api.github.com): your exported files and your access token are sent to commit them to the repository you choose. [Terms](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service), [Privacy](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement).
+* Netlify (api.netlify.com): your exported files and access token. [Terms](https://www.netlify.com/legal/terms-of-use/), [Privacy](https://www.netlify.com/privacy/).
+* Cloudflare Pages (api.cloudflare.com): your exported files and API token. [Terms](https://www.cloudflare.com/website-terms/), [Privacy](https://www.cloudflare.com/privacypolicy/).
+* Amazon S3 and CloudFront (or the S3-compatible endpoint you enter, for example Cloudflare R2, MinIO or DigitalOcean Spaces): your exported files, signed with your access key. [AWS terms](https://aws.amazon.com/service-terms/), [Privacy](https://aws.amazon.com/privacy/).
+* BunnyCDN (storage.bunnycdn.com, regional storage hosts and api.bunny.net): your exported files, your storage password and optionally your account API key to purge the cache. [Terms](https://bunny.net/tos/), [Privacy](https://bunny.net/privacy/).
+* SFTP: your exported files and credentials go to the server you enter. No third party is involved.
+
+**Features that run in your visitors' browsers on the exported static site** (visitors' data goes to the service you configure, not to your WordPress site)
+
+* Google Forms and Google Apps Script (docs.google.com, script.google.com): the content of forms you map to them. [Terms](https://policies.google.com/terms), [Privacy](https://policies.google.com/privacy).
+* Netlify Forms (your own Netlify site): form submissions. See the Netlify links above.
+* Formspree (formspree.io): form submissions. [Terms](https://formspree.io/legal/terms-of-service), [Privacy](https://formspree.io/legal/privacy-policy).
+* A webhook URL you enter: form submissions as JSON. The URL is visible in the page source.
+* Algolia (algolia.net): search queries typed by visitors, sent with your search-only key. Your admin key is used only on your server to upload page records. [Terms](https://www.algolia.com/policies/terms/), [Privacy](https://www.algolia.com/policies/privacy/).
+* Giscus (giscus.app, which uses GitHub): comments written by visitors. [Privacy](https://github.com/giscus/giscus/blob/main/PRIVACY-POLICY.md).
+* Utterances (utteranc.es, which uses GitHub): comments written by visitors. [Site](https://utteranc.es/).
+* Disqus (disqus.com): comments written by visitors. [Terms](https://help.disqus.com/en/articles/1717103-disqus-terms-of-service), [Privacy](https://help.disqus.com/en/articles/1717103-disqus-privacy-policy).
+
+**Other network access**
+
+* Your own site: while exporting, the plugin requests your site's pages and files from your own server (loopback requests). Nothing leaves your server for this.
+* TikTok media: only if the QuadLayers TikTok plugin is active, its images are downloaded so they can be included in the export.
+
+= Server requirements and code =
+Deployment targets, optimization, search indexing and the automatic fixes run a bundled Node.js program with PHP's exec() function, so they need Node.js 18 or newer on the server. ZIP export, local export, forms, comments and multilingual export work without it. The command is fixed, arguments are escaped, and credentials are passed in a temporary file that is deleted when read.
+
+The compiled files in this plugin are built from source that is available in the public repository https://github.com/JantuDeb/wp-static-export: the Node.js program and the browser scripts (forms and search) from `deployer/src`, and the settings screen from `src/admin/src`. Build instructions are in the repository README.
+
 == Installation ==
 = Automatic Installation (Recommended) =
 
@@ -156,7 +190,7 @@ Yes. Configure a deployment target under Deploy & Features and each export uploa
 No. WP Static Export creates an exact copy of your WordPress site. Same HTML, same CSS, same JavaScript. The only difference is it loads faster and is more secure.
 = Do I need to know how to code? =
 No. WP Static Export works through a simple WordPress admin interface. Click a button, get your static site.
-Developers can extend WP Static Export with 100+ hooks and filters, but coding knowledge is not required for basic use.
+Developers can extend WP Static Export with hooks and filters (prefixed `wpse_`), but coding knowledge is not required for basic use.
 = Can I still use WordPress after generating a static site? =
 Yes! Your WordPress site remains fully functional. You use WordPress to manage content, then generate a new static version when you're ready to publish updates.
 = What happens to forms, search, and comments on my static site? =

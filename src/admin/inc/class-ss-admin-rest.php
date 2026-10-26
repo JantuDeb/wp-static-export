@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -57,7 +57,7 @@ class Admin_Rest {
 
         // Multisite-only endpoints
         if ( is_multisite() ) {
-            register_rest_route( 'simplystatic/v1', '/sites', array(
+            register_rest_route( 'wp-static-export/v1', '/sites', array(
                 'methods'             => 'GET',
 				'callback'            => [ $this, 'get_sites' ],
 				'permission_callback' => function () {
@@ -65,23 +65,23 @@ class Admin_Rest {
                 },
             ) );
 
-            register_rest_route( 'simplystatic/v1', '/trigger-cron', array(
+            register_rest_route( 'wp-static-export/v1', '/trigger-cron', array(
                 'methods'             => 'POST',
                 'callback'            => [ $this, 'trigger_cron' ],
                 'permission_callback' => function () {
-                    return current_user_can( apply_filters( 'ss_user_capability', 'manage_network', 'cron' ) );
+                    return current_user_can( apply_filters( 'wpse_user_capability', 'manage_network', 'cron' ) );
                 },
             ) );
 
-            register_rest_route( 'simplystatic/v1', '/check-can-run', array(
+            register_rest_route( 'wp-static-export/v1', '/check-can-run', array(
                 'methods'             => 'GET',
                 'callback'            => [ $this, 'check_if_can_run_export' ],
                 'permission_callback' => function () {
-                    return current_user_can( apply_filters( 'ss_user_capability', 'manage_network', 'cron' ) );
+                    return current_user_can( apply_filters( 'wpse_user_capability', 'manage_network', 'cron' ) );
                 },
             ) );
 
-            register_rest_route( 'simplystatic/v1', '/reset-export-lock', array(
+            register_rest_route( 'wp-static-export/v1', '/reset-export-lock', array(
                 'methods'             => 'POST',
 				'callback'            => [ $this, 'reset_export_lock' ],
 				'permission_callback' => function () {
@@ -91,124 +91,124 @@ class Admin_Rest {
         }
 
         // Data providers
-        register_rest_route( 'simplystatic/v1', '/post-types', array(
+        register_rest_route( 'wp-static-export/v1', '/post-types', array(
             'methods'             => 'GET',
             'callback'            => [ $this, 'get_post_types' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'settings' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'settings' ) );
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/taxonomies', array(
+        register_rest_route( 'wp-static-export/v1', '/taxonomies', array(
             'methods'             => 'GET',
             'callback'            => [ $this, 'get_taxonomies' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'settings' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'settings' ) );
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/active-plugins', array(
+        register_rest_route( 'wp-static-export/v1', '/active-plugins', array(
             'methods'             => 'GET',
             'callback'            => [ $this, 'get_active_plugins' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'settings' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'settings' ) );
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/active-themes', array(
+        register_rest_route( 'wp-static-export/v1', '/active-themes', array(
             'methods'             => 'GET',
             'callback'            => [ $this, 'get_active_themes' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'settings' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'settings' ) );
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/crawlers', array(
+        register_rest_route( 'wp-static-export/v1', '/crawlers', array(
             'methods'             => 'GET',
             'callback'            => [ $this, 'get_crawlers' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'settings' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'settings' ) );
             },
         ) );
 
         // Unpushed changes count
-        register_rest_route( 'simplystatic/v1', '/unpushed-changes', array(
+        register_rest_route( 'wp-static-export/v1', '/unpushed-changes', array(
             'methods'             => 'GET',
             'callback'            => [ $this, 'get_unpushed_changes' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'settings' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'settings' ) );
             },
         ) );
 
         // Export type helper
-        register_rest_route( 'simplystatic/v1', '/export-type', array(
+        register_rest_route( 'wp-static-export/v1', '/export-type', array(
             'methods'             => 'GET',
             'callback'            => [ $this, 'get_export_type' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'activity-log' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'activity-log' ) );
             },
         ) );
 
         // Settings CRUD
-        register_rest_route( 'simplystatic/v1', '/settings', array(
+        register_rest_route( 'wp-static-export/v1', '/settings', array(
             'methods'             => 'GET',
             'callback'            => [ $this, 'get_settings' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'settings' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'settings' ) );
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/settings/export', array(
+        register_rest_route( 'wp-static-export/v1', '/settings/export', array(
             'methods'             => 'GET',
             'callback'            => [ $this, 'get_settings_export' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'settings' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'settings' ) );
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/settings', array(
+        register_rest_route( 'wp-static-export/v1', '/settings', array(
             'methods'             => 'POST',
             'callback'            => [ $this, 'save_settings' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'settings' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'settings' ) );
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/settings/reset', array(
+        register_rest_route( 'wp-static-export/v1', '/settings/reset', array(
             'methods'             => 'POST',
             'callback'            => [ $this, 'reset_settings' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'settings' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'settings' ) );
             },
         ) );
 
         // 404-only export
-        register_rest_route( 'simplystatic/v1', '/export-404', array(
+        register_rest_route( 'wp-static-export/v1', '/export-404', array(
             'methods'             => 'POST',
             'callback'            => [ $this, 'maybe_export_404' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'publish_pages', 'generate' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'publish_pages', 'generate' ) );
             },
         ) );
 
         // Maintenance/Utilities
-        register_rest_route( 'simplystatic/v1', '/settings/reset-database', array(
+        register_rest_route( 'wp-static-export/v1', '/settings/reset-database', array(
             'methods'             => 'POST',
             'callback'            => [ $this, 'reset_database' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'settings' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'settings' ) );
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/settings/reset-background-queue', array(
+        register_rest_route( 'wp-static-export/v1', '/settings/reset-background-queue', array(
             'methods'             => 'POST',
             'callback'            => [ $this, 'reset_background_queue' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'settings' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'settings' ) );
             },
         ) );
 
-		register_rest_route( 'simplystatic/v1', '/update-from-network', array(
+		register_rest_route( 'wp-static-export/v1', '/update-from-network', array(
             'methods'             => 'POST',
             'callback'            => [ $this, 'update_from_network' ],
 			'permission_callback' => function () {
@@ -216,157 +216,157 @@ class Admin_Rest {
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/pages', array(
+        register_rest_route( 'wp-static-export/v1', '/pages', array(
             'methods'             => 'GET',
             'callback'            => [ $this, 'get_pages' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'settings' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'settings' ) );
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/pages-slugs', array(
+        register_rest_route( 'wp-static-export/v1', '/pages-slugs', array(
             'methods'             => 'GET',
             'callback'            => [ $this, 'get_pages_slugs' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'settings' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'settings' ) );
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/migrate', array(
+        register_rest_route( 'wp-static-export/v1', '/migrate', array(
             'methods'             => 'POST',
             'callback'            => [ $this, 'migrate' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'settings' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'settings' ) );
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/reset-diagnostics', array(
+        register_rest_route( 'wp-static-export/v1', '/reset-diagnostics', array(
             'methods'             => 'POST',
             'callback'            => [ $this, 'reset_diagnostics' ],
             'permission_callback' => function () {
-				return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'diagnostics' ) );
+				return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'diagnostics' ) );
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/system-status', array(
+        register_rest_route( 'wp-static-export/v1', '/system-status', array(
             'methods'             => 'GET',
             'callback'            => [ $this, 'get_system_status' ],
             'permission_callback' => function () {
-				return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'diagnostics' ) );
+				return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'diagnostics' ) );
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/system-status/passed', array(
+        register_rest_route( 'wp-static-export/v1', '/system-status/passed', array(
             'methods'             => 'GET',
             'callback'            => [ $this, 'check_system_status_passed' ],
             'permission_callback' => function () {
-				return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'diagnostics' ) );
+				return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'diagnostics' ) );
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/delete-log', array(
+        register_rest_route( 'wp-static-export/v1', '/delete-log', array(
             'methods'             => 'POST',
             'callback'            => [ $this, 'delete_log' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'activity-log' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'activity-log' ) );
             },
         ) );
 
-		register_rest_route( 'simplystatic/v1', '/activity-log', array(
+		register_rest_route( 'wp-static-export/v1', '/activity-log', array(
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'get_activity_log' ],
 			'permission_callback' => [ $this, 'can_view_activity_log_for_request' ],
 		) );
 
-		register_rest_route( 'simplystatic/v1', '/export-log', array(
+		register_rest_route( 'wp-static-export/v1', '/export-log', array(
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'get_export_log' ],
 			'permission_callback' => [ $this, 'can_view_activity_log_for_request' ],
 		) );
 
-        register_rest_route( 'simplystatic/v1', '/exports', array(
+        register_rest_route( 'wp-static-export/v1', '/exports', array(
             'methods'             => 'GET',
             'callback'            => [ $this, 'get_deploy_manifests' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'activity-log' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'activity-log' ) );
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/exports/latest', array(
+        register_rest_route( 'wp-static-export/v1', '/exports/latest', array(
             'methods'             => 'GET',
             'callback'            => [ $this, 'get_latest_deploy_manifest' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'activity-log' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'activity-log' ) );
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/exports/(?P<export_id>[a-zA-Z0-9][a-zA-Z0-9_-]{7,79})', array(
+        register_rest_route( 'wp-static-export/v1', '/exports/(?P<export_id>[a-zA-Z0-9][a-zA-Z0-9_-]{7,79})', array(
             'methods'             => 'GET',
             'callback'            => [ $this, 'get_deploy_manifest' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'activity-log' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'activity-log' ) );
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/exports/(?P<export_id>[a-zA-Z0-9][a-zA-Z0-9_-]{7,79})/urls', array(
+        register_rest_route( 'wp-static-export/v1', '/exports/(?P<export_id>[a-zA-Z0-9][a-zA-Z0-9_-]{7,79})/urls', array(
             'methods'             => 'GET',
             'callback'            => [ $this, 'get_deploy_manifest_urls' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'activity-log' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'activity-log' ) );
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/exports/(?P<export_id>[a-zA-Z0-9][a-zA-Z0-9_-]{7,79})/files', array(
+        register_rest_route( 'wp-static-export/v1', '/exports/(?P<export_id>[a-zA-Z0-9][a-zA-Z0-9_-]{7,79})/files', array(
             'methods'             => 'GET',
             'callback'            => [ $this, 'get_deploy_manifest_files' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'activity-log' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'activity-log' ) );
             },
         ) );
 
-        register_rest_route( 'simplystatic/v1', '/exports/(?P<export_id>[a-zA-Z0-9][a-zA-Z0-9_-]{7,79})/warnings', array(
+        register_rest_route( 'wp-static-export/v1', '/exports/(?P<export_id>[a-zA-Z0-9][a-zA-Z0-9_-]{7,79})/warnings', array(
             'methods'             => 'GET',
             'callback'            => [ $this, 'get_deploy_manifest_warnings' ],
             'permission_callback' => function () {
-                return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'activity-log' ) );
+                return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'activity-log' ) );
             },
         ) );
 
-		register_rest_route( 'simplystatic/v1', '/start-export', array(
+		register_rest_route( 'wp-static-export/v1', '/start-export', array(
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'start_export' ],
 			'permission_callback' => [ $this, 'can_generate_for_request' ],
 		) );
 
-		register_rest_route( 'simplystatic/v1', '/cancel-export', array(
+		register_rest_route( 'wp-static-export/v1', '/cancel-export', array(
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'cancel_export' ],
 			'permission_callback' => [ $this, 'can_generate_for_request' ],
 		) );
 
-		register_rest_route( 'simplystatic/v1', '/pause-export', array(
+		register_rest_route( 'wp-static-export/v1', '/pause-export', array(
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'pause_export' ],
 			'permission_callback' => [ $this, 'can_generate_for_request' ],
 		) );
 
-		register_rest_route( 'simplystatic/v1', '/resume-export', array(
+		register_rest_route( 'wp-static-export/v1', '/resume-export', array(
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'resume_export' ],
 			'permission_callback' => [ $this, 'can_generate_for_request' ],
 		) );
 
-		register_rest_route( 'simplystatic/v1', '/is-running', array(
+		register_rest_route( 'wp-static-export/v1', '/is-running', array(
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'is_running' ],
 			'permission_callback' => [ $this, 'can_generate_for_request' ],
 		) );
 
-		register_rest_route( 'simplystatic/v1', '/clear-temp-files', array(
+		register_rest_route( 'wp-static-export/v1', '/clear-temp-files', array(
             'methods'             => 'POST',
             'callback'            => [ $this, 'clear_temp_files' ],
 			'permission_callback' => function () {
-				return current_user_can( apply_filters( 'ss_user_capability', 'manage_options', 'settings' ) );
+				return current_user_can( apply_filters( 'wpse_user_capability', 'manage_options', 'settings' ) );
             },
         ) );
 
@@ -379,7 +379,7 @@ class Admin_Rest {
      * @return bool
      */
     public function can_generate_for_request( $request = null ) {
-        $capability = apply_filters( 'ss_user_capability', 'publish_pages', 'generate' );
+        $capability = apply_filters( 'wpse_user_capability', 'publish_pages', 'generate' );
 
         return $this->current_user_can_for_target_site( $request, $capability );
     }
@@ -391,7 +391,7 @@ class Admin_Rest {
      * @return bool
      */
     public function can_view_activity_log_for_request( $request = null ) {
-        $capability = apply_filters( 'ss_user_capability', 'manage_options', 'activity-log' );
+        $capability = apply_filters( 'wpse_user_capability', 'manage_options', 'activity-log' );
 
         return $this->current_user_can_for_target_site( $request, $capability );
     }
@@ -451,7 +451,7 @@ class Admin_Rest {
             'update_site_meta_cache' => false,
         ];
         // Allow filtering of REST get_sites() args for multisite endpoints
-        $get_sites_args = apply_filters( 'ss_multisite_get_sites_args', $get_sites_args, 'rest_sites' );
+        $get_sites_args = apply_filters( 'wpse_multisite_get_sites_args', $get_sites_args, 'rest_sites' );
         $site_ids       = get_sites( $get_sites_args );
 
         /** @var Archive_Creation_Job $job */
@@ -483,13 +483,13 @@ class Admin_Rest {
                 'path'             => $site->path,
                 'running'          => $running,
                 'paused'           => $paused,
-                'status'           => $running ? __( 'Running', 'simply-static' ) : ( $paused ? __( 'Paused', 'simply-static' ) : __( 'Idle', 'simply-static' ) ),
-                'settings_url'     => esc_url( get_admin_url( $site->blog_id ) . 'admin.php?page=simply-static-settings' ),
-                'activity_log_url' => esc_url( get_admin_url( $site->blog_id ) . 'admin.php?page=simply-static-generate' ),
+                'status'           => $running ? __( 'Running', 'wp-static-export' ) : ( $paused ? __( 'Paused', 'wp-static-export' ) : __( 'Idle', 'wp-static-export' ) ),
+                'settings_url'     => esc_url( get_admin_url( $site->blog_id ) . 'admin.php?page=wp-static-export-settings' ),
+                'activity_log_url' => esc_url( get_admin_url( $site->blog_id ) . 'admin.php?page=wp-static-export-generate' ),
             ];
         }
 
-        $sites = apply_filters( 'ss_rest_multisite_get_sites', $sites );
+        $sites = apply_filters( 'wpse_rest_multisite_get_sites', $sites );
 
 		return rest_ensure_response(
 			array(
@@ -507,14 +507,14 @@ class Admin_Rest {
         if ( ! is_multisite() ) {
             return json_encode( [
                 'status'  => 400,
-                'message' => __( 'This endpoint is only available for multisite installations.', 'simply-static' ),
+                'message' => __( 'This endpoint is only available for multisite installations.', 'wp-static-export' ),
             ] );
         }
 
         if ( empty( $blog_id ) || ! get_blog_details( $blog_id ) ) {
             return json_encode( [
                 'status'  => 400,
-                'message' => __( 'Invalid blog ID provided.', 'simply-static' ),
+                'message' => __( 'Invalid blog ID provided.', 'wp-static-export' ),
             ] );
         }
 
@@ -522,7 +522,7 @@ class Admin_Rest {
 			$this->run_in_blog_context(
 				$blog_id,
 				function () {
-					do_action( 'wp_archive_creation_job' );
+					do_action( 'wpse_archive_creation_job' );
 				}
 			);
 
@@ -530,7 +530,7 @@ class Admin_Rest {
                 'status'  => 200,
                 'message' => sprintf(
                     /* translators: %d: WordPress site ID. */
-                    __( 'CRON triggered successfully for site %d.', 'simply-static' ),
+                    __( 'CRON triggered successfully for site %d.', 'wp-static-export' ),
                     $blog_id
                 ),
             ] );
@@ -567,7 +567,7 @@ class Admin_Rest {
 
         return json_encode( [
             'status'  => 200,
-            'message' => __( 'Export lock cleared.', 'simply-static' ),
+            'message' => __( 'Export lock cleared.', 'wp-static-export' ),
         ] );
     }
 
@@ -661,10 +661,10 @@ class Admin_Rest {
     /** Data: crawlers for JS */
     public function get_crawlers() {
         // Load the Crawlers class
-        require_once SIMPLY_STATIC_PATH . 'src/crawler/class-ss-crawlers.php';
+        require_once WPSE_PATH . 'src/crawler/class-ss-crawlers.php';
 
         // Get the crawler manager
-        $crawlers = \Simply_Static\Crawlers::instance();
+        $crawlers = \WP_Static_Export\Crawlers::instance();
 
         // Get all crawlers for JS
         $crawlers_for_js = $crawlers->get_crawlers_for_js();
@@ -687,7 +687,7 @@ class Admin_Rest {
             }
             unset( $crawler_js );
         } catch ( \Throwable $e ) {
-            \Simply_Static\Util::debug_log( 'Post-process crawlers failed: ' . $e->getMessage() );
+            \WP_Static_Export\Util::debug_log( 'Post-process crawlers failed: ' . $e->getMessage() );
         }
 
         return json_encode( [
@@ -698,8 +698,8 @@ class Admin_Rest {
 
     /** Get Export Type */
     public function get_export_type() {
-        $use_single = get_option( 'simply-static-use-single' );
-        $use_build  = get_option( 'simply-static-use-build' );
+        $use_single = get_option( 'wp-static-export-use-single' );
+        $use_build  = get_option( 'wp-static-export-use-build' );
 
         $options = Options::reinstance();
 
@@ -772,7 +772,7 @@ class Admin_Rest {
         // 2. Count rows in the delete tracker table (Pro feature).
         //    Only count rows added after the last export so that stale/structural
         //    entries (e.g. plugin_deactivate) already handled by an export are excluded.
-        $delete_table = $wpdb->prefix . 'simply_static_delete_pages';
+        $delete_table = $wpdb->prefix . 'wpse_delete_pages';
         // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $table_exists = $wpdb->get_var( "SHOW TABLES LIKE '{$delete_table}'" );
         if ( $table_exists === $delete_table ) {
@@ -817,7 +817,7 @@ class Admin_Rest {
      * @return array Settings array
      */
     public function get_settings() {
-        $settings = get_option( 'simply-static' );
+        $settings = get_option( 'wp-static-export' );
         if ( ! is_array( $settings ) ) {
             $settings = array();
         }
@@ -850,11 +850,11 @@ class Admin_Rest {
 
         // Auto-enable Builds in returned settings if build terms already exist (no persistence here)
         if ( empty( $settings['ss_use_builds'] ) ) {
-            $has_build_terms = get_transient( 'simply_static_has_build_terms' );
+            $has_build_terms = get_transient( 'wpse_has_build_terms' );
             if ( false === $has_build_terms ) {
                 global $wpdb;
                 $has_build_terms = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->term_taxonomy} WHERE taxonomy = %s", 'ssp-build' ) );
-                set_transient( 'simply_static_has_build_terms', $has_build_terms, 5 * MINUTE_IN_SECONDS );
+                set_transient( 'wpse_has_build_terms', $has_build_terms, 5 * MINUTE_IN_SECONDS );
             }
             if ( $has_build_terms > 0 ) {
                 $settings['ss_use_builds'] = true;
@@ -951,7 +951,7 @@ class Admin_Rest {
             $settings['plugins_to_include'] = Util::ensure_required_plugins( $settings['plugins_to_include'] );
         }
 
-        return apply_filters( 'ss_get_settings', $settings );
+        return apply_filters( 'wpse_get_settings', $settings );
     }
 
     /**
@@ -961,7 +961,7 @@ class Admin_Rest {
      * @return false|string JSON-encoded export settings
      */
     public function get_settings_export() {
-        $settings = get_option( 'simply-static' );
+        $settings = get_option( 'wp-static-export' );
         if ( ! is_array( $settings ) ) {
             $settings = array();
         }
@@ -1021,7 +1021,7 @@ class Admin_Rest {
             'ss_single_pages',
         );
 		// Filters may add exclusions, but cannot remove the built-in security list.
-		$filtered = apply_filters( 'ss_export_excluded_options', $defaults );
+		$filtered = apply_filters( 'wpse_export_excluded_options', $defaults );
 		$list     = is_array( $filtered ) ? array_merge( $defaults, $filtered ) : $defaults;
 		$list     = array_merge( $list, Util::get_sensitive_option_keys() );
 		$list = array_map( 'sanitize_key', array_filter( array_map( 'strval', $list ) ) );
@@ -1080,7 +1080,7 @@ class Admin_Rest {
 			return wp_json_encode(
 				array(
 					'status'  => 500,
-					'message' => __( 'Unable to verify that the export queue is idle.', 'simply-static' ),
+					'message' => __( 'Unable to verify that the export queue is idle.', 'wp-static-export' ),
 				)
 			);
 		}
@@ -1098,30 +1098,30 @@ class Admin_Rest {
      */
     public function save_settings( $request ) {
         if ( ! $request || ! method_exists( $request, 'get_params' ) ) {
-            return wp_json_encode( [ 'status' => 400, 'message' => __( 'No options updated.', 'simply-static' ) ] );
+            return wp_json_encode( [ 'status' => 400, 'message' => __( 'No options updated.', 'wp-static-export' ) ] );
         }
 
         $params = $request->get_params();
         if ( ! $params ) {
-            return wp_json_encode( [ 'status' => 400, 'message' => __( 'No options updated.', 'simply-static' ) ] );
+            return wp_json_encode( [ 'status' => 400, 'message' => __( 'No options updated.', 'wp-static-export' ) ] );
         }
 
-		$portable_import = ! empty( $params['__simply_static_import'] );
-		unset( $params['__simply_static_import'] );
+		$portable_import = ! empty( $params['__wpse_import'] );
+		unset( $params['__wpse_import'] );
 
 		if ( $portable_import ) {
 			$conflict = $this->get_maintenance_conflict_response(
-				__( 'Settings cannot be imported while an export is active or paused.', 'simply-static' )
+				__( 'Settings cannot be imported while an export is active or paused.', 'wp-static-export' )
 			);
 			if ( null !== $conflict ) {
 				return $conflict;
 			}
 
-			$params = $this->preserve_destination_options( $params, get_option( 'simply-static' ) );
+			$params = $this->preserve_destination_options( $params, get_option( 'wp-static-export' ) );
 		}
 
         // Sanitize full options array using WP core sanitize_option for baseline cleaning
-        $options = sanitize_option( 'simply-static', $params );
+        $options = sanitize_option( 'wp-static-export', $params );
 
         // Field groups by type
 		$multiline_fields = [
@@ -1239,7 +1239,7 @@ class Admin_Rest {
 		}
 
 		// Preserve internal/runtime values that are not owned by the settings form.
-		$current_options = get_option( 'simply-static' );
+		$current_options = get_option( 'wp-static-export' );
 		$internal_keys   = array(
 			'encryption_key',
 			'archive_status_messages',
@@ -1304,7 +1304,7 @@ class Admin_Rest {
 				foreach ( $this->get_export_excluded_options() as $excluded_key ) {
 					unset( $portable_options[ $excluded_key ] );
 				}
-				update_site_option( 'simply-static-' . $blog_id, $portable_options );
+				update_site_option( 'wp-static-export-' . $blog_id, $portable_options );
 			}
         }
 
@@ -1343,7 +1343,7 @@ class Admin_Rest {
         }
 
         // Persist options
-        update_option( 'simply-static', $options );
+        update_option( 'wp-static-export', $options );
 
         return json_encode( [ 'status' => 200, 'message' => 'Ok' ] );
     }
@@ -1398,7 +1398,7 @@ class Admin_Rest {
      */
     public function reset_settings( $request ) {
 		$conflict = $this->get_maintenance_conflict_response(
-			__( 'Plugin settings cannot be reset while an export is active or paused.', 'simply-static' )
+			__( 'Plugin settings cannot be reset while an export is active or paused.', 'wp-static-export' )
 		);
 		if ( null !== $conflict ) {
 			return $conflict;
@@ -1407,7 +1407,7 @@ class Admin_Rest {
         // Keep installation and reset on the same complete, typed source of truth.
         Page::create_or_update_table();
 		$default_options = Upgrade_Handler::get_default_options();
-        update_option( 'simply-static', $default_options );
+        update_option( 'wp-static-export', $default_options );
 		Options::reinstance();
 
 		return wp_json_encode( array( 'status' => 200, 'message' => 'Ok', 'data' => $default_options ) );
@@ -1418,14 +1418,14 @@ class Admin_Rest {
     /** Reset database (drop and recreate SS pages table) */
     public function reset_database() {
 		$conflict = $this->get_maintenance_conflict_response(
-			__( 'The database table cannot be reset while an export is active or paused.', 'simply-static' )
+			__( 'The database table cannot be reset while an export is active or paused.', 'wp-static-export' )
 		);
 		if ( null !== $conflict ) {
 			return $conflict;
 		}
 
         global $wpdb;
-        $table_name = $wpdb->prefix . 'simply_static_pages';
+        $table_name = $wpdb->prefix . 'wpse_pages';
         $wpdb->query( "DROP TABLE IF EXISTS $table_name" );
         Page::create_or_update_table();
         return json_encode( [ 'status' => 200, 'message' => 'Ok' ] );
@@ -1445,16 +1445,16 @@ class Admin_Rest {
 				return wp_json_encode(
 					array(
 						'status'  => 409,
-						'message' => __( 'The background worker is still active. Wait for it to finish before resetting the queue.', 'simply-static' ),
+						'message' => __( 'The background worker is still active. Wait for it to finish before resetting the queue.', 'wp-static-export' ),
 					)
 				);
 			}
 
 			// Delete queued batches and the background-process status marker.
 			$job->delete_all();
-			$identifier = method_exists( $job, 'get_identifier' ) ? (string) $job->get_identifier() : 'wp_archive_creation_job';
+			$identifier = method_exists( $job, 'get_identifier' ) ? (string) $job->get_identifier() : 'wpse_archive_creation_job';
 			if ( '' === $identifier ) {
-				$identifier = 'wp_archive_creation_job';
+				$identifier = 'wpse_archive_creation_job';
 			}
 			delete_option( $identifier . '_status' );
 
@@ -1493,14 +1493,14 @@ class Admin_Rest {
 				$options->set( $key, $value );
 			}
 			$options->save();
-			delete_option( 'simply_static_zip_files' );
+			delete_option( 'wpse_zip_files' );
 
 			if ( method_exists( $job, 'reset_runtime_state' ) ) {
 				$job->reset_runtime_state();
 			}
 
 			// Special export modes are one-shot state and must never survive a reset.
-			foreach ( array( 'simply-static-404-only', 'simply-static-use-single', 'simply-static-use-build', 'simply-static-use-language' ) as $option_name ) {
+			foreach ( array( 'wp-static-export-404-only', 'wp-static-export-use-single', 'wp-static-export-use-build', 'wp-static-export-use-language' ) as $option_name ) {
 				delete_option( $option_name );
 			}
 
@@ -1513,7 +1513,7 @@ class Admin_Rest {
 				}
 			}
 
-			do_action( 'ss_after_background_queue_reset', $job, $site_id );
+			do_action( 'wpse_after_background_queue_reset', $job, $site_id );
 
 			return wp_json_encode( array( 'status' => 200, 'message' => 'Ok' ) );
 		} catch ( \Throwable $e ) {
@@ -1524,11 +1524,11 @@ class Admin_Rest {
     /** Import settings from another site in network */
 	public function update_from_network( $request ) {
 		if ( ! is_multisite() || ! current_user_can( 'manage_network_options' ) ) {
-			return new \WP_Error( 'rest_forbidden', __( 'You are not allowed to import settings across the network.', 'simply-static' ), array( 'status' => 403 ) );
+			return new \WP_Error( 'rest_forbidden', __( 'You are not allowed to import settings across the network.', 'wp-static-export' ), array( 'status' => 403 ) );
 		}
 
 		$conflict = $this->get_maintenance_conflict_response(
-			__( 'Settings cannot be imported while an export is active or paused.', 'simply-static' )
+			__( 'Settings cannot be imported while an export is active or paused.', 'wp-static-export' )
 		);
 		if ( null !== $conflict ) {
 			return $conflict;
@@ -1539,32 +1539,32 @@ class Admin_Rest {
 			$blog_id = isset( $params['blog_id'] ) ? absint( $params['blog_id'] ) : 0;
 			$site = $blog_id ? get_blog_details( $blog_id ) : null;
 			if ( ! $site || ! empty( $site->deleted ) || ! empty( $site->spam ) || ! empty( $site->archived ) ) {
-				return new \WP_Error( 'invalid_blog_id', __( 'Invalid source site.', 'simply-static' ), array( 'status' => 400 ) );
+				return new \WP_Error( 'invalid_blog_id', __( 'Invalid source site.', 'wp-static-export' ), array( 'status' => 400 ) );
 			}
 			// Get Settings from selected subsite.
-			$options = get_site_option( 'simply-static-' . $blog_id );
+			$options = get_site_option( 'wp-static-export-' . $blog_id );
             if ( ! $options ) {
                 return wp_json_encode( [
                     'status'  => 400,
-                    'message' => __( 'Please save the settings on the selected subsite before importing them into a new site.', 'simply-static' )
+                    'message' => __( 'Please save the settings on the selected subsite before importing them into a new site.', 'wp-static-export' )
                 ] );
             }
 			$options = Util::remove_sensitive_options( is_array( $options ) ? $options : array() );
 			foreach ( $this->get_export_excluded_options() as $excluded_key ) {
 				unset( $options[ $excluded_key ] );
 			}
-			$options = $this->preserve_destination_options( $options, get_option( 'simply-static' ) );
-			update_option( 'simply-static', $options );
+			$options = $this->preserve_destination_options( $options, get_option( 'wp-static-export' ) );
+			update_option( 'wp-static-export', $options );
             return json_encode( [ 'status' => 200, 'message' => 'Ok' ] );
         }
-        return wp_json_encode( [ 'status' => 400, 'message' => __( 'No options updated.', 'simply-static' ) ] );
+        return wp_json_encode( [ 'status' => 400, 'message' => __( 'No options updated.', 'wp-static-export' ) ] );
     }
 
     public function get_pages() { return Admin_Settings::get_instance()->get_pages(); }
     public function get_pages_slugs() { return Admin_Settings::get_instance()->get_pages_slugs(); }
 	public function migrate( $request ) {
 		$conflict = $this->get_maintenance_conflict_response(
-			__( 'Settings cannot be migrated while an export is active or paused.', 'simply-static' )
+			__( 'Settings cannot be migrated while an export is active or paused.', 'wp-static-export' )
 		);
 		if ( null !== $conflict ) {
 			return $conflict;
@@ -1575,14 +1575,14 @@ class Admin_Rest {
 
     /** Reset diagnostics (clear transient) */
     public function reset_diagnostics() {
-        delete_transient( 'simply_static_checks' );
-        delete_transient( 'simply_static_failed_tests' );
+        delete_transient( 'wpse_checks' );
+        delete_transient( 'wpse_failed_tests' );
         return json_encode( [ 'status' => 200 ] );
     }
 
     /** Get system status checks */
     public function get_system_status() {
-        $checks = get_transient( 'simply_static_checks' );
+        $checks = get_transient( 'wpse_checks' );
         if ( ! $checks ) {
             $diagnostics = new Diagnostic();
             $checks      = $diagnostics->get_checks();
@@ -1593,7 +1593,7 @@ class Admin_Rest {
     /** Determine if all system checks passed */
     public function check_system_status_passed() {
         $passed = 'yes';
-        $checks = get_transient( 'simply_static_checks' );
+        $checks = get_transient( 'wpse_checks' );
         if ( false === $checks || empty( $checks ) ) {
             $diagnostics = new Diagnostic();
             $checks      = $diagnostics->get_checks();
@@ -1663,7 +1663,7 @@ class Admin_Rest {
         $manifest = Deploy_Manifest_Service::get_instance()->get_latest_manifest();
 
         if ( empty( $manifest ) ) {
-            return new \WP_Error( 'ss_manifest_not_found', __( 'No deploy manifest available.', 'simply-static' ), array( 'status' => 404 ) );
+            return new \WP_Error( 'ss_manifest_not_found', __( 'No deploy manifest available.', 'wp-static-export' ), array( 'status' => 404 ) );
         }
 
         return rest_ensure_response( $manifest );
@@ -1675,7 +1675,7 @@ class Admin_Rest {
         $manifest  = Deploy_Manifest_Service::get_instance()->get_manifest( $deploy_id );
 
         if ( empty( $manifest ) ) {
-            return new \WP_Error( 'ss_manifest_not_found', __( 'Deploy manifest not found.', 'simply-static' ), array( 'status' => 404 ) );
+            return new \WP_Error( 'ss_manifest_not_found', __( 'Deploy manifest not found.', 'wp-static-export' ), array( 'status' => 404 ) );
         }
 
         return rest_ensure_response( $manifest );
@@ -1726,34 +1726,34 @@ class Admin_Rest {
 		try {
 			return $this->run_in_blog_context( $blog_id, function () use ( $blog_id, $type, $language ) {
 				$archive_creation_job = Plugin::instance()->get_archive_creation_job();
-				do_action( 'ss_before_perform_archive_running_check', $blog_id, $archive_creation_job );
+				do_action( 'wpse_before_perform_archive_running_check', $blog_id, $archive_creation_job );
 				if ( $archive_creation_job->is_running() ) {
 					return wp_json_encode( array(
 						'status'  => 409,
-						'message' => __( 'An export is already running. Please wait for it to complete or cancel it before starting a new one.', 'simply-static' ),
+						'message' => __( 'An export is already running. Please wait for it to complete or cancel it before starting a new one.', 'wp-static-export' ),
 					) );
 				}
 
 				$prepare_export = function () use ( $blog_id, $type, $language, $archive_creation_job ) {
 					if ( ! empty( $language ) ) {
-						update_option( 'simply-static-use-language', $language, false );
+						update_option( 'wp-static-export-use-language', $language, false );
 					} else {
-						delete_option( 'simply-static-use-language' );
+						delete_option( 'wp-static-export-use-language' );
 					}
 
-					do_action( 'ss_before_perform_archive_action', $blog_id, 'start', $archive_creation_job );
+					do_action( 'wpse_before_perform_archive_action', $blog_id, 'start', $archive_creation_job );
 
-					return apply_filters( 'ss_export_type', $type );
+					return apply_filters( 'wpse_export_type', $type );
 				};
 				$started = Plugin::instance()->run_static_export( $blog_id, $type, $prepare_export );
 				if ( $started ) {
-					do_action( 'ss_after_perform_archive_action', $blog_id, 'start', $archive_creation_job );
+					do_action( 'wpse_after_perform_archive_action', $blog_id, 'start', $archive_creation_job );
 					return wp_json_encode( array( 'status' => 200 ) );
 				}
 
 				return wp_json_encode( array(
 					'status'  => 409,
-					'message' => __( 'The export could not be started because another export is active or an export preflight check failed.', 'simply-static' ),
+					'message' => __( 'The export could not be started because another export is active or an export preflight check failed.', 'wp-static-export' ),
 				) );
 			} );
 		} catch ( \Throwable $e ) {
@@ -1795,7 +1795,7 @@ class Admin_Rest {
 					$job->dispatch();
 				}
 
-				return wp_json_encode( apply_filters( 'ss_is_running_statuses', $stats ) );
+				return wp_json_encode( apply_filters( 'wpse_is_running_statuses', $stats ) );
 			} );
 		} catch ( \Throwable $e ) {
 			return wp_json_encode( array( 'status' => 500, 'message' => $e->getMessage() ) );
@@ -1812,7 +1812,7 @@ class Admin_Rest {
 	public function clear_temp_files() {
 		try {
 			$conflict = $this->get_maintenance_conflict_response(
-				__( 'Temporary files cannot be cleared while the export queue is active.', 'simply-static' )
+				__( 'Temporary files cannot be cleared while the export queue is active.', 'wp-static-export' )
 			);
 			if ( null !== $conflict ) {
 				$response = json_decode( $conflict, true );
@@ -1832,7 +1832,7 @@ class Admin_Rest {
                 'cleared' => (bool) $result,
             ] );
         } catch ( \Throwable $e ) {
-            if ( class_exists( '\\Simply_Static\\Util' ) ) {
+            if ( class_exists( '\\WP_Static_Export\\Util' ) ) {
                 Util::debug_log( 'Error clearing temporary files via REST: ' . $e->getMessage() );
             }
 
@@ -1859,9 +1859,9 @@ class Admin_Rest {
 			return $this->run_in_blog_context( $blog_id, function () use ( $blog_id, $action, $method ) {
 				$plugin = Plugin::instance();
 				$job    = $plugin->get_archive_creation_job();
-				do_action( 'ss_before_perform_archive_action', $blog_id, $action, $job );
+				do_action( 'wpse_before_perform_archive_action', $blog_id, $action, $job );
 				$plugin->{$method}();
-				do_action( 'ss_after_perform_archive_action', $blog_id, $action, $job );
+				do_action( 'wpse_after_perform_archive_action', $blog_id, $action, $job );
 
 				return wp_json_encode( array( 'status' => 200 ) );
 			} );

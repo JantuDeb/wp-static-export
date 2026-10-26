@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 /**
  * Post-processes the exported files before delivery: copies the browser scripts for forms and
@@ -40,7 +40,7 @@ class Process_Task extends Task {
 		$step = $this->advance_node_job(
 			'process_run',
 			function () use ( $archive_dir, $ops ) {
-				$this->save_status_message( __( 'Optimizing files and building search index', 'simply-static' ) );
+				$this->save_status_message( __( 'Optimizing files and building search index', 'wp-static-export' ) );
 
 				return array(
 					'action' => 'process',
@@ -53,7 +53,7 @@ class Process_Task extends Task {
 		);
 
 		if ( is_wp_error( $step ) ) {
-			return new \WP_Error( 'ss_process_failed', sprintf( /* translators: %s: error */ __( 'Processing failed: %s', 'simply-static' ), $step->get_error_message() ) );
+			return new \WP_Error( 'ss_process_failed', sprintf( /* translators: %s: error */ __( 'Processing failed: %s', 'wp-static-export' ), $step->get_error_message() ) );
 		}
 		if ( 'running' === $step['state'] ) {
 			return false;
@@ -61,7 +61,7 @@ class Process_Task extends Task {
 
 		$created = array_merge( (array) $this->options->get( 'process_extra_files' ), (array) ( $step['result']['created'] ?? array() ) );
 		$this->options->set( 'process_extra_files', array_values( array_unique( $created ) ) )->save();
-		$this->save_status_message( (string) ( $step['result']['message'] ?? __( 'Processing finished', 'simply-static' ) ) );
+		$this->save_status_message( (string) ( $step['result']['message'] ?? __( 'Processing finished', 'wp-static-export' ) ) );
 
 		return true;
 	}

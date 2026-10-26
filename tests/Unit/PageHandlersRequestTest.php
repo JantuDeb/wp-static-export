@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Page_Handlers;
-use Simply_Static\Tests\Support\UnitTestCase;
+use WP_Static_Export\Page_Handlers;
+use WP_Static_Export\Tests\Support\UnitTestCase;
 
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-page-handlers.php';
 
@@ -66,7 +66,7 @@ final class PageHandlersRequestTest extends UnitTestCase {
 		$original_request_uri     = $_SERVER['REQUEST_URI'] ?? null;
 
 		try {
-			$_GET['simply_static_page'] = '59229';
+			$_GET['wpse_page'] = '59229';
 			$_SERVER['REQUEST_URI']      = $request_uri;
 
 			$handler = new RequestUriPageHandler();
@@ -85,7 +85,7 @@ final class PageHandlersRequestTest extends UnitTestCase {
 
 			self::assertSame( $request_uri, $handler->request_uri );
 			self::assertSame( $expected_uri, $later_request_uri );
-			self::assertSame( '59229', $_GET['simply_static_page'] );
+			self::assertSame( '59229', $_GET['wpse_page'] );
 		} finally {
 			$_GET = $original_get;
 			if ( $had_original_request_uri ) {
@@ -100,19 +100,19 @@ final class PageHandlersRequestTest extends UnitTestCase {
 	public function requestUriProvider(): array {
 		return array(
 			'root page' => array(
-				'/?simply_static_page=59229',
+				'/?wpse_page=59229',
 				'/',
 			),
 			'page with preceding query argument' => array(
-				'/news/?lang=de&simply_static_page=59229',
+				'/news/?lang=de&wpse_page=59229',
 				'/news/?lang=de',
 			),
 			'page with following query argument' => array(
-				'/news/?simply_static_page=59229&preview=1',
+				'/news/?wpse_page=59229&preview=1',
 				'/news/?preview=1',
 			),
 			'page with surrounding query arguments' => array(
-				'/news/?lang=de&simply_static_page=59229&preview=1',
+				'/news/?lang=de&wpse_page=59229&preview=1',
 				'/news/?lang=de&preview=1',
 			),
 		);

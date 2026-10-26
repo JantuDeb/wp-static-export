@@ -1,5 +1,5 @@
 <?php
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Pro-only placeholder for UAM in the Free plugin.
 // Mirrors the Environments pattern: visible in the UI, cannot run without Pro.
@@ -10,7 +10,7 @@ class SS_UAM_Integration extends Pro_Integration {
     protected $id = 'ss-uam';
 
     public function __construct() {
-        $this->name        = __( 'User Access Management (Core)', 'simply-static' );
-        $this->description = __( 'Control access to WP Static Export pages, menus, and features by assigning a minimum role.', 'simply-static' );
+        $this->name        = __( 'User Access Management (Core)', 'wp-static-export' );
+        $this->description = __( 'Control access to WP Static Export pages, menus, and features by assigning a minimum role.', 'wp-static-export' );
     }
 }

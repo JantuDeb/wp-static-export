@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) {
@@ -16,9 +16,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - Use mb_convert_encoding(..., 'HTML-ENTITIES', ...) only as a legacy fallback for PHP < 8.2.
  *
  * Filters:
- * - simply_static_dom_input_charset: override the detected input charset before DOM.
- * - simply_static_preencode_mode: 'none' | 'bmp_only' (default) | 'all'.
- * - simply_static_preencode_for_dom: boolean override to enable/disable pre-encoding entirely.
+ * - wpse_dom_input_charset: override the detected input charset before DOM.
+ * - wpse_preencode_mode: 'none' | 'bmp_only' (default) | 'all'.
+ * - wpse_preencode_for_dom: boolean override to enable/disable pre-encoding entirely.
  */
 class Html_Encoding_Helper {
 	/**
@@ -35,8 +35,8 @@ class Html_Encoding_Helper {
 		$html_string = Util::strip_bom( $html_string );
 
 		// Selective pre-encoding configuration
-		$preencode_mode = apply_filters( 'simply_static_preencode_mode', 'bmp_only', $context );
-		$preencode      = apply_filters( 'simply_static_preencode_for_dom', $preencode_mode !== 'none', $detected_charset, $context );
+		$preencode_mode = apply_filters( 'wpse_preencode_mode', 'bmp_only', $context );
+		$preencode      = apply_filters( 'wpse_preencode_for_dom', $preencode_mode !== 'none', $detected_charset, $context );
 
 		// Start with the original HTML; we avoid charset conversion for simplicity and robustness.
 		$html_prepared = $html_string;

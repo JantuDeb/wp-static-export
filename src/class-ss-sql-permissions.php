@@ -1,5 +1,5 @@
 <?php
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) {
@@ -15,7 +15,7 @@ class Sql_Permissions {
 
 	/**
 	 * Singleton instance
-	 * @var Simply_Static\Sql_Permissions
+	 * @var WP_Static_Export\Sql_Permissions
 	 */
 	protected static $instance = null;
 
@@ -52,8 +52,8 @@ class Sql_Permissions {
 	public function __wakeup() {}
 
 	/**
-	 * Return an instance of Simply_Static\Sql_Permissions
-	 * @return Simply_Static\Sql_Permissions
+	 * Return an instance of WP_Static_Export\Sql_Permissions
+	 * @return WP_Static_Export\Sql_Permissions
 	 */
 	public static function instance() {
 		if ( null === self::$instance ) {

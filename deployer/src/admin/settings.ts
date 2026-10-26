@@ -161,7 +161,7 @@ export function mount(root: El, boot: Boot): void {
       const input = cell.querySelector('select,input[type=checkbox]');
       input?.addEventListener('change', () => render());
     }
-    if (locked) cell.append(h('p', { class: 'description' }, `Set by the SIMPLY_STATIC_${field.key.toUpperCase()} constant in wp-config.php.`));
+    if (locked) cell.append(h('p', { class: 'description' }, `Set by the WPSE_${field.key.toUpperCase()} constant in wp-config.php.`));
     if (field.help) cell.append(h('p', { class: 'description' }, field.help));
     return h('tr', {}, h('th', { scope: 'row' }, h('label', { for: `ssf-${field.key}` }, field.label)), cell);
   }

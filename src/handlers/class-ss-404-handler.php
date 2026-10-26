@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -66,4 +66,4 @@ class Handler_404 extends Page_Handler {
 }
 
 // Register hook listener for Local Directory transfer finalization.
-add_action( 'ss_before_finish_transferring_files_locally', [ '\Simply_Static\Handler_404', 'transfer_404_page' ], 10, 3 );
+add_action( 'wpse_before_finish_transferring_files_locally', [ '\WP_Static_Export\Handler_404', 'transfer_404_page' ], 10, 3 );

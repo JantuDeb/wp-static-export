@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
 use ReflectionMethod;
-use Simply_Static\Fetch_Urls_Task;
-use Simply_Static\Options;
-use Simply_Static\Tests\Support\UnitTestCase;
+use WP_Static_Export\Fetch_Urls_Task;
+use WP_Static_Export\Options;
+use WP_Static_Export\Tests\Support\UnitTestCase;
 
 final class ExcludedBackupPage {
 
@@ -15,7 +15,7 @@ final class ExcludedBackupPage {
 	public $url;
 
 	/** @var string|null */
-	public $file_path = 'wp-content/uploads/simply-static/backup-old/studio-backup.zip';
+	public $file_path = 'wp-content/uploads/wp-static-export/backup-old/studio-backup.zip';
 
 	/** @var string|null */
 	public $last_checked_at;
@@ -58,7 +58,7 @@ final class FetchUrlsExclusionTest extends UnitTestCase {
 	public function test_incremental_export_clears_stale_file_path_for_excluded_backup(): void {
 		$key  = str_repeat( 'a', 32 );
 		$page = new ExcludedBackupPage(
-			'https://example.test/wp-content/uploads/simply-static/backup-' . $key . '/studio-backup.zip'
+			'https://example.test/wp-content/uploads/wp-static-export/backup-' . $key . '/studio-backup.zip'
 		);
 
 		$method = new ReflectionMethod( Fetch_Urls_Task::class, 'process_page' );

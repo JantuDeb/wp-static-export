@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
 use ReflectionMethod;
-use Simply_Static\Crawler\Uploads_Crawler;
-use Simply_Static\Options;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment;
+use WP_Static_Export\Crawler\Uploads_Crawler;
+use WP_Static_Export\Options;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment;
 
 final class UploadsCrawlerWpdb {
 
@@ -58,14 +58,14 @@ final class UploadsCrawlerTest extends UnitTestCase {
 		wp_mkdir_p( $root . '/2026/deep' );
 		wp_mkdir_p( $root . '/cache' );
 		wp_mkdir_p( $root . '/compatibility-check/plugin' );
-		wp_mkdir_p( $root . '/simply-static/temp-files/current-export' );
+		wp_mkdir_p( $root . '/wp-static-export/temp-files/current-export' );
 		file_put_contents( $root . '/photo.jpg', 'image' );
 		file_put_contents( $root . '/notes.txt', 'ignore' );
 		file_put_contents( $root . '/2026/one.png', 'image' );
 		file_put_contents( $root . '/2026/deep/two.pdf', 'document' );
 		file_put_contents( $root . '/cache/hidden.jpg', 'cache' );
 		file_put_contents( $root . '/compatibility-check/plugin/package.js', 'private working file' );
-		file_put_contents( $root . '/simply-static/temp-files/current-export/index.js', 'recursive export artifact' );
+		file_put_contents( $root . '/wp-static-export/temp-files/current-export/index.js', 'recursive export artifact' );
 
 		WpTestEnvironment::$upload_dir = array(
 			'basedir' => $root,
@@ -73,10 +73,10 @@ final class UploadsCrawlerTest extends UnitTestCase {
 		);
 		$GLOBALS['wpdb'] = new UploadsCrawlerWpdb();
 		Options::instance()->set( 'archive_start_time', '2026-08-19 10:00:00' )->save();
-		add_filter( 'ss_uploads_additional_directories', static function () {
+		add_filter( 'wpse_uploads_additional_directories', static function () {
 			return array();
 		} );
-		add_filter( 'simply_static_uploads_crawler_max_entries_per_batch', static function () {
+		add_filter( 'wpse_uploads_crawler_max_entries_per_batch', static function () {
 			return 2;
 		} );
 
@@ -127,7 +127,7 @@ final class UploadsCrawlerTest extends UnitTestCase {
 
 	public function test_private_backup_files_are_removed_before_upload_urls_are_built(): void {
 		$root       = sys_get_temp_dir() . '/ss-uploads-crawler-' . bin2hex( random_bytes( 8 ) );
-		$backup_dir = $root . '/simply-static/backup-' . str_repeat( 'a', 32 );
+		$backup_dir = $root . '/wp-static-export/backup-' . str_repeat( 'a', 32 );
 		wp_mkdir_p( $backup_dir );
 		file_put_contents( $root . '/photo.jpg', 'image' );
 		file_put_contents( $backup_dir . '/config.json', '{}' );

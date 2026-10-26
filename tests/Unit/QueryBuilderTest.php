@@ -18,13 +18,13 @@ namespace {
 	}
 }
 
-namespace Simply_Static\Tests\Unit {
+namespace WP_Static_Export\Tests\Unit {
 
-	use Simply_Static\Model;
-	use Simply_Static\Page;
-	use Simply_Static\Query;
-	use Simply_Static\Tests\Support\UnitTestCase;
-	use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+	use WP_Static_Export\Model;
+	use WP_Static_Export\Page;
+	use WP_Static_Export\Query;
+	use WP_Static_Export\Tests\Support\UnitTestCase;
+	use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 	require_once dirname( __DIR__, 2 ) . '/src/class-ss-query.php';
 	require_once dirname( __DIR__, 2 ) . '/src/models/class-ss-model.php';
@@ -115,11 +115,11 @@ namespace Simply_Static\Tests\Unit {
 			WpEnv::$current_blog_id = 7;
 
 			self::assertSame(
-				'SELECT * FROM  wp_simply_static_pages WHERE 1=1 AND site_id=7',
+				'SELECT * FROM  wp_wpse_pages WHERE 1=1 AND site_id=7',
 				( new Query( Page::class ) )->get_raw_sql( '*' )
 			);
 			self::assertSame(
-				'SELECT * FROM  wp_simply_static_pages WHERE 1=1 AND url = \'https://example.test/page\' AND site_id=7',
+				'SELECT * FROM  wp_wpse_pages WHERE 1=1 AND url = \'https://example.test/page\' AND site_id=7',
 				( new Query( QueryBuilderPage::class ) )
 					->where( array( 'url' => 'https://example.test/page' ) )
 					->get_raw_sql( '*' )
@@ -137,11 +137,11 @@ namespace Simply_Static\Tests\Unit {
 				->get_raw_sql( '*' );
 
 			self::assertSame(
-				"SELECT * FROM  wp_simply_static_pages WHERE 1=1 AND site_id = '12'",
+				"SELECT * FROM  wp_wpse_pages WHERE 1=1 AND site_id = '12'",
 				$array_scope
 			);
 			self::assertSame(
-				'SELECT * FROM  wp_simply_static_pages WHERE 1=1 AND site_id IS NULL',
+				'SELECT * FROM  wp_wpse_pages WHERE 1=1 AND site_id IS NULL',
 				$raw_scope
 			);
 		self::assertStringNotContainsString( 'site_id=7', $array_scope . $raw_scope );
@@ -168,7 +168,7 @@ namespace Simply_Static\Tests\Unit {
 				->get_raw_sql( 'id, name' );
 
 			self::assertSame(
-				"SELECT id, name FROM  wp_simply_static_query_records WHERE 1=1 AND name IS NULL AND id > '4' AND name <> 'O\\'Reilly' ORDER BY id DESC LIMIT 20 OFFSET 40",
+				"SELECT id, name FROM  wp_wpse_query_records WHERE 1=1 AND name IS NULL AND id > '4' AND name <> 'O\\'Reilly' ORDER BY id DESC LIMIT 20 OFFSET 40",
 				$sql
 			);
 		}
@@ -211,7 +211,7 @@ namespace Simply_Static\Tests\Unit {
 			self::assertInstanceOf( QueryBuilderRecord::class, $records[0] );
 			self::assertSame( 'Alpha', $records[0]->name );
 			self::assertSame(
-				'SELECT * FROM  wp_simply_static_query_records ORDER BY id ASC',
+				'SELECT * FROM  wp_wpse_query_records ORDER BY id ASC',
 				$this->wpdb->queries[0]
 			);
 
@@ -232,7 +232,7 @@ namespace Simply_Static\Tests\Unit {
 
 			self::assertSame( 8, $found->id );
 			self::assertSame(
-				"SELECT * FROM  wp_simply_static_query_records WHERE 1=1 AND name = 'Found' LIMIT 1",
+				"SELECT * FROM  wp_wpse_query_records WHERE 1=1 AND name = 'Found' LIMIT 1",
 				$this->wpdb->queries[0]
 			);
 
@@ -246,17 +246,17 @@ namespace Simply_Static\Tests\Unit {
 			$query = ( new Query( QueryBuilderRecord::class ) )->where( array( 'name' => 'Old' ) );
 			self::assertSame( 3, $query->delete_all() );
 			self::assertSame(
-				"DELETE FROM  wp_simply_static_query_records WHERE 1=1 AND name = 'Old'",
+				"DELETE FROM  wp_wpse_query_records WHERE 1=1 AND name = 'Old'",
 				$this->wpdb->queries[0]
 			);
 
 			$this->wpdb->value = '17';
 			self::assertSame( '17', ( new Query( QueryBuilderRecord::class ) )->count() );
-			self::assertSame( 'SELECT COUNT(*) FROM  wp_simply_static_query_records', $this->wpdb->queries[1] );
+			self::assertSame( 'SELECT COUNT(*) FROM  wp_wpse_query_records', $this->wpdb->queries[1] );
 
 			self::assertSame( 3, ( new Query( QueryBuilderRecord::class ) )->delete_by_id( 9 ) );
 			self::assertSame(
-				"DELETE FROM  wp_simply_static_query_records WHERE 1=1 AND id = '9'",
+				"DELETE FROM  wp_wpse_query_records WHERE 1=1 AND id = '9'",
 				$this->wpdb->queries[2]
 			);
 		}

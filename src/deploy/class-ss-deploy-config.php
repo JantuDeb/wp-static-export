@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -129,7 +129,7 @@ class Deploy_Config {
 		 * @param array  $config Provider settings.
 		 * @param string $method Delivery method.
 		 */
-		return apply_filters( 'ss_deploy_config', $config, $method );
+		return apply_filters( 'wpse_deploy_config', $config, $method );
 	}
 
 	/**

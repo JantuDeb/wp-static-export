@@ -1,10 +1,10 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 use RankMath\Helper;
 use RankMath\Traits\Hooker;
-use Simply_Static\Options;
+use WP_Static_Export\Options;
 
 class Rank_Math_Sitemap_Handler extends Page_Handler {
 

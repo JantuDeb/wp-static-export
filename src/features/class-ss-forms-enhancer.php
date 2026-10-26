@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -121,7 +121,7 @@ class Forms_Enhancer {
 		 *
 		 * @param array<string,string[]> $patterns Class marker of the plugin's <form> => script id/src substrings.
 		 */
-		$filtered = apply_filters( 'ss_forms_script_patterns', $patterns );
+		$filtered = apply_filters( 'wpse_forms_script_patterns', $patterns );
 
 		return is_array( $filtered ) ? $filtered : $patterns;
 	}

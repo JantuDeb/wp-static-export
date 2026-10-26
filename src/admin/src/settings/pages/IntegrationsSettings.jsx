@@ -117,7 +117,7 @@ function IntegrationsSettings() {
                     {() => (
                         <Notice status="success" isDismissible={false}>
                             <p>
-                                {__('Settings saved successfully.', 'simply-static')}
+                                {__('Settings saved successfully.', 'wp-static-export')}
                             </p>
                         </Notice>
                     )}
@@ -127,7 +127,7 @@ function IntegrationsSettings() {
         }
         <div className={"save-settings"}>
             <Button onClick={setSavingSettings}
-                    variant="primary">{__('Save Settings', 'simply-static')}</Button>
+                    variant="primary">{__('Save Settings', 'wp-static-export')}</Button>
         </div>
     </div>)
 }

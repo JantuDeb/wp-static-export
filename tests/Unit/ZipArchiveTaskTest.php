@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Create_Zip_Archive_Task;
-use Simply_Static\Options;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Create_Zip_Archive_Task;
+use WP_Static_Export\Options;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 final class ZipArchiveTaskTest extends UnitTestCase {
 
@@ -36,10 +36,10 @@ final class ZipArchiveTaskTest extends UnitTestCase {
 		$this->requireSource( 'src/tasks/class-ss-task.php' );
 		$this->requireSource( 'src/tasks/class-ss-create-zip-archive.php' );
 
-		$this->temp_dir    = WpEnv::$upload_dir['basedir'] . '/simply-static/zip-tests-' . uniqid( '', true );
+		$this->temp_dir    = WpEnv::$upload_dir['basedir'] . '/wp-static-export/zip-tests-' . uniqid( '', true );
 		$this->archive_dir = trailingslashit( $this->temp_dir ) . 'site/';
 		wp_mkdir_p( $this->archive_dir . 'nested' );
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'temp_files_dir'         => $this->temp_dir,
 			'archive_name'           => 'site/',
 			'generate_type'          => 'export',
@@ -54,12 +54,12 @@ final class ZipArchiveTaskTest extends UnitTestCase {
 		file_put_contents( $this->archive_dir . 'a.txt', 'alpha' );
 		file_put_contents( $this->archive_dir . 'nested/b.txt', 'beta' );
 		file_put_contents( $this->archive_dir . '.nojekyll', '' );
-		add_filter( 'ss_zip_batch_size', static function () { return 1; } );
+		add_filter( 'wpse_zip_batch_size', static function () { return 1; } );
 
 		$task = new Create_Zip_Archive_Task();
 		self::assertFalse( $task->create_zip() );
-		self::assertSame( 1, WpEnv::$options['simply-static']['zip_batch_offset'] );
-		self::assertNull( WpEnv::$options['simply-static']['zip_files'] );
+		self::assertSame( 1, WpEnv::$options['wp-static-export']['zip_batch_offset'] );
+		self::assertNull( WpEnv::$options['wp-static-export']['zip_files'] );
 		self::assertCount( 3, WpEnv::$options[ Create_Zip_Archive_Task::ZIP_FILES_OPTION ] );
 
 		// Files appearing mid-export belong to the next export, not this archive.
@@ -81,7 +81,7 @@ final class ZipArchiveTaskTest extends UnitTestCase {
 
 	public function test_zero_batch_size_is_clamped_and_cannot_stall_progress(): void {
 		file_put_contents( $this->archive_dir . 'only.txt', 'content' );
-		add_filter( 'ss_zip_batch_size', static function () { return 0; } );
+		add_filter( 'wpse_zip_batch_size', static function () { return 0; } );
 
 		$result = ( new Create_Zip_Archive_Task() )->create_zip();
 
@@ -91,21 +91,21 @@ final class ZipArchiveTaskTest extends UnitTestCase {
 
 	public function test_perform_publishes_structured_download_link(): void {
 		file_put_contents( $this->archive_dir . 'index.html', '<h1>Archived</h1>' );
-		$zip_file = WP_CONTENT_DIR . '/uploads/simply-static/activity-link-test.zip';
+		$zip_file = WP_CONTENT_DIR . '/uploads/wp-static-export/activity-link-test.zip';
 		$debug_log = $this->temp_dir . '/zip-debug.log';
 		wp_mkdir_p( dirname( $zip_file ) );
-		add_filter( 'ss_zip_filename', static function () use ( $zip_file ) {
+		add_filter( 'wpse_zip_filename', static function () use ( $zip_file ) {
 			return $zip_file;
 		} );
-		add_filter( 'ss_debug_log_file', static function () use ( $debug_log ) {
+		add_filter( 'wpse_debug_log_file', static function () use ( $debug_log ) {
 			return $debug_log;
 		} );
-		WpEnv::$options['simply-static']['debugging_mode'] = true;
+		WpEnv::$options['wp-static-export']['debugging_mode'] = true;
 		Options::reinstance();
 
 		self::assertTrue( ( new Create_Zip_Archive_Task() )->perform() );
 
-		$status = WpEnv::$options['simply-static']['archive_status_messages']['create_zip_archive'];
+		$status = WpEnv::$options['wp-static-export']['archive_status_messages']['create_zip_archive'];
 		self::assertSame( 'ZIP archive created: ', $status['message'] );
 		self::assertSame( 'Click here to download', $status['link']['label'] );
 		self::assertStringStartsWith( 'https://example.test/wp-content/', $status['link']['url'] );
@@ -122,7 +122,7 @@ final class ZipArchiveTaskTest extends UnitTestCase {
 		self::assertTrue( ( new Create_Zip_Archive_Task() )->perform() );
 
 		$zip_file = untrailingslashit( $this->archive_dir ) . '.zip';
-		$status   = WpEnv::$options['simply-static']['archive_status_messages']['create_zip_archive'];
+		$status   = WpEnv::$options['wp-static-export']['archive_status_messages']['create_zip_archive'];
 		$relative = substr( wp_normalize_path( $zip_file ), strlen( wp_normalize_path( WpEnv::$upload_dir['basedir'] ) ) );
 
 		self::assertFileExists( $zip_file );
@@ -131,12 +131,12 @@ final class ZipArchiveTaskTest extends UnitTestCase {
 	}
 
 	public function test_perform_does_not_report_success_when_the_zip_has_no_public_url(): void {
-		$private_temp_dir = sys_get_temp_dir() . '/simply-static-private-zip-' . uniqid( '', true );
+		$private_temp_dir = sys_get_temp_dir() . '/wp-static-export-private-zip-' . uniqid( '', true );
 		$private_archive  = trailingslashit( $private_temp_dir ) . 'site/';
 		wp_mkdir_p( $private_archive );
 		file_put_contents( $private_archive . 'index.html', '<h1>Archived</h1>' );
 
-		WpEnv::$options['simply-static']['temp_files_dir'] = $private_temp_dir;
+		WpEnv::$options['wp-static-export']['temp_files_dir'] = $private_temp_dir;
 		Options::reinstance();
 
 		$result = ( new Create_Zip_Archive_Task() )->perform();
@@ -144,7 +144,7 @@ final class ZipArchiveTaskTest extends UnitTestCase {
 		self::assertInstanceOf( \WP_Error::class, $result );
 		self::assertSame( 'zip_url_unavailable', $result->get_error_code() );
 		self::assertFileExists( untrailingslashit( $private_archive ) . '.zip' );
-		self::assertArrayNotHasKey( 'create_zip_archive', WpEnv::$options['simply-static']['archive_status_messages'] );
+		self::assertArrayNotHasKey( 'create_zip_archive', WpEnv::$options['wp-static-export']['archive_status_messages'] );
 	}
 
 	public function test_filtered_files_outside_archive_and_symlink_escapes_are_excluded(): void {
@@ -154,7 +154,7 @@ final class ZipArchiveTaskTest extends UnitTestCase {
 		$link = $this->archive_dir . 'escape.txt';
 		$linked = function_exists( 'symlink' ) && @symlink( $outside, $link );
 
-		add_filter( 'ss_zip_files_to_include', static function ( array $files ) use ( $outside, $link, $linked ): array {
+		add_filter( 'wpse_zip_files_to_include', static function ( array $files ) use ( $outside, $link, $linked ): array {
 			$files[] = $outside;
 			if ( $linked ) {
 				$files[] = $link;

@@ -3,8 +3,8 @@ const {__} = wp.i18n;
 
 export default function EnvironmentDropdown({ onChange, current, environments, disabled, onDelete, isStudio }) {
     const helpText = isStudio
-        ? __('Choose an environment.', 'simply-static')
-        : __('Choose an environment or create a new one to configure settings.', 'simply-static');
+        ? __('Choose an environment.', 'wp-static-export')
+        : __('Choose an environment or create a new one to configure settings.', 'wp-static-export');
 
     return (
         <Flex>
@@ -23,7 +23,7 @@ export default function EnvironmentDropdown({ onChange, current, environments, d
                 <Button
                     className={'environment-delete-button'}
                     variant={'tertiary'}
-                    label={__('Delete selected environment', 'simply-static')}
+                    label={__('Delete selected environment', 'wp-static-export')}
                     size={'small'}
                     icon={'trash'}
                     disabled={disabled}

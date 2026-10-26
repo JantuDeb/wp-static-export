@@ -86,7 +86,7 @@ function ExportLog() {
 			setExportLogError( '' );
 
 			const request = {
-				path: `/simplystatic/v1/export-log?page=${ safePage }&per_page=${ safePerPage }&blog_id=${ encodeURIComponent(
+				path: `/wp-static-export/v1/export-log?page=${ safePage }&per_page=${ safePerPage }&blog_id=${ encodeURIComponent(
 					blogId
 				) }&is_network_admin=${
 					options.is_network
@@ -108,7 +108,7 @@ function ExportLog() {
 						throw new Error(
 							__(
 								'Invalid export log response.',
-								'simply-static'
+								'wp-static-export'
 							)
 						);
 					}
@@ -146,7 +146,7 @@ function ExportLog() {
 									? error.message
 									: __(
 											'Could not load the export log.',
-											'simply-static'
+											'wp-static-export'
 									  )
 							);
 						}
@@ -168,7 +168,7 @@ function ExportLog() {
 
 	const fetchExportType = useCallback( () => {
 		return apiFetch( {
-			path: '/simplystatic/v1/export-type',
+			path: '/wp-static-export/v1/export-type',
 			method: 'GET',
 		} )
 			.then( ( response ) => {
@@ -251,13 +251,13 @@ function ExportLog() {
 	const urlColumnWidth = isPro() ? '40%' : '60%';
 	const baseColumns = [
 		{
-			name: __( 'Code', 'simply-static' ),
+			name: __( 'Code', 'wp-static-export' ),
 			selector: ( row ) => row.code,
 			sortable: true,
 			width: '12%',
 		},
 		{
-			name: __( 'URL', 'simply-static' ),
+			name: __( 'URL', 'wp-static-export' ),
 			selector: ( row ) => {
 				const raw = row && typeof row.url === 'string' ? row.url : '';
 				if ( ! raw ) {
@@ -290,7 +290,7 @@ function ExportLog() {
 	];
 
 	const exportTypeColumn = {
-		name: __( 'Export Type', 'simply-static' ),
+		name: __( 'Export Type', 'wp-static-export' ),
 		selector: () => {
 			if ( exportType === 'Build' || exportType === 'Single' ) {
 				return `${ exportType } (ID: ${ exportTypeId })`;
@@ -302,7 +302,7 @@ function ExportLog() {
 	};
 
 	const notesColumn = {
-		name: __( 'Notes', 'simply-static' ),
+		name: __( 'Notes', 'wp-static-export' ),
 		wrap: true,
 		selector: ( row ) => (
 			<span>{ toInertLogText( row && row.notes ) }</span>
@@ -327,13 +327,13 @@ function ExportLog() {
 						className="screen-reader-text"
 						htmlFor="export-search"
 					>
-						{ __( 'Search export log', 'simply-static' ) }
+						{ __( 'Search export log', 'wp-static-export' ) }
 					</label>
 					<input
 						id="export-search"
 						className="ss-export-log-search"
 						type="search"
-						placeholder={ __( 'Search…', 'simply-static' ) }
+						placeholder={ __( 'Search…', 'wp-static-export' ) }
 						value={ filterText }
 						onChange={ handleSearch }
 					/>
@@ -359,7 +359,7 @@ function ExportLog() {
 					<div style={ { padding: '24px', textAlign: 'center' } }>
 						<Spinner />
 						<div style={ { marginTop: '8px' } }>
-							{ __( 'Loading…', 'simply-static' ) }
+							{ __( 'Loading…', 'wp-static-export' ) }
 						</div>
 					</div>
 				}

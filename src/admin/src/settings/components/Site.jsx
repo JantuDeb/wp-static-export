@@ -30,7 +30,7 @@ function Site(props) {
         setIsPaused(false);
 
         apiFetch({
-            path: '/simplystatic/v1/start-export',
+            path: '/wp-static-export/v1/start-export',
             method: 'POST',
             data: {
                 'blog_id': blogId,
@@ -49,7 +49,7 @@ function Site(props) {
 
     const cancelExport = () => {
         apiFetch({
-            path: '/simplystatic/v1/cancel-export',
+            path: '/wp-static-export/v1/cancel-export',
             method: 'POST',
             data: {
                 'blog_id': blogId,
@@ -64,7 +64,7 @@ function Site(props) {
 
     const pauseExport = () => {
         apiFetch({
-            path: '/simplystatic/v1/pause-export',
+            path: '/wp-static-export/v1/pause-export',
             method: 'POST',
             data: {
                 'blog_id': blogId,
@@ -78,7 +78,7 @@ function Site(props) {
 
     const resumeExport = () => {
         apiFetch({
-            path: '/simplystatic/v1/resume-export',
+            path: '/wp-static-export/v1/resume-export',
             method: 'POST',
             data: {
                 'blog_id': blogId,

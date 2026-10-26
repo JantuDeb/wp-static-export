@@ -9,23 +9,23 @@ namespace {
 		 * @return int
 		 */
 		function wp_clear_scheduled_hook( $hook, $args = array(), $wp_error = false ) {
-			$events = isset( $GLOBALS['simply_static_test_scheduled_hooks'][ $hook ] )
-				? $GLOBALS['simply_static_test_scheduled_hooks'][ $hook ]
+			$events = isset( $GLOBALS['wpse_test_scheduled_hooks'][ $hook ] )
+				? $GLOBALS['wpse_test_scheduled_hooks'][ $hook ]
 				: array();
-			unset( $GLOBALS['simply_static_test_scheduled_hooks'][ $hook ] );
+			unset( $GLOBALS['wpse_test_scheduled_hooks'][ $hook ] );
 			return count( $events );
 		}
 	}
 }
 
-namespace Simply_Static\Tests\Unit {
+namespace WP_Static_Export\Tests\Unit {
 
-	use Simply_Static\Admin_Rest;
-	use Simply_Static\Background_Process;
-	use Simply_Static\Options;
-	use Simply_Static\Plugin;
-	use Simply_Static\Tests\Support\UnitTestCase;
-	use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+	use WP_Static_Export\Admin_Rest;
+	use WP_Static_Export\Background_Process;
+	use WP_Static_Export\Options;
+	use WP_Static_Export\Plugin;
+	use WP_Static_Export\Tests\Support\UnitTestCase;
+	use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 	require_once dirname( __DIR__, 2 ) . '/src/class-ss-plugin.php';
 	require_once dirname( __DIR__, 2 ) . '/src/class-ss-options.php';
@@ -38,6 +38,9 @@ namespace Simply_Static\Tests\Unit {
 
 		/** @var string */
 		protected $action = 'archive_creation_job';
+
+		/** @var string */
+		protected $prefix = 'wpse';
 
 		/** @param mixed $item */
 		protected function task( $item ) {
@@ -79,7 +82,7 @@ namespace Simply_Static\Tests\Unit {
 		}
 
 		public function get_identifier(): string {
-			return 'wp_archive_creation_job';
+			return 'wpse_archive_creation_job';
 		}
 
 		public function get_options(): Options {
@@ -104,7 +107,7 @@ namespace Simply_Static\Tests\Unit {
 
 			WpEnv::$multisite       = true;
 			WpEnv::$current_blog_id = 7;
-			WpEnv::$options['simply-static'] = array(
+			WpEnv::$options['wp-static-export'] = array(
 				'delivery_method'        => 'zip',
 				'encryption_key'         => 'keep-me',
 				'archive_status_messages' => array( 'fetch' => array( 'message' => 'stale' ) ),
@@ -119,23 +122,23 @@ namespace Simply_Static\Tests\Unit {
 				'zip_total_files'        => 1000,
 				'zip_files'              => array( '/tmp/one', '/tmp/two' ),
 			);
-			WpEnv::$options['wp_archive_creation_job_status'] = 2;
-			foreach ( array( 'simply-static-404-only', 'simply-static-use-single', 'simply-static-use-build', 'simply-static-use-language' ) as $flag ) {
+			WpEnv::$options['wpse_archive_creation_job_status'] = 2;
+			foreach ( array( 'wp-static-export-404-only', 'wp-static-export-use-single', 'wp-static-export-use-build', 'wp-static-export-use-language' ) as $flag ) {
 				WpEnv::$options[ $flag ] = 'stale';
 			}
 
 			WpEnv::$site_transients = array(
-				'wp_archive_creation_job_process_lock'                 => 'legacy-lock',
-				'wp_archive_creation_job_process_lock_site_7'          => 'site-lock',
-				'wp_archive_creation_job_process_lock_site_8'          => 'other-site-lock',
-				'wp_archive_creation_job_loopback_available'           => 'no',
-				'wp_archive_creation_job_loopback_available_site_7'    => 'no',
-				'wp_archive_creation_job_loopback_available_site_8'    => 'yes',
+				'wpse_archive_creation_job_process_lock'                 => 'legacy-lock',
+				'wpse_archive_creation_job_process_lock_site_7'          => 'site-lock',
+				'wpse_archive_creation_job_process_lock_site_8'          => 'other-site-lock',
+				'wpse_archive_creation_job_loopback_available'           => 'no',
+				'wpse_archive_creation_job_loopback_available_site_7'    => 'no',
+				'wpse_archive_creation_job_loopback_available_site_8'    => 'yes',
 			);
 			WpEnv::$site_options[ Plugin::SLUG . '_multisite_export_running' ] = 7;
-			$GLOBALS['simply_static_test_scheduled_hooks'] = array(
-				'wp_archive_creation_job_cron'    => array( 100, 200 ),
-				'simply_static_site_export_cron' => array( 300 ),
+			$GLOBALS['wpse_test_scheduled_hooks'] = array(
+				'wpse_archive_creation_job_cron'    => array( 100, 200 ),
+				'wpse_site_export_cron' => array( 300 ),
 			);
 
 			$options   = Options::reinstance();
@@ -157,7 +160,7 @@ namespace Simply_Static\Tests\Unit {
 			$instance_property = new \ReflectionProperty( Plugin::class, 'instance' );
 			$instance_property->setAccessible( true );
 			$instance_property->setValue( null, null );
-			unset( $GLOBALS['simply_static_test_scheduled_hooks'] );
+			unset( $GLOBALS['wpse_test_scheduled_hooks'] );
 
 			parent::tearDown();
 		}
@@ -165,7 +168,7 @@ namespace Simply_Static\Tests\Unit {
 		public function test_reset_clears_stale_queue_runtime_and_one_shot_state(): void {
 			$reset_actions = 0;
 			add_action(
-				'ss_after_background_queue_reset',
+				'wpse_after_background_queue_reset',
 				static function () use ( &$reset_actions ): void {
 					++$reset_actions;
 				}
@@ -179,7 +182,7 @@ namespace Simply_Static\Tests\Unit {
 			self::assertNull( $this->job->current_task );
 			self::assertSame( 1, $reset_actions );
 
-			$options = WpEnv::$options['simply-static'];
+			$options = WpEnv::$options['wp-static-export'];
 			self::assertSame( 'zip', $options['delivery_method'] );
 			self::assertSame( 'keep-me', $options['encryption_key'] );
 			self::assertSame( array(), $options['archive_status_messages'] );
@@ -194,23 +197,23 @@ namespace Simply_Static\Tests\Unit {
 			self::assertNull( $options['zip_total_files'] );
 			self::assertNull( $options['zip_files'] );
 
-			self::assertArrayNotHasKey( 'wp_archive_creation_job_status', WpEnv::$options );
-			foreach ( array( 'simply-static-404-only', 'simply-static-use-single', 'simply-static-use-build', 'simply-static-use-language' ) as $flag ) {
+			self::assertArrayNotHasKey( 'wpse_archive_creation_job_status', WpEnv::$options );
+			foreach ( array( 'wp-static-export-404-only', 'wp-static-export-use-single', 'wp-static-export-use-build', 'wp-static-export-use-language' ) as $flag ) {
 				self::assertArrayNotHasKey( $flag, WpEnv::$options );
 			}
 
-			self::assertSame( 'legacy-lock', WpEnv::$site_transients['wp_archive_creation_job_process_lock'] );
-			self::assertArrayNotHasKey( 'wp_archive_creation_job_process_lock_site_7', WpEnv::$site_transients );
-			self::assertSame( 'other-site-lock', WpEnv::$site_transients['wp_archive_creation_job_process_lock_site_8'] );
-			self::assertSame( 'no', WpEnv::$site_transients['wp_archive_creation_job_loopback_available'] );
-			self::assertArrayNotHasKey( 'wp_archive_creation_job_loopback_available_site_7', WpEnv::$site_transients );
-			self::assertSame( 'yes', WpEnv::$site_transients['wp_archive_creation_job_loopback_available_site_8'] );
+			self::assertSame( 'legacy-lock', WpEnv::$site_transients['wpse_archive_creation_job_process_lock'] );
+			self::assertArrayNotHasKey( 'wpse_archive_creation_job_process_lock_site_7', WpEnv::$site_transients );
+			self::assertSame( 'other-site-lock', WpEnv::$site_transients['wpse_archive_creation_job_process_lock_site_8'] );
+			self::assertSame( 'no', WpEnv::$site_transients['wpse_archive_creation_job_loopback_available'] );
+			self::assertArrayNotHasKey( 'wpse_archive_creation_job_loopback_available_site_7', WpEnv::$site_transients );
+			self::assertSame( 'yes', WpEnv::$site_transients['wpse_archive_creation_job_loopback_available_site_8'] );
 			self::assertArrayNotHasKey( Plugin::SLUG . '_multisite_export_running', WpEnv::$site_options );
 
-			self::assertArrayNotHasKey( 'wp_archive_creation_job_cron', $GLOBALS['simply_static_test_scheduled_hooks'] );
+			self::assertArrayNotHasKey( 'wpse_archive_creation_job_cron', $GLOBALS['wpse_test_scheduled_hooks'] );
 			self::assertSame(
 				array( 300 ),
-				$GLOBALS['simply_static_test_scheduled_hooks']['simply_static_site_export_cron']
+				$GLOBALS['wpse_test_scheduled_hooks']['wpse_site_export_cron']
 			);
 		}
 
@@ -227,10 +230,10 @@ namespace Simply_Static\Tests\Unit {
 
 			$this->rest->reset_background_queue();
 
-			self::assertArrayNotHasKey( 'wp_archive_creation_job_process_lock', WpEnv::$site_transients );
-			self::assertArrayNotHasKey( 'wp_archive_creation_job_loopback_available', WpEnv::$site_transients );
-			self::assertSame( 'site-lock', WpEnv::$site_transients['wp_archive_creation_job_process_lock_site_7'] );
-			self::assertSame( 'no', WpEnv::$site_transients['wp_archive_creation_job_loopback_available_site_7'] );
+			self::assertArrayNotHasKey( 'wpse_archive_creation_job_process_lock', WpEnv::$site_transients );
+			self::assertArrayNotHasKey( 'wpse_archive_creation_job_loopback_available', WpEnv::$site_transients );
+			self::assertSame( 'site-lock', WpEnv::$site_transients['wpse_archive_creation_job_process_lock_site_7'] );
+			self::assertSame( 'no', WpEnv::$site_transients['wpse_archive_creation_job_loopback_available_site_7'] );
 		}
 
 		public function test_reset_refuses_to_race_an_active_background_worker(): void {
@@ -240,16 +243,16 @@ namespace Simply_Static\Tests\Unit {
 
 			self::assertSame( 409, $response['status'] ?? null );
 			self::assertSame( 0, $this->job->delete_all_calls );
-			self::assertSame( '2026-07-12 10:00:00', WpEnv::$options['simply-static']['archive_start_time'] );
+			self::assertSame( '2026-07-12 10:00:00', WpEnv::$options['wp-static-export']['archive_start_time'] );
 			self::assertSame( 'fetch_urls', $this->job->current_task );
-			self::assertArrayHasKey( 'wp_archive_creation_job_cron', $GLOBALS['simply_static_test_scheduled_hooks'] );
-			self::assertSame( 'stale', WpEnv::$options['simply-static-404-only'] );
+			self::assertArrayHasKey( 'wpse_archive_creation_job_cron', $GLOBALS['wpse_test_scheduled_hooks'] );
+			self::assertSame( 'stale', WpEnv::$options['wp-static-export-404-only'] );
 		}
 
 		public function test_process_lock_guard_distinguishes_active_stale_and_invalid_locks(): void {
 			$process = new ResetLockBackgroundProcess();
 			$process->set_current_site_id( 7 );
-			$lock_key = 'wp_archive_creation_job_process_lock_site_7';
+			$lock_key = 'wpse_archive_creation_job_process_lock_site_7';
 
 			WpEnv::$site_transients[ $lock_key ] = microtime() . ':active-token';
 			self::assertTrue( $process->has_active_process_lock() );

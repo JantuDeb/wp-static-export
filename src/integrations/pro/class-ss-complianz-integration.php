@@ -1,5 +1,5 @@
 <?php
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 class Complianz_Integration extends Pro_Integration {
 	/**
@@ -10,8 +10,8 @@ class Complianz_Integration extends Pro_Integration {
 	protected $id = 'complianz';
 
 	public function __construct() {
-		$this->name        = __( 'Complianz | GDPR/CCPA Cookie Consent', 'simply-static' );
-		$this->description = __( 'Integrates Complianz Cookie banner to work on the static site.', 'simply-static' );
+		$this->name        = __( 'Complianz | GDPR/CCPA Cookie Consent', 'wp-static-export' );
+		$this->description = __( 'Integrates Complianz Cookie banner to work on the static site.', 'wp-static-export' );
 	}
 
 	public function dependency_active() {

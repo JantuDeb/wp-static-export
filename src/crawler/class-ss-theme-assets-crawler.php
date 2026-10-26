@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static\Crawler;
+namespace WP_Static_Export\Crawler;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,8 +24,8 @@ class Theme_Assets_Crawler extends Crawler {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->name        = __( 'Theme Assets', 'simply-static' );
-		$this->description = __( 'Detects URLs for assets (CSS, JS, images) used by the active theme.', 'simply-static' );
+		$this->name        = __( 'Theme Assets', 'wp-static-export' );
+		$this->description = __( 'Detects URLs for assets (CSS, JS, images) used by the active theme.', 'wp-static-export' );
 	}
 
 	/**
@@ -69,7 +69,7 @@ class Theme_Assets_Crawler extends Crawler {
 			'ico',
 			'json'
 		];
-		$skip_dirs  = apply_filters( 'ss_skip_crawl_theme_directories', [
+		$skip_dirs  = apply_filters( 'wpse_skip_crawl_theme_directories', [
 			'.git',
 			'node_modules',
 			'vendor/bin',
@@ -82,8 +82,8 @@ class Theme_Assets_Crawler extends Crawler {
 			$this->get_scan_directories(),
 			$extensions,
 			(array) $skip_dirs,
-			'simply_static_theme_assets_crawler_max_entries_per_batch',
-			'simply_static_theme_assets_crawler_max_batch_seconds'
+			'wpse_theme_assets_crawler_max_entries_per_batch',
+			'wpse_theme_assets_crawler_max_batch_seconds'
 		);
 	}
 
@@ -93,9 +93,9 @@ class Theme_Assets_Crawler extends Crawler {
 	 * @return array<int,array{basedir:string,baseurl:string,slug:string}>
 	 */
 	protected function get_scan_directories(): array {
-		$allowed = (array) \Simply_Static\Options::instance()->get( 'themes_to_include' );
+		$allowed = (array) \WP_Static_Export\Options::instance()->get( 'themes_to_include' );
 		$allowed = is_array( $allowed ) ? array_filter( array_map( 'strval', $allowed ) ) : [];
-		$allowed = apply_filters( 'ss_crawlable_themes', $allowed );
+		$allowed = apply_filters( 'wpse_crawlable_themes', $allowed );
 
 		$directories = array();
 		$child_slug  = get_stylesheet();
@@ -125,7 +125,7 @@ class Theme_Assets_Crawler extends Crawler {
 		 * @param array $directories Theme asset roots.
 		 * @param Theme_Assets_Crawler $crawler Current crawler instance.
 		 */
-		$directories = (array) apply_filters( 'ss_theme_asset_crawler_directories', $directories, $this );
+		$directories = (array) apply_filters( 'wpse_theme_asset_crawler_directories', $directories, $this );
 
 		return array_values(
 			array_filter(
@@ -150,8 +150,8 @@ class Theme_Assets_Crawler extends Crawler {
 	 */
 	private function scan_directory_for_assets( $dir, $url_base ): array {
 		$urls        = [];
-		$max_entries = max( 1, min( 100000, (int) apply_filters( 'simply_static_theme_detection_max_entries', 5000 ) ) );
-		$deadline    = microtime( true ) + max( 0.5, min( 15, (float) apply_filters( 'simply_static_theme_detection_max_seconds', 5 ) ) );
+		$max_entries = max( 1, min( 100000, (int) apply_filters( 'wpse_theme_detection_max_entries', 5000 ) ) );
+		$deadline    = microtime( true ) + max( 0.5, min( 15, (float) apply_filters( 'wpse_theme_detection_max_seconds', 5 ) ) );
 		$scanned     = 0;
 
 		// Asset file extensions to look for
@@ -177,7 +177,7 @@ class Theme_Assets_Crawler extends Crawler {
 		];
 
 		// Skip these directories
-		$skip_dirs = apply_filters( 'ss_skip_crawl_theme_directories', [
+		$skip_dirs = apply_filters( 'wpse_skip_crawl_theme_directories', [
 			'.git',
 			'node_modules',
 			'vendor/bin',
@@ -202,7 +202,7 @@ class Theme_Assets_Crawler extends Crawler {
 			}
 
 			// Build a safe relative path and skip files in ignored directories
-			$relative_path = \Simply_Static\Util::safe_relative_path( $dir, $file->getPathname() );
+			$relative_path = \WP_Static_Export\Util::safe_relative_path( $dir, $file->getPathname() );
 			$should_skip   = false;
 
 			foreach ( $skip_dirs as $skip_dir ) {
@@ -228,7 +228,7 @@ class Theme_Assets_Crawler extends Crawler {
 			$extension = strtolower( pathinfo( $relative_path, PATHINFO_EXTENSION ) );
 			if ( in_array( $extension, $asset_extensions, true ) ) {
 				// Convert the file path to a URL and join safely
-				$url    = \Simply_Static\Util::safe_join_url( $url_base, $relative_path );
+				$url    = \WP_Static_Export\Util::safe_join_url( $url_base, $relative_path );
 				$urls[] = $url;
 			}
 		}

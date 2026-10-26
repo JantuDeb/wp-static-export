@@ -1,5 +1,5 @@
 <?php
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 class Multilingual_Integration extends Pro_Integration {
 	/**
@@ -10,8 +10,8 @@ class Multilingual_Integration extends Pro_Integration {
 	protected $id = 'multilingual';
 
 	public function __construct() {
-		$this->name = __( 'Multilingual', 'simply-static' );
-		$this->description = __( 'Integrates WPML, Polylang and TranslatePress to work with exported sites.', 'simply-static' );
+		$this->name = __( 'Multilingual', 'wp-static-export' );
+		$this->description = __( 'Integrates WPML, Polylang and TranslatePress to work with exported sites.', 'wp-static-export' );
 	}
 
 	public function dependency_active() {

@@ -91,7 +91,7 @@ function SidebarSite( props = null ) {
     const [unpushedChanges, setUnpushedChanges] = useState(0);
     const hasAutoSelectedExportType = useRef(false);
     const hasSelectedExportTypeManually = useRef(false);
-    const rollbackMessage = snapshotRollback && snapshotRollback.message ? snapshotRollback.message : __('Rollback in progress. WP Static Export export actions are locked until the rollback has finished.', 'simply-static');
+    const rollbackMessage = snapshotRollback && snapshotRollback.message ? snapshotRollback.message : __('Rollback in progress. WP Static Export export actions are locked until the rollback has finished.', 'wp-static-export');
     const rollbackProgress = snapshotRollback && snapshotRollback.progress ? snapshotRollback.progress : {};
     const rollbackProgressText = rollbackProgress.label
         ? `${rollbackProgress.label}${rollbackProgress.total ? ` (${rollbackProgress.percent || 0}%, ${rollbackProgress.completed || 0}/${rollbackProgress.total})` : ''}`
@@ -101,7 +101,7 @@ function SidebarSite( props = null ) {
     const resetExportLock = () => {
         setIsResettingLock(true);
         apiFetch({
-            path: '/simplystatic/v1/reset-export-lock',
+            path: '/wp-static-export/v1/reset-export-lock',
             method: 'POST'
         }).then(() => {
             setCanRunExport(true);
@@ -117,7 +117,7 @@ function SidebarSite( props = null ) {
 			return;
 		}
             apiFetch({
-                path: '/simplystatic/v1/check-can-run',
+                path: '/wp-static-export/v1/check-can-run',
                 method: 'GET'
 		}).then(resp => {
 			var json = JSON.parse(resp);
@@ -151,7 +151,7 @@ function SidebarSite( props = null ) {
                     return {label: `${site.name} (#${site.blog_id})`, value: site.blog_id}
                 });
 
-            sites.unshift({label: __('Use current settings', 'simply-static'), value: 'current'});
+            sites.unshift({label: __('Use current settings', 'wp-static-export'), value: 'current'});
             setSelectableSites(sites);
         }
 
@@ -160,7 +160,7 @@ function SidebarSite( props = null ) {
     // Fetch unpushed changes count on mount and after each export finishes.
     useEffect(() => {
         apiFetch({
-            path: '/simplystatic/v1/unpushed-changes',
+            path: '/wp-static-export/v1/unpushed-changes',
             method: 'GET',
         }).then(resp => {
             const json = JSON.parse(resp);
@@ -204,7 +204,7 @@ function SidebarSite( props = null ) {
         const isLanguageExport = selectedExportType.indexOf(languagePrefix) === 0;
 
         apiFetch({
-            path: '/simplystatic/v1/start-export',
+            path: '/wp-static-export/v1/start-export',
             method: 'POST',
             data: {
                 'blog_id': blogId,
@@ -272,9 +272,9 @@ function SidebarSite( props = null ) {
     };
 
     const cancelExport = () => {
-        const fallbackMessage = __( 'The export could not be cancelled. Please try again.', 'simply-static' );
+        const fallbackMessage = __( 'The export could not be cancelled. Please try again.', 'wp-static-export' );
 
-        return runArchiveAction( '/simplystatic/v1/cancel-export', () => {
+        return runArchiveAction( '/wp-static-export/v1/cancel-export', () => {
             setIsResumed(false);
             setIsPaused(false);
             setIsRunning(false);
@@ -283,9 +283,9 @@ function SidebarSite( props = null ) {
     }
 
     const pauseExport = () => {
-        const fallbackMessage = __( 'The export could not be paused. Please try again.', 'simply-static' );
+        const fallbackMessage = __( 'The export could not be paused. Please try again.', 'wp-static-export' );
 
-        return runArchiveAction( '/simplystatic/v1/pause-export', () => {
+        return runArchiveAction( '/wp-static-export/v1/pause-export', () => {
             setIsRunning(false);
             setIsResumed(false);
             setIsPaused(true);
@@ -293,9 +293,9 @@ function SidebarSite( props = null ) {
     }
 
     const resumeExport = () => {
-        const fallbackMessage = __( 'The export could not be resumed. Please try again.', 'simply-static' );
+        const fallbackMessage = __( 'The export could not be resumed. Please try again.', 'wp-static-export' );
 
-        return runArchiveAction( '/simplystatic/v1/resume-export', () => {
+        return runArchiveAction( '/wp-static-export/v1/resume-export', () => {
             setIsResumed(true);
             setIsPaused(false);
             setIsRunning(true);
@@ -304,7 +304,7 @@ function SidebarSite( props = null ) {
 
     const runUpdateFromNetwork = (blogId) => {
         setIsUpdatingFromNetwork(true);
-        const fallbackMessage = __( 'The settings could not be imported. Please try again.', 'simply-static' );
+        const fallbackMessage = __( 'The settings could not be imported. Please try again.', 'wp-static-export' );
 
         return Promise.resolve().then(() => {
             // SettingsContext resolves only after the imported settings have been fetched.
@@ -329,7 +329,7 @@ function SidebarSite( props = null ) {
             return a.props.children.localeCompare(b.props.children);
         });
 
-        buildOptions = <optgroup label={__('Builds', 'simply-static')}>
+        buildOptions = <optgroup label={__('Builds', 'wp-static-export')}>
             {builds}
         </optgroup>
     }
@@ -372,7 +372,7 @@ function SidebarSite( props = null ) {
 
     let languageSelectOptions = '';
     if (languageOptions.length) {
-        languageSelectOptions = <optgroup label={__('Languages', 'simply-static')}>
+        languageSelectOptions = <optgroup label={__('Languages', 'wp-static-export')}>
             {languageOptions.map((language) => {
                 return <option key={language.value} value={`language:${language.value}`}>{language.label}</option>
             })}
@@ -399,13 +399,13 @@ function SidebarSite( props = null ) {
     const hasAnyAdvanced = ['/integrations', '/utilities', '/debug', '/uam'].some(isAllowed);
     const unpushedChangesMessage = sprintf(
         /* translators: %d: number of changes that have not been pushed. */
-        _n('You have %d unpushed change.', 'You have %d unpushed changes.', unpushedChanges, 'simply-static'),
+        _n('You have %d unpushed change.', 'You have %d unpushed changes.', unpushedChanges, 'wp-static-export'),
         unpushedChanges
     );
 
     return <Card className={"plugin-nav"}>
         <div className={"plugin-logo"}>
-            <img alt={__('WP Static Export logo', 'simply-static')}
+            <img alt={__('WP Static Export logo', 'wp-static-export')}
                  src={options.logo}/>
         </div>
         <div className={`generate-container ${disabledButton && !isRollbackRunning ? 'generating' : ''} ${isRollbackRunning ? 'rollback-locked' : ''}`}>
@@ -420,9 +420,9 @@ function SidebarSite( props = null ) {
                     setSelectedExportType(value);
                 }}
             >
-                <option value="export">{__('Full Site', 'simply-static')}</option>
+                <option value="export">{__('Full Site', 'wp-static-export')}</option>
                 {'pro' === options.plan && isPro() &&
-                    <option value="update">{__('Changes Only', 'simply-static')}</option>
+                    <option value="update">{__('Changes Only', 'wp-static-export')}</option>
                 }
                 {buildOptions}
                 {languageSelectOptions}
@@ -438,7 +438,7 @@ function SidebarSite( props = null ) {
                     isPaused={isPaused}
                     isResumed={isResumed}
                     isDelayed={isDelayed}
-                    buttonLabel={__('Push', 'simply-static')}
+                    buttonLabel={__('Push', 'wp-static-export')}
                 />
             }
 
@@ -449,7 +449,7 @@ function SidebarSite( props = null ) {
                         className={'generate rollback-locked-button'}
                     >
                         <Dashicon icon="update"/>
-                        {__('Rollback in progress', 'simply-static')}
+                        {__('Rollback in progress', 'wp-static-export')}
                     </Button>
                     <Notice status="warning" isDismissible={false} className={"rollback-lock-sidebar-notice"}>
                         <p>{rollbackProgressText}</p>
@@ -469,17 +469,17 @@ function SidebarSite( props = null ) {
                     className={'generate'}
                 >
                     <Dashicon icon="update"/>
-                    {__('Push', 'simply-static')}
+                    {__('Push', 'wp-static-export')}
 
                 </Button>
-                <p>{ __('A push from another site is running.', 'simply-static') }</p>
+                <p>{ __('A push from another site is running.', 'wp-static-export') }</p>
                 <Button
                     variant={'link'}
                     isBusy={isResettingLock}
                     disabled={isResettingLock}
                     onClick={resetExportLock}
                 >
-                    { __('Reset push lock', 'simply-static') }
+                    { __('Reset push lock', 'wp-static-export') }
                 </Button>
             </>}
         </div>
@@ -493,11 +493,11 @@ function SidebarSite( props = null ) {
             }
             {!options.is_network && options.is_multisite &&
                 <div className={"import-container"}>
-                    <h4 className={"settings-headline"}> {__('Import', 'simply-static')}</h4>
+                    <h4 className={"settings-headline"}> {__('Import', 'wp-static-export')}</h4>
                     <SelectControl
                         value={selectedCopySite}
                         options={selectablesSites}
-                        help={__('Choose a subsite to import settings from.', 'simply-static')}
+                        help={__('Choose a subsite to import settings from.', 'wp-static-export')}
                         __next40pxDefaultSize
                         __nextHasNoMarginBottom
                         onChange={(blog_id) => {
@@ -513,7 +513,7 @@ function SidebarSite( props = null ) {
                                 runUpdateFromNetwork(selectedCopySite);
                             }}
                         >
-                            {__('Import Settings', 'simply-static')}
+                            {__('Import Settings', 'wp-static-export')}
                         </Button>
                     }
                     {isUpdatingFromNetwork ?
@@ -522,7 +522,7 @@ function SidebarSite( props = null ) {
                                 <Notice status="info" isDismissible={false}
                                         className={"upgrade-network-notice"}>
                                     <p>
-                                        {__('Importing settings…', 'simply-static')}
+                                        {__('Importing settings…', 'wp-static-export')}
                                     </p>
                                 </Notice>
                             )}
@@ -533,7 +533,7 @@ function SidebarSite( props = null ) {
                 </div>
             }
             {hasAnyTools && <>
-            <h4 className={"settings-headline"}> {__('Tools', 'simply-static')}</h4>
+            <h4 className={"settings-headline"}> {__('Tools', 'wp-static-export')}</h4>
             {isAllowed('/') && (
             <NavigatorButton onClick={() => {
                 setActiveItem('/')
@@ -541,7 +541,7 @@ function SidebarSite( props = null ) {
             }}
                              className={activeItem === '/' ? 'is-active-item generate' : 'generate'}
                              path="/">
-                <Dashicon icon="update"/> {__('Activity Log', 'simply-static')}
+                <Dashicon icon="update"/> {__('Activity Log', 'wp-static-export')}
             </NavigatorButton>
             )}
             {isAllowed('/diagnostics') && (
@@ -551,13 +551,13 @@ function SidebarSite( props = null ) {
             }}
                              className={activeItem === '/diagnostics' ? 'is-active-item' : ''}
                              path="/diagnostics">
-                <Dashicon icon="bell"/> {__('Diagnostics', 'simply-static')}
+                <Dashicon icon="bell"/> {__('Diagnostics', 'wp-static-export')}
             </NavigatorButton>
             )}
             </>}
         </CardBody>
         {hasAnySettings && <CardBody>
-            <h4 className={"settings-headline"}> {__('Settings', 'simply-static')}</h4>
+            <h4 className={"settings-headline"}> {__('Settings', 'wp-static-export')}</h4>
             {isAllowed('/general') && (
             <NavigatorButton onClick={() => {
                 setActiveItem('/general')
@@ -565,7 +565,7 @@ function SidebarSite( props = null ) {
             }}
                              className={activeItem === '/general' ? 'is-active-item' : ''}
                              path="/general">
-                <Dashicon icon="admin-generic"/> {__('General', 'simply-static')}
+                <Dashicon icon="admin-generic"/> {__('General', 'wp-static-export')}
             </NavigatorButton>
             )}
             {!options.is_network && isAllowed('/deployment') && (
@@ -575,7 +575,7 @@ function SidebarSite( props = null ) {
                 }}
                                  className={activeItem === '/deployment' ? 'is-active-item' : ''}
                                  path="/deployment">
-                    <Dashicon icon="migrate"/> {__('Deploy', 'simply-static')}
+                    <Dashicon icon="migrate"/> {__('Deploy', 'wp-static-export')}
                 </NavigatorButton>
             )}
             {!options.is_network &&
@@ -587,7 +587,7 @@ function SidebarSite( props = null ) {
                     }}
                                      className={activeItem === '/forms' ? 'is-active-item' : ''}
                                      path="/forms">
-                        <Dashicon icon="align-center"/> {__('Forms', 'simply-static')}
+                        <Dashicon icon="align-center"/> {__('Forms', 'wp-static-export')}
                     </NavigatorButton>
                     )}
                     {isAllowed('/search') && (
@@ -597,7 +597,7 @@ function SidebarSite( props = null ) {
                     }}
                                      className={activeItem === '/search' ? 'is-active-item' : ''}
                                      path="/search">
-                        <Dashicon icon="search"/> {__('Search', 'simply-static')}
+                        <Dashicon icon="search"/> {__('Search', 'wp-static-export')}
                     </NavigatorButton>
                     )}
                     {isAllowed('/optimize') && (
@@ -607,7 +607,7 @@ function SidebarSite( props = null ) {
                     }}
                                      className={activeItem === '/optimize' ? 'is-active-item' : ''}
                                      path="/optimize">
-                        <Dashicon icon="dashboard"/> {__('Optimize', 'simply-static')}
+                        <Dashicon icon="dashboard"/> {__('Optimize', 'wp-static-export')}
                     </NavigatorButton>
                     )}
                     {isAllowed('/hide-wp') && (
@@ -617,14 +617,14 @@ function SidebarSite( props = null ) {
                     }}
                                      className={activeItem === '/hide-wp' ? 'is-active-item' : ''}
                                      path="/hide-wp">
-                        <Dashicon icon="hidden"/> {__('Hide WP', 'simply-static')}
+                        <Dashicon icon="hidden"/> {__('Hide WP', 'wp-static-export')}
                     </NavigatorButton>
                     )}
                 </>
             }
         </CardBody>}
         {hasAnyAdvanced && <CardBody>
-            <h4 className={"settings-headline"}> {__('Advanced', 'simply-static')}</h4>
+            <h4 className={"settings-headline"}> {__('Advanced', 'wp-static-export')}</h4>
             {isAllowed('/integrations') && (
             <NavigatorButton onClick={() => {
                 setActiveItem('/integrations')
@@ -632,7 +632,7 @@ function SidebarSite( props = null ) {
             }}
                              className={activeItem === '/integrations' ? 'is-active-item' : ''}
                              path="/integrations">
-                <Dashicon icon="block-default"/> {__('Integrations', 'simply-static')}
+                <Dashicon icon="block-default"/> {__('Integrations', 'wp-static-export')}
             </NavigatorButton>
             )}
             {isAllowed('/workflow') && (
@@ -642,7 +642,7 @@ function SidebarSite( props = null ) {
             }}
                              className={activeItem === '/workflow' ? 'is-active-item' : ''}
                              path="/workflow">
-                <Dashicon icon="randomize"/> {__('Workflow', 'simply-static')}
+                <Dashicon icon="randomize"/> {__('Workflow', 'wp-static-export')}
             </NavigatorButton>
             )}
             {isAllowed('/utilities') && (
@@ -652,7 +652,7 @@ function SidebarSite( props = null ) {
             }}
                              className={activeItem === '/utilities' ? 'is-active-item' : ''}
                              path="/utilities">
-                <Dashicon icon="admin-tools"/> {__('Utilities', 'simply-static')}
+                <Dashicon icon="admin-tools"/> {__('Utilities', 'wp-static-export')}
             </NavigatorButton>
             )}
             {isAllowed('/debug') && (
@@ -662,7 +662,7 @@ function SidebarSite( props = null ) {
             }}
                              className={activeItem === '/debug' ? 'is-active-item' : ''}
                              path="/debug">
-                <Dashicon icon="editor-help"/> {__('Debug', 'simply-static')}
+                <Dashicon icon="editor-help"/> {__('Debug', 'wp-static-export')}
             </NavigatorButton>
             )}
             {options.uam_enabled && isAllowed('/uam') && (
@@ -672,17 +672,14 @@ function SidebarSite( props = null ) {
             }}
                              className={activeItem === '/uam' ? 'is-active-item' : ''}
                              path="/uam">
-                <Dashicon icon="admin-users"/> {__('UAM', 'simply-static')}
+                <Dashicon icon="admin-users"/> {__('UAM', 'wp-static-export')}
             </NavigatorButton>
             )}
         </CardBody>}
         <CardBody>
-            <h4 className={"settings-headline"}>{__('Learn', 'simply-static')}</h4>
-            <Button href="https://docs.simplystatic.com" target="_blank">
-                <Dashicon icon="admin-links"/> {__('Documentation', 'simply-static')}
-            </Button>
-            <Button href="https://simplystatic.com/tutorials/" target="_blank">
-                <Dashicon icon="edit"/> {__('Tutorials', 'simply-static')}
+            <h4 className={"settings-headline"}>{__('Learn', 'wp-static-export')}</h4>
+            <Button href="https://github.com/JantuDeb/wp-static-export#readme" target="_blank">
+                <Dashicon icon="admin-links"/> {__('Documentation', 'wp-static-export')}
             </Button>
         </CardBody>
         <VersionInfo/>

@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Comments_Enhancer;
-use Simply_Static\Deploy_Config;
-use Simply_Static\Features_Schema;
-use Simply_Static\Forms_Enhancer;
-use Simply_Static\Html_Enhancer;
-use Simply_Static\Options;
-use Simply_Static\Process_Config;
-use Simply_Static\Search_Enhancer;
-use Simply_Static\Single_Export;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Comments_Enhancer;
+use WP_Static_Export\Deploy_Config;
+use WP_Static_Export\Features_Schema;
+use WP_Static_Export\Forms_Enhancer;
+use WP_Static_Export\Html_Enhancer;
+use WP_Static_Export\Options;
+use WP_Static_Export\Process_Config;
+use WP_Static_Export\Search_Enhancer;
+use WP_Static_Export\Single_Export;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 final class FeaturesTest extends UnitTestCase {
 
@@ -38,7 +38,7 @@ final class FeaturesTest extends UnitTestCase {
 	}
 
 	private function configure( array $options ): void {
-		WpEnv::$options['simply-static'] = $options + array(
+		WpEnv::$options['wp-static-export'] = $options + array(
 			'destination_url_type' => 'absolute',
 			'destination_scheme'   => 'https://',
 			'destination_host'     => 'static.example.com',
@@ -95,7 +95,7 @@ final class FeaturesTest extends UnitTestCase {
 		$this->assertStringContainsString( 'contact-form-7-js', $out );
 
 		// The plugin list is extensible.
-		add_filter( 'ss_forms_script_patterns', static function ( $p ) {
+		add_filter( 'wpse_forms_script_patterns', static function ( $p ) {
 			$p['frm-fluent-form'] = array( 'fluentform' );
 			return $p;
 		} );
@@ -328,14 +328,14 @@ final class FeaturesTest extends UnitTestCase {
 
 	public function test_deploy_state_dir_is_excluded_from_the_uploads_crawl_and_the_deploy(): void {
 		$this->requireSource( 'src/deploy/class-ss-deploy-runner.php' );
-		\Simply_Static\Deploy_Runner::init();
+		\WP_Static_Export\Deploy_Runner::init();
 
-		$skip = apply_filters( 'ss_skip_crawl_uploads_directories', array( 'tmp' ) );
-		$this->assertContains( 'simply-static/deploy-state', $skip );
+		$skip = apply_filters( 'wpse_skip_crawl_uploads_directories', array( 'tmp' ) );
+		$this->assertContains( 'wp-static-export/deploy-state', $skip );
 		$this->assertContains( 'tmp', $skip, 'existing entries are kept' );
 
-		$ignore = \Simply_Static\Deploy_Runner::ignore_patterns();
-		$this->assertContains( '*/simply-static/deploy-state/*', $ignore );
+		$ignore = \WP_Static_Export\Deploy_Runner::ignore_patterns();
+		$this->assertContains( '*/wp-static-export/deploy-state/*', $ignore );
 	}
 
 	public function test_single_export_normalizes_ids_and_clears_its_one_shot_flag(): void {
@@ -344,9 +344,9 @@ final class FeaturesTest extends UnitTestCase {
 		$this->assertSame( array(), Single_Export::normalize_ids( '' ) );
 
 		// Core's wrap-up never clears this flag; leaving it would make every later export a single-page export.
-		WpEnv::$options['simply-static-use-single'] = '12';
+		WpEnv::$options['wp-static-export-use-single'] = '12';
 		Single_Export::clear_flag();
-		$this->assertArrayNotHasKey( 'simply-static-use-single', WpEnv::$options );
+		$this->assertArrayNotHasKey( 'wp-static-export-use-single', WpEnv::$options );
 
 	}
 
@@ -361,7 +361,7 @@ final class FeaturesTest extends UnitTestCase {
 		$log = tempnam( sys_get_temp_dir(), 'ssl' );
 		$this->configure( array( 'deploy_run' => array( 'pid' => 0, 'log_file' => $log, 'job_file' => '' ), 'process_run' => array( 'pid' => 0, 'log_file' => '', 'job_file' => '' ), 'keep' => 'me' ) );
 
-		\Simply_Static\Deploy_Runner::reset_runs();
+		\WP_Static_Export\Deploy_Runner::reset_runs();
 
 		$o = Options::reinstance();
 		$this->assertEmpty( $o->get( 'deploy_run' ) );
@@ -376,22 +376,34 @@ final class FeaturesTest extends UnitTestCase {
 		$this->configure( array( 'generate_type' => 'update' ) );
 		$this->assertSame( 'partial', Process_Config::scope() );
 		$this->configure( array( 'generate_type' => 'export' ) );
-		WpEnv::$options['simply-static-use-single'] = '12';
+		WpEnv::$options['wp-static-export-use-single'] = '12';
 		$this->assertSame( 'partial', Process_Config::scope() );
 	}
 
-	public function test_extra_files_are_copied_but_cannot_escape_the_export(): void {
+	public function test_extra_files_are_found_in_the_archive_and_cannot_escape_the_export(): void {
 		$base = sys_get_temp_dir() . '/ss-extra-' . bin2hex( random_bytes( 4 ) );
 		mkdir( $base . '/archive/ss-assets', 0777, true );
+		mkdir( $base . '/archive/wp-content/uploads', 0777, true );
 		mkdir( $base . '/dest', 0777, true );
 		file_put_contents( $base . '/archive/ss-assets/search-index.json', '[]' );
+		file_put_contents( $base . '/archive/wp-content/uploads/a.jpg.webp', 'webp' );
+		file_put_contents( $base . '/archive/wp-content/uploads/a.jpg', 'jpeg' );
+		file_put_contents( $base . '/archive/_headers', '/*' );
 		file_put_contents( $base . '/secret.txt', 'top secret' );
+		// The recorded list is incomplete on purpose (only one entry) and contains an escape attempt.
 		$this->configure( array( 'process_extra_files' => array( 'ss-assets/search-index.json', '../secret.txt', '' ) ) );
 
 		Process_Config::transfer_extra_files( $base . '/dest', $base . '/archive' );
 
 		$this->assertFileExists( $base . '/dest/ss-assets/search-index.json' );
+		$this->assertFileExists( $base . '/dest/wp-content/uploads/a.jpg.webp', 'twins are found even when not in the list' );
+		$this->assertFileExists( $base . '/dest/_headers' );
+		$this->assertFileDoesNotExist( $base . '/dest/wp-content/uploads/a.jpg', 'ordinary page files are left to the normal transfer' );
 		$this->assertFileDoesNotExist( $base . '/dest/secret.txt' );
-		$this->assertSame( 'top secret', file_get_contents( $base . '/secret.txt' ) );
+
+		// A changed twin is refreshed, an unchanged one is not rewritten.
+		file_put_contents( $base . '/archive/wp-content/uploads/a.jpg.webp', 'webp-v2' );
+		Process_Config::transfer_extra_files( $base . '/dest', $base . '/archive' );
+		$this->assertSame( 'webp-v2', file_get_contents( $base . '/dest/wp-content/uploads/a.jpg.webp' ) );
 	}
 }

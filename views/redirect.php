@@ -33,7 +33,7 @@ if ( ! $is_relative_url ) {
 <!DOCTYPE html>
 <html>
 	<head>
-		<title><?php echo esc_html__( 'Redirecting...', 'simply-static' ); ?></title>
+		<title><?php echo esc_html__( 'Redirecting...', 'wp-static-export' ); ?></title>
 			<?php if ( $redirect_url ) : ?>
 				<meta http-equiv="refresh" content="0;url=<?php echo esc_attr( $redirect_url ); ?>">
 			<?php endif; ?>
@@ -46,9 +46,9 @@ if ( ! $is_relative_url ) {
 			<?php endif; ?>
 
 			<?php if ( $redirect_url ) : ?>
-				<p><?php echo wp_kses_post( sprintf( __( 'You are being redirected to %s', 'simply-static' ), '<a href="' . esc_attr( $redirect_url ) . '">' . esc_html( $redirect_url ) . '</a>' ) ); ?></p>
+				<p><?php echo wp_kses_post( sprintf( __( 'You are being redirected to %s', 'wp-static-export' ), '<a href="' . esc_attr( $redirect_url ) . '">' . esc_html( $redirect_url ) . '</a>' ) ); ?></p>
 			<?php else : ?>
-				<p><?php echo esc_html__( 'The redirect target is invalid.', 'simply-static' ); ?></p>
+				<p><?php echo esc_html__( 'The redirect target is invalid.', 'wp-static-export' ); ?></p>
 			<?php endif; ?>
 	</body>
 </html>

@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -17,7 +17,7 @@ class Upgrade_Handler {
 	/**
 	 * An instance of the options structure containing all options for this plugin
 	 *
-	 * @var Simply_Static\Options
+	 * @var WP_Static_Export\Options
 	 */
 	protected static $options = null;
 
@@ -258,10 +258,10 @@ class Upgrade_Handler {
 			'archive_start_time'            => null,
 			'archive_end_time'              => null,
 			'archive_task_list'             => array(),
-			'version'                       => SIMPLY_STATIC_VERSION,
+			'version'                       => WPSE_VERSION,
 			);
 
-		$filtered = apply_filters( 'ss_default_options', $defaults );
+		$filtered = apply_filters( 'wpse_default_options', $defaults );
 
 		return is_array( $filtered ) ? $filtered : $defaults;
 	}
@@ -288,7 +288,7 @@ class Upgrade_Handler {
 			Deploy_Manifest_Service::create_or_update_tables();
 			self::set_default_options();
 		} else {
-			if ( version_compare( $version, SIMPLY_STATIC_VERSION, '!=' ) ) {
+			if ( version_compare( $version, WPSE_VERSION, '!=' ) ) {
 				// Sync database.
 				Page::create_or_update_table();
 				Deploy_Manifest_Service::create_or_update_tables();
@@ -301,7 +301,7 @@ class Upgrade_Handler {
 
 				// Update version.
 				self::$options
-					->set( 'version', SIMPLY_STATIC_VERSION )
+					->set( 'version', WPSE_VERSION )
 					->save();
 			}
 		}
@@ -410,7 +410,7 @@ class Upgrade_Handler {
 
 			self::$options->set( 'crawlers', $crawlers )->save();
 
-			\Simply_Static\Util::debug_log( 'Updated crawler IDs in options: ' . implode( ', ', $crawlers ) );
+			\WP_Static_Export\Util::debug_log( 'Updated crawler IDs in options: ' . implode( ', ', $crawlers ) );
 		}
 	}
 }

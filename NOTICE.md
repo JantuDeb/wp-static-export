@@ -8,5 +8,7 @@ Changes in this fork are also released under GPL-2.0-or-later. This project is i
 and is not affiliated with or endorsed by the Simply Static authors. "Simply Static",
 "Simply Static Pro" and "Static Studio" are their names and products.
 
-Internal identifiers (the `Simply_Static` PHP namespace, `SIMPLY_STATIC_*` constants, the
-`simply-static` text domain and option name) are unchanged from upstream.
+Identifiers were renamed so this plugin can be installed next to the original without conflicts:
+PHP namespace `WP_Static_Export`, constants `WPSE_*`, hooks and tables `wpse_*`, text domain,
+option name and menu slugs `wp-static-export`, REST namespace `wp-static-export/v1`.
+Settings are not shared with the original plugin.

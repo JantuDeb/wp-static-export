@@ -16,7 +16,7 @@ const getErrorMessage = (error) => {
         return error.message;
     }
 
-    return __('The operations mode request could not be completed.', 'simply-static');
+    return __('The operations mode request could not be completed.', 'wp-static-export');
 };
 
 function OperationsMode({locked = false}) {
@@ -47,13 +47,13 @@ function OperationsMode({locked = false}) {
     const enableOrUpdate = () => {
         if ((!mode.enabled || password) && password.length < minimumPassword) {
             setError(
-                __('The operations mode password must contain at least 8 characters.', 'simply-static')
+                __('The operations mode password must contain at least 8 characters.', 'wp-static-export')
             );
             return;
         }
 
         if (password !== confirmation) {
-            setError(__('The password confirmation does not match.', 'simply-static'));
+            setError(__('The password confirmation does not match.', 'wp-static-export'));
             return;
         }
 
@@ -64,13 +64,13 @@ function OperationsMode({locked = false}) {
         return (
             <Card>
                 <CardHeader>
-                    <b>{__('Operations mode', 'simply-static')}</b>
+                    <b>{__('Operations mode', 'wp-static-export')}</b>
                 </CardHeader>
                 <CardBody>
-                    <p>{__('Publishing remains available. Enter the operations password to access deployment, account, and plugin settings.', 'simply-static')}</p>
+                    <p>{__('Publishing remains available. Enter the operations password to access deployment, account, and plugin settings.', 'wp-static-export')}</p>
                     {error && <Notice status="error" isDismissible={false}><p>{error}</p></Notice>}
                     <TextControl
-                        label={__('Operations password', 'simply-static')}
+                        label={__('Operations password', 'wp-static-export')}
                         type="password"
                         value={password}
                         autoComplete="current-password"
@@ -91,7 +91,7 @@ function OperationsMode({locked = false}) {
                             isBusy={'unlock' === busy}
                             onClick={() => request('unlock', {password})}
                         >
-                            {__('Unlock settings', 'simply-static')}
+                            {__('Unlock settings', 'wp-static-export')}
                         </Button>
                     </p>
                 </CardBody>
@@ -102,22 +102,22 @@ function OperationsMode({locked = false}) {
     return (
         <Card>
             <CardHeader>
-                <b>{__('Operations mode', 'simply-static')}</b>
+                <b>{__('Operations mode', 'wp-static-export')}</b>
             </CardHeader>
             <CardBody>
                 {mode.enabled ?
                     <Notice status="success" isDismissible={false}>
-                        <p>{__('Operations mode is enabled and settings are currently unlocked for support.', 'simply-static')}</p>
+                        <p>{__('Operations mode is enabled and settings are currently unlocked for support.', 'wp-static-export')}</p>
                     </Notice>
                     :
-                    <p>{__('Protect deployment credentials and configuration from client changes while keeping publishing and diagnostics available.', 'simply-static')}</p>
+                    <p>{__('Protect deployment credentials and configuration from client changes while keeping publishing and diagnostics available.', 'wp-static-export')}</p>
                 }
 
                 <TextControl
-                    label={mode.enabled ? __('New password (optional)', 'simply-static') : __('Operations password', 'simply-static')}
+                    label={mode.enabled ? __('New password (optional)', 'wp-static-export') : __('Operations password', 'wp-static-export')}
                     help={mode.enabled
-                        ? __('Leave blank to keep the existing password.', 'simply-static')
-                        : __('Use at least 8 characters. The password is stored as a one-way hash.', 'simply-static')}
+                        ? __('Leave blank to keep the existing password.', 'wp-static-export')
+                        : __('Use at least 8 characters. The password is stored as a one-way hash.', 'wp-static-export')}
                     type="password"
                     value={password}
                     autoComplete="new-password"
@@ -127,7 +127,7 @@ function OperationsMode({locked = false}) {
                     onChange={setPassword}
                 />
                 <TextControl
-                    label={__('Confirm password', 'simply-static')}
+                    label={__('Confirm password', 'wp-static-export')}
                     type="password"
                     value={confirmation}
                     autoComplete="new-password"
@@ -146,7 +146,7 @@ function OperationsMode({locked = false}) {
                         isBusy={'configure' === busy}
                         onClick={enableOrUpdate}
                     >
-                        {mode.enabled ? __('Update operations mode', 'simply-static') : __('Enable operations mode', 'simply-static')}
+                        {mode.enabled ? __('Update operations mode', 'wp-static-export') : __('Enable operations mode', 'wp-static-export')}
                     </Button>
                     {mode.enabled &&
                         <>
@@ -157,7 +157,7 @@ function OperationsMode({locked = false}) {
                                 isBusy={'lock' === busy}
                                 onClick={() => request('lock')}
                             >
-                                {__('Lock settings now', 'simply-static')}
+                                {__('Lock settings now', 'wp-static-export')}
                             </Button>
                             {' '}
                             <Button
@@ -166,13 +166,13 @@ function OperationsMode({locked = false}) {
                                 disabled={!!busy}
                                 onClick={() => request('configure', {enabled: false})}
                             >
-                                {__('Disable operations mode', 'simply-static')}
+                                {__('Disable operations mode', 'wp-static-export')}
                             </Button>
                         </>
                     }
                 </p>
                 {mode.enabled &&
-                    <p>{__('Unlocked sessions expire automatically after one hour.', 'simply-static')}</p>
+                    <p>{__('Unlocked sessions expire automatically after one hour.', 'wp-static-export')}</p>
                 }
             </CardBody>
         </Card>

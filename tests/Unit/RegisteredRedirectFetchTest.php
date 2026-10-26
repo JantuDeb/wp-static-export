@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Fetch_Urls_Task;
-use Simply_Static\Options;
-use Simply_Static\Tests\Support\UnitTestCase;
+use WP_Static_Export\Fetch_Urls_Task;
+use WP_Static_Export\Options;
+use WP_Static_Export\Tests\Support\UnitTestCase;
 
-$simply_static_root = dirname( __DIR__, 2 );
-require_once $simply_static_root . '/src/class-ss-plugin.php';
-require_once $simply_static_root . '/src/class-ss-options.php';
-require_once $simply_static_root . '/src/class-ss-util.php';
-require_once $simply_static_root . '/src/tasks/class-ss-task.php';
-require_once $simply_static_root . '/src/tasks/traits/class-ss-skip-further-processing-exception.php';
-require_once $simply_static_root . '/src/tasks/traits/trait-ss-can-process-pages.php';
-require_once $simply_static_root . '/src/tasks/class-ss-fetch-urls-task.php';
+$wpse_root = dirname( __DIR__, 2 );
+require_once $wpse_root . '/src/class-ss-plugin.php';
+require_once $wpse_root . '/src/class-ss-options.php';
+require_once $wpse_root . '/src/class-ss-util.php';
+require_once $wpse_root . '/src/tasks/class-ss-task.php';
+require_once $wpse_root . '/src/tasks/traits/class-ss-skip-further-processing-exception.php';
+require_once $wpse_root . '/src/tasks/traits/trait-ss-can-process-pages.php';
+require_once $wpse_root . '/src/tasks/class-ss-fetch-urls-task.php';
 
 final class RegisteredRedirectPage {
 	/** @var string */
@@ -67,7 +67,7 @@ final class RegisteredRedirectFetchTest extends UnitTestCase {
 
 	public function test_registered_redirect_bypasses_the_http_fetch_path(): void {
 		add_filter(
-			'simply_static_registered_redirect',
+			'wpse_registered_redirect',
 			static function () {
 				return array(
 					'url'         => 'https://origin.example/new-page',
@@ -92,7 +92,7 @@ final class RegisteredRedirectFetchTest extends UnitTestCase {
 
 	public function test_invalid_registered_redirect_falls_back_to_normal_fetching(): void {
 		add_filter(
-			'simply_static_registered_redirect',
+			'wpse_registered_redirect',
 			static function () {
 				return array(
 					'url'         => 'https://origin.example/gone',

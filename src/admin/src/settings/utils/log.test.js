@@ -91,7 +91,7 @@ describe( 'log utilities', () => {
 				parseActivityLogEntry( {
 					message: 'ZIP archive created:',
 					link: {
-						url: '/wp-content/uploads/simply-static/archive.zip',
+						url: '/wp-content/uploads/wp-static-export/archive.zip',
 						label: 'Click here to download',
 					},
 				} )
@@ -99,7 +99,7 @@ describe( 'log utilities', () => {
 				before: 'ZIP archive created:',
 				after: '',
 				link: {
-					href: '/wp-content/uploads/simply-static/archive.zip',
+					href: '/wp-content/uploads/wp-static-export/archive.zip',
 					label: 'Click here to download',
 				},
 			} );

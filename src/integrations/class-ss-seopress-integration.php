@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 class SEOPress_Integration extends Integration {
 
@@ -12,8 +12,8 @@ class SEOPress_Integration extends Integration {
 	protected $id = 'seopress';
 
 	public function __construct() {
-		$this->name = __( 'SEOPress', 'simply-static' );
-		$this->description = __( 'Adds XML sitemaps to generated static files.', 'simply-static' );
+		$this->name = __( 'SEOPress', 'wp-static-export' );
+		$this->description = __( 'Adds XML sitemaps to generated static files.', 'wp-static-export' );
 	}
 
 	/**
@@ -22,7 +22,7 @@ class SEOPress_Integration extends Integration {
 	 * @return void
 	 */
 	public function run() {
-		add_action( 'ss_after_setup_task', [ $this, 'register_sitemap_pages' ] );
+		add_action( 'wpse_after_setup_task', [ $this, 'register_sitemap_pages' ] );
 
 		// Maybe update sitemap on single export.
 		$add_sitemap_single_export = apply_filters( 'ssp_single_export_add_xml_sitemap', false );
@@ -57,9 +57,9 @@ class SEOPress_Integration extends Integration {
 	 */
 	public function register_sitemap_page( $url ) {
 		Util::debug_log( 'Adding sitemap URL to queue: ' . $url );
-		/** @var \Simply_Static\Page $static_page */
+		/** @var \WP_Static_Export\Page $static_page */
 		$static_page = Page::query()->find_or_initialize_by( 'url', $url );
-		$static_page->set_status_message( __( 'Sitemap URL', 'simply-static' ) );
+		$static_page->set_status_message( __( 'Sitemap URL', 'wp-static-export' ) );
 		$static_page->found_on_id = 0;
 		$static_page->handler     = SEOPress_Sitemap_Handler::class;
 		$static_page->save();
@@ -105,9 +105,9 @@ class SEOPress_Integration extends Integration {
 		foreach ( $this->extract_sitemap_index_urls( $response ) as $sitemap_url ) {
 			// Add the sitemap URL to the queue.
 			Util::debug_log( 'Adding individual sitemap URL to queue: ' . $sitemap_url );
-			/** @var \Simply_Static\Page $static_page */
+			/** @var \WP_Static_Export\Page $static_page */
 			$static_page = Page::query()->find_or_initialize_by( 'url', $sitemap_url );
-			$static_page->set_status_message( __( 'Individual Sitemap URL', 'simply-static' ) );
+			$static_page->set_status_message( __( 'Individual Sitemap URL', 'wp-static-export' ) );
 			$static_page->found_on_id = 0;
 			$static_page->handler     = SEOPress_Sitemap_Handler::class;
 			$static_page->save();

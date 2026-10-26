@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Options;
-use Simply_Static\Plugin;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Options;
+use WP_Static_Export\Plugin;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-plugin.php';
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-options.php';
@@ -52,7 +52,7 @@ final class PluginTaskLifecycleTest extends UnitTestCase {
 
 	protected function setUp(): void {
 		parent::setUp();
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'debugging_mode'          => false,
 			'delivery_method'         => 'zip',
 			'generate_404'            => false,
@@ -77,7 +77,7 @@ final class PluginTaskLifecycleTest extends UnitTestCase {
 	 * @param string[] $expected
 	 */
 	public function test_404_only_task_list_short_circuits_crawl_and_selects_delivery_task( string $delivery, array $expected ): void {
-		WpEnv::$options['simply-static-404-only'] = '1';
+		WpEnv::$options['wp-static-export-404-only'] = '1';
 		$this->options
 			->set( 'smart_crawl', true )
 			->set( 'generate_404', false );
@@ -161,8 +161,8 @@ final class PluginTaskLifecycleTest extends UnitTestCase {
 	public function incrementalScopeProvider(): array {
 		return array(
 			'update' => array( array( 'generate_type' => 'update' ) ),
-			'single' => array( array( 'simply-static-use-single' => '12,13' ) ),
-			'build'  => array( array( 'simply-static-use-build' => 'release-7' ) ),
+			'single' => array( array( 'wp-static-export-use-single' => '12,13' ) ),
+			'build'  => array( array( 'wp-static-export-use-build' => 'release-7' ) ),
 		);
 	}
 
@@ -231,7 +231,7 @@ final class PluginTaskLifecycleTest extends UnitTestCase {
 			$log['linked']['link']
 		);
 		self::assertArrayNotHasKey( 'link', $log['unsafe_link'] );
-		self::assertContains( 'ss_before_render_activity_log', WpEnv::$action_log );
-		self::assertContains( 'ss_after_render_activity_log', WpEnv::$action_log );
+		self::assertContains( 'wpse_before_render_activity_log', WpEnv::$action_log );
+		self::assertContains( 'wpse_after_render_activity_log', WpEnv::$action_log );
 	}
 }

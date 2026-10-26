@@ -1,5 +1,5 @@
 <?php
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Query {
 	/**
-	 * @var Simply_Static\Model
+	 * @var WP_Static_Export\Model
 	 */
 	protected $model;
 
@@ -40,7 +40,7 @@ class Query {
 	protected $order = null;
 
 	/**
-	 * @param Simply_Static\Model $model
+	 * @param WP_Static_Export\Model $model
 	 */
 	public function __construct( $model ) {
 		$this->model = $model;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -12,9 +12,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * ## EXAMPLES
  *
- *     wp simply-static run --deploy-to=netlify
- *     wp simply-static run --type=update
- *     wp simply-static status
+ *     wp static-export run --deploy-to=netlify
+ *     wp static-export run --type=update
+ *     wp static-export status
  */
 class CLI_Command {
 

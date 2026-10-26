@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
-defined( 'ABSPATH' ) || define( 'ABSPATH', sys_get_temp_dir() . '/simply-static-tests/wordpress/' );
+defined( 'ABSPATH' ) || define( 'ABSPATH', sys_get_temp_dir() . '/wp-static-export-tests/wordpress/' );
 defined( 'WP_CONTENT_DIR' ) || define( 'WP_CONTENT_DIR', ABSPATH . 'wp-content' );
 defined( 'WP_CONTENT_URL' ) || define( 'WP_CONTENT_URL', 'https://example.test/wp-content' );
 defined( 'WP_PLUGIN_DIR' ) || define( 'WP_PLUGIN_DIR', WP_CONTENT_DIR . '/plugins' );
@@ -14,10 +14,10 @@ defined( 'HOUR_IN_SECONDS' ) || define( 'HOUR_IN_SECONDS', 3600 );
 defined( 'DAY_IN_SECONDS' ) || define( 'DAY_IN_SECONDS', 86400 );
 defined( 'ARRAY_A' ) || define( 'ARRAY_A', 'ARRAY_A' );
 defined( 'ARRAY_N' ) || define( 'ARRAY_N', 'ARRAY_N' );
-defined( 'SIMPLY_STATIC_PATH' ) || define( 'SIMPLY_STATIC_PATH', dirname( __DIR__, 2 ) . '/' );
-defined( 'SIMPLY_STATIC_URL' ) || define( 'SIMPLY_STATIC_URL', 'https://example.test/wp-content/plugins/simply-static' );
-defined( 'SIMPLY_STATIC_VERSION' ) || define( 'SIMPLY_STATIC_VERSION', 'test' );
-defined( 'LOGGED_IN_COOKIE' ) || define( 'LOGGED_IN_COOKIE', 'wordpress_logged_in_simply_static_test' );
+defined( 'WPSE_PATH' ) || define( 'WPSE_PATH', dirname( __DIR__, 2 ) . '/' );
+defined( 'WPSE_URL' ) || define( 'WPSE_URL', 'https://example.test/wp-content/plugins/wp-static-export' );
+defined( 'WPSE_VERSION' ) || define( 'WPSE_VERSION', 'test' );
+defined( 'LOGGED_IN_COOKIE' ) || define( 'LOGGED_IN_COOKIE', 'wordpress_logged_in_wpse_test' );
 
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {
@@ -339,7 +339,7 @@ function plugin_dir_path( $file ) {
 }
 
 function plugin_dir_url( $file ) {
-	return SIMPLY_STATIC_URL . '/';
+	return WPSE_URL . '/';
 }
 
 function plugin_basename( $file ) {
@@ -531,31 +531,31 @@ function wp_cache_flush() {
 }
 
 function wp_next_scheduled( $hook, $args = array() ) {
-	$events = $GLOBALS['simply_static_test_scheduled_hooks'][ $hook ] ?? array();
+	$events = $GLOBALS['wpse_test_scheduled_hooks'][ $hook ] ?? array();
 	return $events ? reset( $events ) : false;
 }
 
 function wp_schedule_event( $timestamp, $recurrence, $hook, $args = array(), $wp_error = false ) {
-	$GLOBALS['simply_static_test_scheduled_hooks'][ $hook ][] = (int) $timestamp;
+	$GLOBALS['wpse_test_scheduled_hooks'][ $hook ][] = (int) $timestamp;
 	return true;
 }
 
 function wp_unschedule_event( $timestamp, $hook, $args = array(), $wp_error = false ) {
-	if ( empty( $GLOBALS['simply_static_test_scheduled_hooks'][ $hook ] ) ) {
+	if ( empty( $GLOBALS['wpse_test_scheduled_hooks'][ $hook ] ) ) {
 		return false;
 	}
 
-	$GLOBALS['simply_static_test_scheduled_hooks'][ $hook ] = array_values(
+	$GLOBALS['wpse_test_scheduled_hooks'][ $hook ] = array_values(
 		array_filter(
-			$GLOBALS['simply_static_test_scheduled_hooks'][ $hook ],
+			$GLOBALS['wpse_test_scheduled_hooks'][ $hook ],
 			static function ( $event_timestamp ) use ( $timestamp ) {
 				return (int) $event_timestamp !== (int) $timestamp;
 			}
 		)
 	);
 
-	if ( empty( $GLOBALS['simply_static_test_scheduled_hooks'][ $hook ] ) ) {
-		unset( $GLOBALS['simply_static_test_scheduled_hooks'][ $hook ] );
+	if ( empty( $GLOBALS['wpse_test_scheduled_hooks'][ $hook ] ) ) {
+		unset( $GLOBALS['wpse_test_scheduled_hooks'][ $hook ] );
 	}
 
 	return true;

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
 use ReflectionClass;
 use ReflectionProperty;
-use Simply_Static\Admin_Rest;
-use Simply_Static\Plugin;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Admin_Rest;
+use WP_Static_Export\Plugin;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-plugin.php';
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-util.php';
@@ -67,7 +67,7 @@ final class MaintenanceImportTest extends UnitTestCase {
 	}
 
 	public function test_portable_import_preserves_destination_secrets_paths_and_runtime_state(): void {
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'delivery_method'             => 'sftp',
 			'origin_url'                  => 'https://destination.example.test',
 			'local_dir'                   => '/srv/destination',
@@ -84,7 +84,7 @@ final class MaintenanceImportTest extends UnitTestCase {
 			(string) $this->rest->save_settings(
 				new \WP_REST_Request(
 					array(
-						'__simply_static_import' => true,
+						'__wpse_import' => true,
 						'delivery_method'        => 'zip',
 						'origin_url'             => 'https://attacker.example.test',
 						'local_dir'              => '/attacker/replacement',
@@ -102,7 +102,7 @@ final class MaintenanceImportTest extends UnitTestCase {
 		);
 
 		self::assertSame( 200, $response['status'] ?? null );
-		$saved = WpEnv::$options['simply-static'];
+		$saved = WpEnv::$options['wp-static-export'];
 		self::assertSame( 'zip', $saved['delivery_method'] );
 		self::assertSame( 'https://destination.example.test', $saved['origin_url'] );
 		self::assertSame( '/srv/destination', $saved['local_dir'] );
@@ -113,18 +113,18 @@ final class MaintenanceImportTest extends UnitTestCase {
 			array( 'label' => 'Imported label', 'api_secret' => 'nested-secret' ),
 			$saved['provider']
 		);
-		self::assertArrayNotHasKey( '__simply_static_import', $saved );
+		self::assertArrayNotHasKey( '__wpse_import', $saved );
 	}
 
 	public function test_destructive_maintenance_and_import_are_blocked_while_job_is_active(): void {
 		$this->job->active = true;
-		WpEnv::$options['simply-static'] = array( 'delivery_method' => 'zip' );
+		WpEnv::$options['wp-static-export'] = array( 'delivery_method' => 'zip' );
 
 		$import = json_decode(
 			(string) $this->rest->save_settings(
 				new \WP_REST_Request(
 					array(
-						'__simply_static_import' => true,
+						'__wpse_import' => true,
 						'delivery_method'        => 'local',
 					)
 				)
@@ -142,7 +142,7 @@ final class MaintenanceImportTest extends UnitTestCase {
 		self::assertSame( 409, $migrate['status'] ?? null );
 		self::assertSame( 409, $clear_temp['status'] ?? null );
 		self::assertFalse( $clear_temp['cleared'] ?? true );
-		self::assertSame( array( 'delivery_method' => 'zip' ), WpEnv::$options['simply-static'] );
+		self::assertSame( array( 'delivery_method' => 'zip' ), WpEnv::$options['wp-static-export'] );
 	}
 
 	public function test_network_import_keeps_destination_credentials_and_excluded_values(): void {
@@ -154,13 +154,13 @@ final class MaintenanceImportTest extends UnitTestCase {
 			'spam'     => 0,
 			'archived' => 0,
 		);
-		WpEnv::$options['simply-static']           = array(
+		WpEnv::$options['wp-static-export']           = array(
 			'delivery_method' => 'sftp',
 			'origin_url'      => 'https://destination.example.test',
 			'local_dir'       => '/srv/destination',
 			'sftp_pass'       => 'destination-password',
 		);
-		WpEnv::$site_options['simply-static-2']    = array(
+		WpEnv::$site_options['wp-static-export-2']    = array(
 			'delivery_method' => 'zip',
 			'origin_url'      => 'https://attacker.example.test',
 			'local_dir'       => '/srv/source',
@@ -173,9 +173,9 @@ final class MaintenanceImportTest extends UnitTestCase {
 		);
 
 		self::assertSame( 200, $response['status'] ?? null );
-		self::assertSame( 'zip', WpEnv::$options['simply-static']['delivery_method'] );
-		self::assertSame( 'https://destination.example.test', WpEnv::$options['simply-static']['origin_url'] );
-		self::assertSame( '/srv/destination', WpEnv::$options['simply-static']['local_dir'] );
-		self::assertSame( 'destination-password', WpEnv::$options['simply-static']['sftp_pass'] );
+		self::assertSame( 'zip', WpEnv::$options['wp-static-export']['delivery_method'] );
+		self::assertSame( 'https://destination.example.test', WpEnv::$options['wp-static-export']['origin_url'] );
+		self::assertSame( '/srv/destination', WpEnv::$options['wp-static-export']['local_dir'] );
+		self::assertSame( 'destination-password', WpEnv::$options['wp-static-export']['sftp_pass'] );
 	}
 }

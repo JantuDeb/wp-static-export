@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,7 +13,7 @@ class Divi_Integration extends Integration {
 	 *
 	 * @var string
 	 */
-	const PERFORMANCE_OPTIONS_BACKUP = 'simply_static_divi_performance_options_backup';
+	const PERFORMANCE_OPTIONS_BACKUP = 'wpse_divi_performance_options_backup';
 
 	/**
 	 * Divi option containers that may be changed during an export.
@@ -32,8 +32,8 @@ class Divi_Integration extends Integration {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->name        = __( 'Divi', 'simply-static' );
-		$this->description = __( 'Optimizes DIVI for using it on static sites including a custom crawler to include cache files', 'simply-static' );
+		$this->name        = __( 'Divi', 'wp-static-export' );
+		$this->description = __( 'Optimizes DIVI for using it on static sites including a custom crawler to include cache files', 'wp-static-export' );
 	}
 
  /**
@@ -78,13 +78,13 @@ class Divi_Integration extends Integration {
 	 * Run the integration.
 	 */
 	public function run() {
-		add_action( 'ss_before_static_export', [ $this, 'prepare_divi_performance_options' ], 10, 0 );
-		add_action( 'ss_after_cleanup', [ $this, 'restore_divi_performance_options' ], 10, 0 );
-		add_action( 'ss_archive_creation_job_start_failed', [ $this, 'restore_divi_performance_options' ], 10, 0 );
-		add_action( 'ss_after_background_queue_reset', [ $this, 'restore_divi_performance_options' ], 10, 0 );
-		add_action( 'simply_static_deactivated', [ $this, 'restore_divi_performance_options' ], 10, 0 );
-		add_filter( 'ss_after_replace_urls_in_html', [ $this, 'replace_data_fac_urls' ], 10, 2 );
-		add_filter( 'ss_theme_asset_crawler_directories', [ $this, 'filter_theme_asset_crawler_directories' ], 10, 2 );
+		add_action( 'wpse_before_static_export', [ $this, 'prepare_divi_performance_options' ], 10, 0 );
+		add_action( 'wpse_after_cleanup', [ $this, 'restore_divi_performance_options' ], 10, 0 );
+		add_action( 'wpse_archive_creation_job_start_failed', [ $this, 'restore_divi_performance_options' ], 10, 0 );
+		add_action( 'wpse_after_background_queue_reset', [ $this, 'restore_divi_performance_options' ], 10, 0 );
+		add_action( 'wpse_deactivated', [ $this, 'restore_divi_performance_options' ], 10, 0 );
+		add_filter( 'wpse_after_replace_urls_in_html', [ $this, 'replace_data_fac_urls' ], 10, 2 );
+		add_filter( 'wpse_theme_asset_crawler_directories', [ $this, 'filter_theme_asset_crawler_directories' ], 10, 2 );
 	}
 
 	/**
@@ -246,7 +246,7 @@ class Divi_Integration extends Integration {
 		}
 
 		$destination_url = Options::instance()->get_destination_url();
-		$attrs           = apply_filters( 'ss_divi_base64_url_attributes', array( 'data-fac' ) );
+		$attrs           = apply_filters( 'wpse_divi_base64_url_attributes', array( 'data-fac' ) );
 
 		foreach ( $attrs as $attr ) {
 			$attr_pattern = preg_quote( $attr, '/' );
@@ -369,7 +369,7 @@ class Divi_Integration extends Integration {
 			$legacy = (int) $matches[1] < 5;
 		}
 
-		return (bool) apply_filters( 'ss_divi_use_legacy_asset_crawl', $legacy, $version );
+		return (bool) apply_filters( 'wpse_divi_use_legacy_asset_crawl', $legacy, $version );
 	}
 
 	/**

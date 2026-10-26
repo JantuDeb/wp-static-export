@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 require_once( ABSPATH . 'wp-admin/includes/class-pclzip.php' );
 
@@ -26,7 +26,7 @@ class Create_Zip_Archive_Task extends Task {
 	/**
 	 * Non-autoloaded option containing the potentially large file snapshot.
 	 */
-	const ZIP_FILES_OPTION = 'simply_static_zip_files';
+	const ZIP_FILES_OPTION = 'wpse_zip_files';
 
 	/**
 	 * Performing the action.
@@ -58,10 +58,10 @@ class Create_Zip_Archive_Task extends Task {
 			}
 		}
 
-		$message = __( 'ZIP archive created: ', 'simply-static' );
+		$message = __( 'ZIP archive created: ', 'wp-static-export' );
 		$link    = array(
 			'url'   => $download_url,
-			'label' => __( 'Click here to download', 'simply-static' ),
+			'label' => __( 'Click here to download', 'wp-static-export' ),
 		);
 		if ( $this->is_wp_cli_running() ) {
 			$message .= $download_url;
@@ -103,7 +103,7 @@ class Create_Zip_Archive_Task extends Task {
 		// Only clean temp dir on the first batch.
 		if ( $is_first_batch ) {
 			if ( ! Util::is_safe_directory_to_delete( $temp_dir ) ) {
-				return new \WP_Error( 'unsafe_temp_directory', __( 'Refusing to modify an unsafe temporary directory.', 'simply-static' ) );
+				return new \WP_Error( 'unsafe_temp_directory', __( 'Refusing to modify an unsafe temporary directory.', 'wp-static-export' ) );
 			}
 
 			$temp_dir_empty = ! ( new \FilesystemIterator( $temp_dir ) )->valid();
@@ -111,7 +111,7 @@ class Create_Zip_Archive_Task extends Task {
 			if ( ! $temp_dir_empty ) {
 				foreach ( new \DirectoryIterator( $temp_dir ) as $file ) {
 					if ( ! $file->isDir() ) {
-						$can_delete_file = apply_filters( 'ss_can_delete_file', true, $file, $temp_dir );
+						$can_delete_file = apply_filters( 'wpse_can_delete_file', true, $file, $temp_dir );
 
 						if ( ! $can_delete_file ) {
 							continue;
@@ -126,7 +126,7 @@ class Create_Zip_Archive_Task extends Task {
 		// Now we are creating a new zip file.
 		$archive_dir  = $this->options->get_archive_dir();
 		$zip_filename = untrailingslashit( $archive_dir ) . '.zip';
-		$zip_filename = apply_filters( 'ss_zip_filename', $zip_filename, $archive_dir, $this->options );
+		$zip_filename = apply_filters( 'wpse_zip_filename', $zip_filename, $archive_dir, $this->options );
 		$files        = $this->get_files_to_include( $archive_dir, $is_first_batch );
 
 		// Ensure target directory exists in case a custom path points elsewhere
@@ -140,7 +140,7 @@ class Create_Zip_Archive_Task extends Task {
 				'zip_dir_not_writable',
 				sprintf(
 					/* translators: 1: directory path */
-					__( 'The ZIP destination directory is not writable: %s', 'simply-static' ),
+					__( 'The ZIP destination directory is not writable: %s', 'wp-static-export' ),
 					$zip_dir
 				)
 			);
@@ -152,7 +152,7 @@ class Create_Zip_Archive_Task extends Task {
 				'zip_file_not_writable',
 				sprintf(
 					/* translators: 1: zip file path */
-					__( 'Cannot overwrite ZIP file: %s (permission denied)', 'simply-static' ),
+					__( 'Cannot overwrite ZIP file: %s (permission denied)', 'wp-static-export' ),
 					$zip_filename
 				)
 			);
@@ -181,10 +181,10 @@ class Create_Zip_Archive_Task extends Task {
 		}
 
 		if ( $zip_archive->create( $files, PCLZIP_OPT_REMOVE_PATH, $remove_path ) === 0 ) {
-			return new \WP_Error( 'create_zip_failed', __( 'Unable to create ZIP archive', 'simply-static' ) );
+			return new \WP_Error( 'create_zip_failed', __( 'Unable to create ZIP archive', 'wp-static-export' ) );
 		}
 
-		do_action( 'ss_zip_file_created', $zip_archive );
+		do_action( 'wpse_zip_file_created', $zip_archive );
 
 		return $this->get_zip_download_url( $zip_archive->zipname );
 	}
@@ -203,10 +203,10 @@ class Create_Zip_Archive_Task extends Task {
 		$written   = file_put_contents( $zip_filename, $empty_zip );
 
 		if ( false === $written ) {
-			return new \WP_Error( 'create_zip_failed', __( 'Unable to create ZIP archive', 'simply-static' ) );
+			return new \WP_Error( 'create_zip_failed', __( 'Unable to create ZIP archive', 'wp-static-export' ) );
 		}
 
-		do_action( 'ss_zip_file_created', (object) array( 'zipname' => $zip_filename ) );
+		do_action( 'wpse_zip_file_created', (object) array( 'zipname' => $zip_filename ) );
 
 		return $this->get_zip_download_url( $zip_filename );
 	}
@@ -224,7 +224,7 @@ class Create_Zip_Archive_Task extends Task {
 		if ( ! is_file( $zip_filename ) || ! is_readable( $zip_filename ) || filesize( $zip_filename ) < 22 ) {
 			return new \WP_Error(
 				'zip_file_missing',
-				__( 'The ZIP archive could not be found after it was created.', 'simply-static' )
+				__( 'The ZIP archive could not be found after it was created.', 'wp-static-export' )
 			);
 		}
 
@@ -232,7 +232,7 @@ class Create_Zip_Archive_Task extends Task {
 		if ( empty( $download_url ) ) {
 			return new \WP_Error(
 				'zip_url_unavailable',
-				__( 'The ZIP archive was created, but its temporary files directory is not publicly accessible. Choose a directory inside the WordPress uploads directory and try again.', 'simply-static' )
+				__( 'The ZIP archive was created, but its temporary files directory is not publicly accessible. Choose a directory inside the WordPress uploads directory and try again.', 'wp-static-export' )
 			);
 		}
 
@@ -269,7 +269,7 @@ class Create_Zip_Archive_Task extends Task {
 			$files = $this->get_all_archive_files( $archive_dir );
 		}
 
-		$files = apply_filters( 'ss_zip_files_to_include', $files, $archive_dir, $this->options, $this );
+		$files = apply_filters( 'wpse_zip_files_to_include', $files, $archive_dir, $this->options, $this );
 		$files = $this->normalize_zip_file_list( $files, $archive_dir );
 
 		Util::debug_log( 'Prepared ' . count( $files ) . ' file(s) for ZIP archive' );
@@ -396,7 +396,7 @@ class Create_Zip_Archive_Task extends Task {
 	 * @return string|false|WP_Error Download URL when complete, false if more batches needed, WP_Error on failure.
 	 */
 	private function create_zip_batched( $zip_filename, $archive_dir, $batch_offset, $is_first_batch, $all_files ) {
-		$batch_size = max( 1, min( 10000, (int) apply_filters( 'ss_zip_batch_size', self::BATCH_SIZE ) ) );
+		$batch_size = max( 1, min( 10000, (int) apply_filters( 'wpse_zip_batch_size', self::BATCH_SIZE ) ) );
 
 		if ( $is_first_batch ) {
 			Util::debug_log( 'Creating zip archive via ZipArchive (ZIP64 capable if libzip supports it)' );
@@ -413,7 +413,7 @@ class Create_Zip_Archive_Task extends Task {
 				'create_zip_failed',
 				sprintf(
 					/* translators: 1: zip file path */
-					__( 'Unable to open ZIP archive for writing: %s', 'simply-static' ),
+					__( 'Unable to open ZIP archive for writing: %s', 'wp-static-export' ),
 					$zip_filename
 				)
 			);
@@ -464,7 +464,7 @@ class Create_Zip_Archive_Task extends Task {
 				'zip_close_failed',
 				sprintf(
 					/* translators: 1: zip file path, 2: status message */
-					__( 'Failed to finalize ZIP archive: %1$s (%2$s)', 'simply-static' ),
+					__( 'Failed to finalize ZIP archive: %1$s (%2$s)', 'wp-static-export' ),
 					$zip_filename,
 					$status
 				)
@@ -476,7 +476,7 @@ class Create_Zip_Archive_Task extends Task {
 				'zip_add_file_failed',
 				sprintf(
 					/* translators: %d: number of files that could not be added. */
-					__( 'Unable to add %d file(s) to the ZIP archive.', 'simply-static' ),
+					__( 'Unable to add %d file(s) to the ZIP archive.', 'wp-static-export' ),
 					count( $failed_files )
 				),
 				array( 'files' => $failed_files )
@@ -495,7 +495,7 @@ class Create_Zip_Archive_Task extends Task {
 			$this->save_status_message(
 				sprintf(
 					/* translators: 1: files processed so far, 2: total files */
-					__( 'Creating ZIP archive (%1$d of %2$d files)...', 'simply-static' ),
+					__( 'Creating ZIP archive (%1$d of %2$d files)...', 'wp-static-export' ),
 					$new_offset,
 					$total_files
 				)
@@ -508,7 +508,7 @@ class Create_Zip_Archive_Task extends Task {
 		// All files added and zip finalized — we're done.
 		Util::debug_log( 'ZIP archive complete: ' . $total_files . ' files' );
 
-		do_action( 'ss_zip_file_created', (object) array( 'zipname' => $zip_filename ) );
+		do_action( 'wpse_zip_file_created', (object) array( 'zipname' => $zip_filename ) );
 
 		return $this->get_zip_download_url( $zip_filename );
 	}

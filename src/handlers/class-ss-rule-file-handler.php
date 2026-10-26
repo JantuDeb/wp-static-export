@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -23,13 +23,13 @@ class Rule_File_Handler {
      * @return void
      */
     public static function transfer_rule_files( $destination_dir, $archive_dir ) : void {
-        $filenames = apply_filters( 'ss_rule_files_to_transfer', array( 'robots.txt', 'llms.txt', '_redirects', '_headers' ) );
+        $filenames = apply_filters( 'wpse_rule_files_to_transfer', array( 'robots.txt', 'llms.txt', '_redirects', '_headers' ) );
 
         // Respect global include flags so site owners can disable transferring these files entirely.
-        $include_robots    = (bool) apply_filters( 'ss_include_robots_txt_in_export', true );
-        $include_llms      = (bool) apply_filters( 'ss_include_llms_txt_in_export', true );
-        $include_redirects = (bool) apply_filters( 'ss_include_redirects_in_export', true );
-        $include_headers   = (bool) apply_filters( 'ss_include_headers_in_export', true );
+        $include_robots    = (bool) apply_filters( 'wpse_include_robots_txt_in_export', true );
+        $include_llms      = (bool) apply_filters( 'wpse_include_llms_txt_in_export', true );
+        $include_redirects = (bool) apply_filters( 'wpse_include_redirects_in_export', true );
+        $include_headers   = (bool) apply_filters( 'wpse_include_headers_in_export', true );
 
         if ( ! $include_robots ) {
             $filenames = array_values( array_diff( (array) $filenames, array( 'robots.txt' ) ) );
@@ -87,4 +87,4 @@ class Rule_File_Handler {
 }
 
 // Hook into Local Directory transfer before finish.
-add_action( 'ss_before_finish_transferring_files_locally', [ '\Simply_Static\Rule_File_Handler', 'transfer_rule_files' ], 10, 2 );
+add_action( 'wpse_before_finish_transferring_files_locally', [ '\WP_Static_Export\Rule_File_Handler', 'transfer_rule_files' ], 10, 2 );

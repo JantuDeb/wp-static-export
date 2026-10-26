@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 class Admin_Settings {
 
@@ -14,15 +14,15 @@ class Admin_Settings {
 		if ( $job->is_running() || $job->is_paused() ) {
 			return array(
 				'success' => false,
-				'message' => __( 'The 404 export cannot start while another export is active or paused.', 'simply-static' ),
+				'message' => __( 'The 404 export cannot start while another export is active or paused.', 'wp-static-export' ),
 			);
 		}
 
 		$flag_names = array(
-			'simply-static-404-only',
-			'simply-static-use-single',
-			'simply-static-use-build',
-			'simply-static-use-language',
+			'wp-static-export-404-only',
+			'wp-static-export-use-single',
+			'wp-static-export-use-build',
+			'wp-static-export-use-language',
 		);
 		$missing       = new \stdClass();
 		$previous_flags = array();
@@ -42,10 +42,10 @@ class Admin_Settings {
 		try {
 			$prepare_export = static function () {
 				// Mutate the 404 scope only after Core owns the atomic export start gate.
-				update_option( 'simply-static-404-only', 1, false );
-				delete_option( 'simply-static-use-single' );
-				delete_option( 'simply-static-use-build' );
-				delete_option( 'simply-static-use-language' );
+				update_option( 'wp-static-export-404-only', 1, false );
+				delete_option( 'wp-static-export-use-single' );
+				delete_option( 'wp-static-export-use-build' );
+				delete_option( 'wp-static-export-use-language' );
 
 				return 'export';
 			};
@@ -53,7 +53,7 @@ class Admin_Settings {
 			if ( ! $started ) {
 				return array(
 					'success' => false,
-					'message' => __( 'The 404 export could not be started because another export is active or an export preflight check failed.', 'simply-static' ),
+					'message' => __( 'The 404 export could not be started because another export is active or an export preflight check failed.', 'wp-static-export' ),
 				);
 			}
 
@@ -114,7 +114,7 @@ class Admin_Settings {
         add_action( 'admin_init', array( $this, 'maybe_handle_cancel_export' ) );
 
         // Multisite: Free shows only an upgrade notice; full lock management lives in Pro.
-        if ( ! defined( 'SIMPLY_STATIC_PRO_VERSION' ) ) {
+        if ( ! defined( 'WPSE_PRO_VERSION' ) ) {
             // Guard against fatal if method is unavailable in older installs/caches.
             if ( method_exists( $this, 'render_network_lock_upgrade_notice' ) && is_callable( [
                             $this,
@@ -124,7 +124,7 @@ class Admin_Settings {
             }
         }
 
-        $this->failed_tests = intval( get_transient( 'simply_static_failed_tests' ) );
+        $this->failed_tests = intval( get_transient( 'wpse_failed_tests' ) );
 
         Admin_Meta::get_instance();
     }
@@ -135,28 +135,28 @@ class Admin_Settings {
      * @return void
      */
     public function add_menu() {
-        $hide_menu  = apply_filters( 'ss_hide_admin_menu', false );
+        $hide_menu  = apply_filters( 'wpse_hide_admin_menu', false );
 
-        $menu_title = apply_filters( 'ss_menu_title', __( 'WP Static Export', 'simply-static' ) );
-        $menu_icon  = apply_filters( 'ss_menu_icon', SIMPLY_STATIC_URL . '/assets/simply-static-icon.svg' );
+        $menu_title = apply_filters( 'wpse_menu_title', __( 'WP Static Export', 'wp-static-export' ) );
+        $menu_icon  = apply_filters( 'wpse_menu_icon', WPSE_URL . '/assets/wp-static-export-icon.svg' );
 
         // Generate settings page.
         add_menu_page(
                 $menu_title,
                 $menu_title,
-                apply_filters( 'ss_user_capability', 'publish_pages', 'generate' ),
-                'simply-static-generate',
+                apply_filters( 'wpse_user_capability', 'publish_pages', 'generate' ),
+                'wp-static-export-generate',
                 array( $this, 'render_settings' ),
                 $menu_icon,
-                apply_filters( 'ss_menu_position', 100 )
+                apply_filters( 'wpse_menu_position', 100 )
         );
 
         $generate_suffix = add_submenu_page(
-                'simply-static-generate',
-                __( 'Generate', 'simply-static' ),
-                __( 'Generate', 'simply-static' ),
-                apply_filters( 'ss_user_capability', 'publish_pages', 'generate' ),
-                'simply-static-generate',
+                'wp-static-export-generate',
+                __( 'Generate', 'wp-static-export' ),
+                __( 'Generate', 'wp-static-export' ),
+                apply_filters( 'wpse_user_capability', 'publish_pages', 'generate' ),
+                'wp-static-export-generate',
                 array( $this, 'render_settings' )
         );
 
@@ -165,26 +165,26 @@ class Admin_Settings {
         if ( ! is_network_admin() ) {
             // Add settings page.
             $settings_suffix = add_submenu_page(
-                    'simply-static-generate',
-                    __( 'Settings', 'simply-static' ),
-                    __( 'Settings', 'simply-static' ),
-                    apply_filters( 'ss_user_capability', 'manage_options', 'settings' ),
-                    'simply-static-settings',
+                    'wp-static-export-generate',
+                    __( 'Settings', 'wp-static-export' ),
+                    __( 'Settings', 'wp-static-export' ),
+                    apply_filters( 'wpse_user_capability', 'manage_options', 'settings' ),
+                    'wp-static-export-settings',
                     array( $this, 'render_settings' ),
                     5
             );
 
             add_action( "admin_print_scripts-{$settings_suffix}", array( $this, 'add_settings_scripts' ) );
 
-            $notifications = sprintf( '<span class="update-plugins diagnostics-error"><span class="plugin-count" aria-hidden="true">%s</span><span class="screen-reader-text">%s</span></span>', $this->failed_tests, esc_html__( 'errors in diagnostics', 'simply-static' ) );
+            $notifications = sprintf( '<span class="update-plugins diagnostics-error"><span class="plugin-count" aria-hidden="true">%s</span><span class="screen-reader-text">%s</span></span>', $this->failed_tests, esc_html__( 'errors in diagnostics', 'wp-static-export' ) );
 
             // Add diagnostics page.
             $diagnostics_suffix = add_submenu_page(
-                    'simply-static-generate',
-                    __( 'Diagnostics', 'simply-static' ),
-                    $this->failed_tests > 0 ? __( 'Diagnostics', 'simply-static' ) . ' ' . wp_kses_post( $notifications ) : __( 'Diagnostics', 'simply-static' ),
-					apply_filters( 'ss_user_capability', 'manage_options', 'diagnostics' ),
-                    'simply-static-diagnostics',
+                    'wp-static-export-generate',
+                    __( 'Diagnostics', 'wp-static-export' ),
+                    $this->failed_tests > 0 ? __( 'Diagnostics', 'wp-static-export' ) . ' ' . wp_kses_post( $notifications ) : __( 'Diagnostics', 'wp-static-export' ),
+					apply_filters( 'wpse_user_capability', 'manage_options', 'diagnostics' ),
+                    'wp-static-export-diagnostics',
                     array( $this, 'render_settings' ),
                     10
             );
@@ -200,31 +200,31 @@ class Admin_Settings {
 
             // Register a Tools submenu that links directly to the original page.
             global $submenu;
-            $tools_brand = defined( 'SSS_VERSION' ) ? __( 'Static Studio', 'simply-static' ) : __( 'WP Static Export', 'simply-static' );
+            $tools_brand = defined( 'SSS_VERSION' ) ? __( 'Static Studio', 'wp-static-export' ) : __( 'WP Static Export', 'wp-static-export' );
             $submenu['tools.php'][] = array(
                 $tools_brand,
-                apply_filters( 'ss_user_capability', 'publish_pages', 'generate' ),
-                admin_url( 'admin.php?page=simply-static-generate' ),
+                apply_filters( 'wpse_user_capability', 'publish_pages', 'generate' ),
+                admin_url( 'admin.php?page=wp-static-export-generate' ),
             );
 
             // Make the Tools menu open and WP Static Export highlighted when on any SS page.
             add_filter( 'parent_file', function ( $parent_file ) {
                 $screen = get_current_screen();
-                if ( $screen && isset( $_GET['page'] ) && strpos( $_GET['page'], 'simply-static' ) === 0 ) {
+                if ( $screen && isset( $_GET['page'] ) && strpos( $_GET['page'], 'wp-static-export' ) === 0 ) {
                     return 'tools.php';
                 }
                 return $parent_file;
             } );
 
             add_filter( 'submenu_file', function ( $submenu_file, $parent_file ) {
-                if ( isset( $_GET['page'] ) && strpos( $_GET['page'], 'simply-static' ) === 0 ) {
-                    return admin_url( 'admin.php?page=simply-static-generate' );
+                if ( isset( $_GET['page'] ) && strpos( $_GET['page'], 'wp-static-export' ) === 0 ) {
+                    return admin_url( 'admin.php?page=wp-static-export-generate' );
                 }
                 return $submenu_file;
             }, 10, 2 );
 
             // Force the Tools menu open via JS when on any SS page (handles WP menu state conflicts).
-            if ( isset( $_GET['page'] ) && strpos( $_GET['page'], 'simply-static' ) === 0 ) {
+            if ( isset( $_GET['page'] ) && strpos( $_GET['page'], 'wp-static-export' ) === 0 ) {
                 add_action( 'admin_footer', function () {
                     ?>
                     <script type="text/javascript">
@@ -259,9 +259,9 @@ class Admin_Settings {
         }
         $page      = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : '';
         $our_pages = array(
-                'simply-static-generate',
-                'simply-static-settings',
-                'simply-static-diagnostics',
+                'wp-static-export-generate',
+                'wp-static-export-settings',
+                'wp-static-export-diagnostics',
         );
         if ( in_array( $page, $our_pages, true ) ) {
             // Remove the core canonical URL handler that uses history.replaceState on admin pages.
@@ -369,9 +369,9 @@ class Admin_Settings {
 
 		wp_register_script(
 			'react-jsx-runtime',
-			SIMPLY_STATIC_URL . '/assets/react-jsx-runtime.js',
+			WPSE_URL . '/assets/react-jsx-runtime.js',
 			array( 'react' ),
-			SIMPLY_STATIC_VERSION,
+			WPSE_VERSION,
 			true
 		);
 	}
@@ -379,17 +379,17 @@ class Admin_Settings {
     public function add_settings_scripts() {
         $screen  = get_current_screen();
         $options = Options::reinstance();
-		$settings_capability = apply_filters( 'ss_user_capability', 'manage_options', 'settings' );
-		$activity_capability = apply_filters( 'ss_user_capability', 'manage_options', 'activity-log' );
-		$diagnostics_capability = apply_filters( 'ss_user_capability', 'manage_options', 'diagnostics' );
+		$settings_capability = apply_filters( 'wpse_user_capability', 'manage_options', 'settings' );
+		$activity_capability = apply_filters( 'wpse_user_capability', 'manage_options', 'activity-log' );
+		$diagnostics_capability = apply_filters( 'wpse_user_capability', 'manage_options', 'diagnostics' );
 		$can_manage_settings = current_user_can( $settings_capability );
 		$can_view_activity_log = current_user_can( $activity_capability );
 		$can_view_diagnostics = current_user_can( $diagnostics_capability );
 		$generate_only_pages = $can_view_diagnostics ? array( '/', '/diagnostics' ) : array( '/' );
 
         // Load the asset manifest generated by wp-scripts for content-hash based cache busting.
-        $asset_file = SIMPLY_STATIC_PATH . '/src/admin/build/index.asset.php';
-        $asset      = file_exists( $asset_file ) ? require $asset_file : array( 'dependencies' => array(), 'version' => SIMPLY_STATIC_VERSION );
+        $asset_file = WPSE_PATH . '/src/admin/build/index.asset.php';
+        $asset      = file_exists( $asset_file ) ? require $asset_file : array( 'dependencies' => array(), 'version' => WPSE_VERSION );
 
         // Merge explicit dependencies with those from the asset manifest.
         $dependencies = array_unique( array_merge(
@@ -408,10 +408,10 @@ class Admin_Settings {
                 )
         ) );
 
-        $asset_version = isset( $asset['version'] ) ? $asset['version'] : SIMPLY_STATIC_VERSION;
+        $asset_version = isset( $asset['version'] ) ? $asset['version'] : WPSE_VERSION;
 
 		$this->register_react_jsx_runtime_polyfill();
-        wp_enqueue_script( 'simplystatic-settings', SIMPLY_STATIC_URL . '/src/admin/build/index.js', $dependencies, $asset_version, true );
+        wp_enqueue_script( 'simplystatic-settings', WPSE_URL . '/src/admin/build/index.js', $dependencies, $asset_version, true );
 
 
         // Determine initial screen.
@@ -466,7 +466,7 @@ class Admin_Settings {
 		) : $generate_only_pages;
 
         // Let integrations (e.g., UAM in Pro) refine the allowed pages list. They may also add '/uam'.
-		$allowed_pages = apply_filters( 'ss_allowed_pages', $allowed_pages_default, $all_settings );
+		$allowed_pages = apply_filters( 'wpse_allowed_pages', $allowed_pages_default, $all_settings );
 		if ( ! is_array( $allowed_pages ) ) {
 			$allowed_pages = $allowed_pages_default;
 		}
@@ -476,11 +476,11 @@ class Admin_Settings {
         $can_export_languages = $this->can_show_languages();
 
         $args = apply_filters(
-                'ss_settings_args',
+                'wpse_settings_args',
                 array(
                         'screen'           => 'simplystatic-settings',
-                        'version'          => SIMPLY_STATIC_VERSION,
-                        'logo'             => apply_filters( 'ss_admin_logo', SIMPLY_STATIC_URL . '/assets/simply-static-logo.svg' ),
+                        'version'          => WPSE_VERSION,
+                        'logo'             => apply_filters( 'wpse_admin_logo', WPSE_URL . '/assets/wp-static-export-logo.svg' ),
                         'plan'             => 'free',
                         'initial'          => $initial,
                         'home'             => home_url(),
@@ -497,8 +497,8 @@ class Admin_Settings {
 						'can_manage_settings' => $can_manage_settings,
 						'can_view_activity_log' => $can_view_activity_log,
 						'can_view_diagnostics' => $can_view_diagnostics,
-                        'hidden_settings'  => apply_filters( 'ss_hidden_settings', array() ),
-						'allow_studio_deployment_settings' => apply_filters( 'ss_allow_studio_deployment_settings', false, $all_settings ),
+                        'hidden_settings'  => apply_filters( 'wpse_hidden_settings', array() ),
+						'allow_studio_deployment_settings' => apply_filters( 'wpse_allow_studio_deployment_settings', false, $all_settings ),
                         'last_export_end'  => $options->get( 'archive_end_time' ),
                     // Build integrations as an associative array keyed by integration ID
                     // to make lookups reliable in the admin app (no numeric reindexing).
@@ -532,10 +532,10 @@ class Admin_Settings {
 			$can_view_diagnostics
 		);
 
-        if ( defined( 'SIMPLY_STATIC_PRO_VERSION' ) ) {
+        if ( defined( 'WPSE_PRO_VERSION' ) ) {
             // Mark plan as Pro when the Pro plugin is active so the admin UI can enable Pro-only features/toggles.
             $args['plan']        = 'pro';
-            $args['version_pro'] = SIMPLY_STATIC_PRO_VERSION;
+            $args['version_pro'] = WPSE_PRO_VERSION;
 
             // Pass in additional data.
             $data = get_option( 'fs_accounts' );
@@ -556,7 +556,7 @@ class Admin_Settings {
             $sites            = [];
             $selectable_sites = [];
             // Allow filtering of get_sites() args, e.g., to set 'number' => 0 to list all sites.
-            $public_sites_args = apply_filters( 'ss_multisite_get_sites_args', [ 'public' => true ], 'settings_sites' );
+            $public_sites_args = apply_filters( 'wpse_multisite_get_sites_args', [ 'public' => true ], 'settings_sites' );
             $public_sites      = get_sites( $public_sites_args );
 
             if ( $public_sites ) {
@@ -565,8 +565,8 @@ class Admin_Settings {
                             'blog_id'          => $site->blog_id,
                             'name'             => wp_specialchars_decode( $site->blogname, ENT_QUOTES | ENT_HTML5 ),
                             'url'              => $site->siteurl,
-                            'settings_url'     => esc_url( get_admin_url( $site->blog_id ) . 'admin.php?page=simply-static-settings' ),
-                            'activity_log_url' => esc_url( get_admin_url( $site->blog_id ) . 'admin.php?page=simply-static-generate' )
+                            'settings_url'     => esc_url( get_admin_url( $site->blog_id ) . 'admin.php?page=wp-static-export-settings' ),
+                            'activity_log_url' => esc_url( get_admin_url( $site->blog_id ) . 'admin.php?page=wp-static-export-generate' )
                     ];
 
                     if ( $site->blog_id != get_current_blog_id() ) {
@@ -587,8 +587,8 @@ class Admin_Settings {
 
 		if ( $can_manage_settings && file_exists( $debug_file ) ) {
             $uploads_dir       = wp_upload_dir();
-            $simply_static_dir = $uploads_dir['baseurl'] . DIRECTORY_SEPARATOR . 'simply-static' . DIRECTORY_SEPARATOR;
-            $args['log_file']  = $simply_static_dir . $options->get( 'encryption_key' ) . '-debug.txt';
+            $wpse_dir = $uploads_dir['baseurl'] . DIRECTORY_SEPARATOR . 'wp-static-export' . DIRECTORY_SEPARATOR;
+            $args['log_file']  = $wpse_dir . $options->get( 'encryption_key' ) . '-debug.txt';
         }
 
         // Maybe show migration notice.
@@ -617,10 +617,10 @@ class Admin_Settings {
 
         // Make the blocks translatable.
         if ( function_exists( 'wp_set_script_translations' ) ) {
-            wp_set_script_translations( 'simplystatic-settings', 'simply-static', SIMPLY_STATIC_PATH . '/languages' );
+            wp_set_script_translations( 'simplystatic-settings', 'wp-static-export', WPSE_PATH . '/languages' );
         }
 
-        wp_enqueue_style( 'simplystatic-settings-style', SIMPLY_STATIC_URL . '/src/admin/build/index.css', array( 'wp-components' ), $asset_version );
+        wp_enqueue_style( 'simplystatic-settings-style', WPSE_URL . '/src/admin/build/index.css', array( 'wp-components' ), $asset_version );
     }
 
     /**
@@ -708,7 +708,7 @@ class Admin_Settings {
             }
         }
 
-        return apply_filters( 'ss_admin_languages', $this->normalize_languages( $languages ) );
+        return apply_filters( 'wpse_admin_languages', $this->normalize_languages( $languages ) );
     }
 
     /**
@@ -739,7 +739,7 @@ class Admin_Settings {
             return false;
         }
 
-        $settings = get_option( 'simply-static' );
+        $settings = get_option( 'wp-static-export' );
 
         if ( is_array( $settings ) && array_key_exists( 'integrations', $settings ) ) {
             return is_array( $settings['integrations'] ) && in_array( 'multilingual', $settings['integrations'], true );
@@ -848,7 +848,7 @@ class Admin_Settings {
 	public function is_authorized_get_cancel_request( $query ) {
 		$query = is_array( $query ) ? $query : array();
 		$page = isset( $query['page'] ) ? sanitize_text_field( wp_unslash( $query['page'] ) ) : '';
-		if ( 'simply-static-generate' !== $page ) {
+		if ( 'wp-static-export-generate' !== $page ) {
 			return false;
 		}
 
@@ -858,16 +858,16 @@ class Admin_Settings {
 		}
 
 		$nonce = isset( $query['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $query['_wpnonce'] ) ) : '';
-		if ( ! wp_verify_nonce( $nonce, 'simply-static-cancel-export' ) ) {
+		if ( ! wp_verify_nonce( $nonce, 'wp-static-export-cancel-export' ) ) {
 			return false;
 		}
 
-		return current_user_can( apply_filters( 'ss_user_capability', 'publish_pages', 'generate' ) );
+		return current_user_can( apply_filters( 'wpse_user_capability', 'publish_pages', 'generate' ) );
 	}
 
     /**
      * Fallback: handle cancel export via URL param when REST API is unavailable.
-     * Example: /wp-admin/admin.php?page=simply-static-generate&cancel-export=true
+     * Example: /wp-admin/admin.php?page=wp-static-export-generate&cancel-export=true
      */
     public function maybe_handle_cancel_export() {
         // Only run in admin and on our Generate page.
@@ -880,9 +880,9 @@ class Admin_Settings {
 
         // Trigger same actions as REST endpoint without relying on REST.
         $blog_id = 0;
-        do_action( 'ss_before_perform_archive_action', $blog_id, 'cancel', Plugin::instance()->get_archive_creation_job() );
+        do_action( 'wpse_before_perform_archive_action', $blog_id, 'cancel', Plugin::instance()->get_archive_creation_job() );
         Plugin::instance()->cancel_static_export();
-        do_action( 'ss_after_perform_archive_action', $blog_id, 'cancel', Plugin::instance()->get_archive_creation_job() );
+        do_action( 'wpse_after_perform_archive_action', $blog_id, 'cancel', Plugin::instance()->get_archive_creation_job() );
 
         // Redirect to remove the query parameter and avoid re-triggering on refresh.
 		$redirect_url = remove_query_arg( array( 'cancel-export', '_wpnonce' ) );
@@ -1014,7 +1014,7 @@ class Admin_Settings {
          *
          * @param string[] $defaults Directory slugs of admin-only plugins.
          */
-        $list = apply_filters( 'ss_admin_only_plugins', $defaults );
+        $list = apply_filters( 'wpse_admin_only_plugins', $defaults );
 
         if ( ! is_array( $list ) ) {
             return $defaults;
@@ -1061,7 +1061,7 @@ class Admin_Settings {
          *
          * @param string[] $defaults Option keys to exclude from export.
          */
-        $list = apply_filters( 'ss_export_excluded_options', $defaults );
+        $list = apply_filters( 'wpse_export_excluded_options', $defaults );
         if ( ! is_array( $list ) ) {
             return $defaults;
         }
@@ -1351,7 +1351,7 @@ class Admin_Settings {
      */
     public function filter_view_site_link( $admin_bar ) {
         // Allow disabling this behavior via filter.
-        if ( ! apply_filters( 'ss_enable_view_static_site_link', true ) ) {
+        if ( ! apply_filters( 'wpse_enable_view_static_site_link', true ) ) {
             return;
         }
 
@@ -1372,7 +1372,7 @@ class Admin_Settings {
         }
 
         // Update node title and href.
-        $node->title = __( 'View Static Site', 'simply-static' );
+        $node->title = __( 'View Static Site', 'wp-static-export' );
         $node->href  = esc_url( $target_url );
         // Open in a new tab for convenience and safety.
         if ( ! isset( $node->meta ) || ! is_array( $node->meta ) ) {
@@ -1391,10 +1391,10 @@ class Admin_Settings {
      */
     public function get_export_progress_title_status() {
         if ( ! isset( $_POST['security'] ) || ! wp_verify_nonce( $_POST['security'], 'ss-export-progress-title-nonce' ) ) {
-            wp_die( esc_html__( 'Security check failed', 'simply-static' ) );
+            wp_die( esc_html__( 'Security check failed', 'wp-static-export' ) );
         }
 
-        $cap_generate = apply_filters( 'ss_user_capability', 'publish_pages', 'generate' );
+        $cap_generate = apply_filters( 'wpse_user_capability', 'publish_pages', 'generate' );
         if ( ! current_user_can( $cap_generate ) ) {
             wp_send_json_error( [ 'status' => 'forbidden' ], 403 );
         }
@@ -1432,14 +1432,14 @@ class Admin_Settings {
             return;
         }
 
-        $cap_generate = apply_filters( 'ss_user_capability', 'publish_pages', 'generate' );
+        $cap_generate = apply_filters( 'wpse_user_capability', 'publish_pages', 'generate' );
         if ( ! current_user_can( $cap_generate ) ) {
             return;
         }
 
         $ajax_url     = admin_url( 'admin-ajax.php' );
         $nonce        = wp_create_nonce( 'ss-export-progress-title-nonce' );
-        $title_prefix = esc_js( __( 'WP Static Export', 'simply-static' ) );
+        $title_prefix = esc_js( __( 'WP Static Export', 'wp-static-export' ) );
         ?>
         <script id="ss-export-progress-title-js">
         (function(){
@@ -1522,27 +1522,24 @@ class Admin_Settings {
      * Free (no Pro): Show an upgrade notice in Network Admin if a multisite export lock is detected.
      */
     public function render_network_lock_upgrade_notice() {
-        if ( defined( 'SIMPLY_STATIC_PRO_VERSION' ) ) {
+        if ( defined( 'WPSE_PRO_VERSION' ) ) {
             return; // Pro handles full UI.
         }
         if ( ! is_multisite() || ! function_exists( 'is_network_admin' ) || ! is_network_admin() ) {
             return;
         }
         $page = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : '';
-        if ( 'simply-static-settings' !== $page && 'simply-static-generate' !== $page ) {
+        if ( 'wp-static-export-settings' !== $page && 'wp-static-export-generate' !== $page ) {
             return;
         }
         $running = get_site_option( Plugin::SLUG . '_multisite_export_running', false );
         if ( empty( $running ) ) {
             return; // No lock set.
         }
-        $upgrade_url = 'https://simplystatic.com/?utm_source=plugin&utm_medium=notice&utm_campaign=ms-lock-reset';
         ?>
         <div class="notice notice-info">
             <p>
-                <?php echo esc_html__( 'A multisite export lock is currently set. Resetting the lock is not available for multisite exports.', 'simply-static' ); ?>
-                <a href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank"
-                   rel="noopener noreferrer"><?php echo esc_html__( 'Learn more about Pro', 'simply-static' ); ?></a>
+                <?php echo esc_html__( 'A multisite export lock is currently set. Resetting the lock is not available for multisite exports.', 'wp-static-export' ); ?>
             </p>
         </div>
         <?php

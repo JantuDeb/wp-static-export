@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-plugin_slug="simply-static"
+plugin_slug="wp-static-export"
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 output_root="${1:-build/release}"
 
@@ -84,7 +84,7 @@ if find "$package_dir/src/admin" -mindepth 1 -maxdepth 1 ! -name build ! -name i
 	exit 1
 fi
 
-test -s "$package_dir/simply-static.php"
+test -s "$package_dir/wp-static-export.php"
 test -s "$package_dir/readme.txt"
 test -s "$package_dir/src/admin/build/index.js"
 test -s "$package_dir/assets/install-plugins/build/index.js"

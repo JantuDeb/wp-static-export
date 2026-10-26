@@ -1,6 +1,6 @@
 {
-  "name": "simplystatic/simply-static",
-  "description": "Convert your WordPress site into a static one with the free WordPress static site generator plugin, Simply Static.",
+  "name": "jantudeb/wp-static-export",
+  "description": "Convert your WordPress site into a static one with deployment, forms, search and optimization. Fork of Simply Static.",
   "type": "wordpress-plugin",
   "require": {},
   "require-dev": {
@@ -9,13 +9,13 @@
   "license": "GPL-3.0-or-later",
   "authors": [
     {
-      "name": "Patrick Posner",
-      "email": "support@simplystatic.com"
+      "name": "JantuDeb",
+      "homepage": "https://github.com/JantuDeb/wp-static-export"
     }
   ],
   "support": {
-      "issues": "https://github.com/Simply-Static/simply-static/issues",
-      "source": "https://github.com/Simply-Static/simply-static/"
+      "issues": "https://github.com/JantuDeb/wp-static-export/issues",
+      "source": "https://github.com/JantuDeb/wp-static-export/"
   },
   "config": {
     "platform": {

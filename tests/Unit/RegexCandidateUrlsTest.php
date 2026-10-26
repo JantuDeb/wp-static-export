@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static {
+namespace WP_Static_Export {
 	if ( ! function_exists( __NAMESPACE__ . '\\get_post_types' ) ) {
 		function get_post_types( $args = array(), $output = 'names' ) {
-			$provider = isset( $GLOBALS['simply_static_regex_candidate_provider'] ) ? $GLOBALS['simply_static_regex_candidate_provider'] : null;
+			$provider = isset( $GLOBALS['wpse_regex_candidate_provider'] ) ? $GLOBALS['wpse_regex_candidate_provider'] : null;
 
 			return $provider ? $provider->getPostTypes() : \get_post_types( $args, $output );
 		}
@@ -13,7 +13,7 @@ namespace Simply_Static {
 
 	if ( ! function_exists( __NAMESPACE__ . '\\get_posts' ) ) {
 		function get_posts( $args = array() ) {
-			$provider = isset( $GLOBALS['simply_static_regex_candidate_provider'] ) ? $GLOBALS['simply_static_regex_candidate_provider'] : null;
+			$provider = isset( $GLOBALS['wpse_regex_candidate_provider'] ) ? $GLOBALS['wpse_regex_candidate_provider'] : null;
 
 			return $provider ? $provider->getPosts( $args ) : array();
 		}
@@ -21,7 +21,7 @@ namespace Simply_Static {
 
 	if ( ! function_exists( __NAMESPACE__ . '\\get_permalink' ) ) {
 		function get_permalink( $post_id ) {
-			$provider = isset( $GLOBALS['simply_static_regex_candidate_provider'] ) ? $GLOBALS['simply_static_regex_candidate_provider'] : null;
+			$provider = isset( $GLOBALS['wpse_regex_candidate_provider'] ) ? $GLOBALS['wpse_regex_candidate_provider'] : null;
 
 			return $provider ? $provider->getPermalink( (int) $post_id ) : false;
 		}
@@ -29,7 +29,7 @@ namespace Simply_Static {
 
 	if ( ! function_exists( __NAMESPACE__ . '\\get_taxonomies' ) ) {
 		function get_taxonomies( $args = array(), $output = 'names' ) {
-			$provider = isset( $GLOBALS['simply_static_regex_candidate_provider'] ) ? $GLOBALS['simply_static_regex_candidate_provider'] : null;
+			$provider = isset( $GLOBALS['wpse_regex_candidate_provider'] ) ? $GLOBALS['wpse_regex_candidate_provider'] : null;
 
 			return $provider ? $provider->getTaxonomies() : \get_taxonomies( $args, $output );
 		}
@@ -37,7 +37,7 @@ namespace Simply_Static {
 
 	if ( ! function_exists( __NAMESPACE__ . '\\get_terms' ) ) {
 		function get_terms( $args = array() ) {
-			$provider = isset( $GLOBALS['simply_static_regex_candidate_provider'] ) ? $GLOBALS['simply_static_regex_candidate_provider'] : null;
+			$provider = isset( $GLOBALS['wpse_regex_candidate_provider'] ) ? $GLOBALS['wpse_regex_candidate_provider'] : null;
 
 			return $provider ? $provider->getTerms( $args ) : array();
 		}
@@ -45,7 +45,7 @@ namespace Simply_Static {
 
 	if ( ! function_exists( __NAMESPACE__ . '\\get_term_link' ) ) {
 		function get_term_link( $term ) {
-			$provider = isset( $GLOBALS['simply_static_regex_candidate_provider'] ) ? $GLOBALS['simply_static_regex_candidate_provider'] : null;
+			$provider = isset( $GLOBALS['wpse_regex_candidate_provider'] ) ? $GLOBALS['wpse_regex_candidate_provider'] : null;
 
 			return $provider ? $provider->getTermLink( $term ) : false;
 		}
@@ -53,7 +53,7 @@ namespace Simply_Static {
 
 	if ( ! function_exists( __NAMESPACE__ . '\\get_users' ) ) {
 		function get_users( $args = array() ) {
-			$provider = isset( $GLOBALS['simply_static_regex_candidate_provider'] ) ? $GLOBALS['simply_static_regex_candidate_provider'] : null;
+			$provider = isset( $GLOBALS['wpse_regex_candidate_provider'] ) ? $GLOBALS['wpse_regex_candidate_provider'] : null;
 
 			return $provider ? $provider->getUsers( $args ) : array();
 		}
@@ -61,17 +61,17 @@ namespace Simply_Static {
 
 	if ( ! function_exists( __NAMESPACE__ . '\\get_author_posts_url' ) ) {
 		function get_author_posts_url( $user_id ) {
-			$provider = isset( $GLOBALS['simply_static_regex_candidate_provider'] ) ? $GLOBALS['simply_static_regex_candidate_provider'] : null;
+			$provider = isset( $GLOBALS['wpse_regex_candidate_provider'] ) ? $GLOBALS['wpse_regex_candidate_provider'] : null;
 
 			return $provider ? $provider->getAuthorUrl( (int) $user_id ) : false;
 		}
 	}
 }
 
-namespace Simply_Static\Tests\Unit {
+namespace WP_Static_Export\Tests\Unit {
 
-	use Simply_Static\Tests\Support\UnitTestCase;
-	use Simply_Static\Util;
+	use WP_Static_Export\Tests\Support\UnitTestCase;
+	use WP_Static_Export\Util;
 
 	final class RegexCandidateUrlsTest extends UnitTestCase {
 
@@ -85,11 +85,11 @@ namespace Simply_Static\Tests\Unit {
 			$this->requireSource( 'src/class-ss-util.php' );
 
 			$this->provider = new Regex_Candidate_Provider();
-			$GLOBALS['simply_static_regex_candidate_provider'] = $this->provider;
+			$GLOBALS['wpse_regex_candidate_provider'] = $this->provider;
 		}
 
 		protected function tearDown(): void {
-			unset( $GLOBALS['simply_static_regex_candidate_provider'] );
+			unset( $GLOBALS['wpse_regex_candidate_provider'] );
 			parent::tearDown();
 		}
 
@@ -169,13 +169,13 @@ namespace Simply_Static\Tests\Unit {
 
 		private function setLimits( int $limit, int $batch_size ): void {
 			add_filter(
-				'ss_regex_candidate_url_limit',
+				'wpse_regex_candidate_url_limit',
 				static function () use ( $limit ) {
 					return $limit;
 				}
 			);
 			add_filter(
-				'ss_regex_candidate_query_batch_size',
+				'wpse_regex_candidate_query_batch_size',
 				static function () use ( $batch_size ) {
 					return $batch_size;
 				}

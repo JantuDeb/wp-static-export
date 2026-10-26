@@ -24,7 +24,7 @@ multilingual need no Node. For image compression also run `npm install sharp` in
 
 **WP Static Export → Deploy & Features.** Secrets (tokens, keys, passwords) are write-only: the
 page shows "saved" but never sends them back. Any setting can be fixed with a
-`SIMPLY_STATIC_<OPTION>` constant in `wp-config.php`; the page then shows it as locked.
+`WPSE_<OPTION>` constant in `wp-config.php`; the page then shows it as locked.
 Use **Save & test connection** to check credentials without deploying.
 
 ## Deploy targets
@@ -36,10 +36,10 @@ delete anything; a full export won't delete more than half of what was deployed 
 guards against a broken crawl wiping the live site).
 
 ```bash
-wp simply-static run --deploy-to=netlify      # export and deploy
-wp simply-static run --type=update            # only changed pages
-wp simply-static run --force-full             # ignore saved hashes
-wp simply-static doctor                       # checks Node and the bundle
+wp static-export run --deploy-to=netlify      # export and deploy
+wp static-export run --type=update            # only changed pages
+wp static-export run --force-full             # ignore saved hashes
+wp static-export doctor                       # checks Node and the bundle
 ```
 
 ## Forms

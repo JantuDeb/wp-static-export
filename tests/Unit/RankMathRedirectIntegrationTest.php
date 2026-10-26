@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Options;
-use Simply_Static\Rank_Math_Integration;
-use Simply_Static\Tests\Support\UnitTestCase;
+use WP_Static_Export\Options;
+use WP_Static_Export\Rank_Math_Integration;
+use WP_Static_Export\Tests\Support\UnitTestCase;
 
-$simply_static_root = dirname( __DIR__, 2 );
-require_once $simply_static_root . '/src/class-ss-plugin.php';
-require_once $simply_static_root . '/src/class-ss-options.php';
-require_once $simply_static_root . '/src/class-ss-util.php';
-require_once $simply_static_root . '/src/integrations/class-ss-integration.php';
-require_once $simply_static_root . '/src/integrations/class-ss-rank-math-integration.php';
+$wpse_root = dirname( __DIR__, 2 );
+require_once $wpse_root . '/src/class-ss-plugin.php';
+require_once $wpse_root . '/src/class-ss-options.php';
+require_once $wpse_root . '/src/class-ss-util.php';
+require_once $wpse_root . '/src/integrations/class-ss-integration.php';
+require_once $wpse_root . '/src/integrations/class-ss-rank-math-integration.php';
 
 final class RankMathRedirectPage {
 	/** @var string */
@@ -261,7 +261,7 @@ final class RankMathRedirectIntegrationTest extends UnitTestCase {
 		);
 		$page = new RankMathRedirectPage( 'https://wordpress.internal/site/source', $redirect );
 		$integration = new TestableRankMathRedirectIntegration( array() );
-		update_option( 'simply-static-use-single', '42' );
+		update_option( 'wp-static-export-use-single', '42' );
 
 		self::assertSame( 'existing-redirect', $integration->registeredRedirect( 'existing-redirect', $page ) );
 		self::assertSame( 0, $integration->redirect_reads );

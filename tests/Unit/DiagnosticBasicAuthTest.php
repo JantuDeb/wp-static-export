@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
 use ReflectionClass;
-use Simply_Static\Diagnostic;
-use Simply_Static\Options;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Diagnostic;
+use WP_Static_Export\Options;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 final class DiagnosticBasicAuthTest extends UnitTestCase {
 
@@ -30,7 +30,7 @@ final class DiagnosticBasicAuthTest extends UnitTestCase {
 	public function test_detected_basic_auth_requires_both_credentials(): void {
 		$_SERVER['SERVER_SOFTWARE'] = 'apache/2.4';
 		$_SERVER['PHP_AUTH_USER']    = '0';
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'http_basic_auth_username' => 'crawler',
 			'http_basic_auth_password' => '',
 		);
@@ -44,7 +44,7 @@ final class DiagnosticBasicAuthTest extends UnitTestCase {
 	public function test_detected_basic_auth_accepts_complete_credentials(): void {
 		$_SERVER['SERVER_SOFTWARE'] = 'NGINX';
 		$_SERVER['REMOTE_USER']     = 'crawler';
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'http_basic_auth_username' => '0',
 			'http_basic_auth_password' => '0',
 		);

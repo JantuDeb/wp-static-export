@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 /**
  * Class to handle setup task.
@@ -20,7 +20,7 @@ class Setup_Task extends Task {
 	 * @return boolean true this always completes in one run, so returns true.
 	 */
 	public function perform() {
-		$message = __( 'Setting up', 'simply-static' );
+		$message = __( 'Setting up', 'wp-static-export' );
 		$this->save_status_message( $message );
 
 		// Delete files in temp dir.
@@ -37,8 +37,8 @@ class Setup_Task extends Task {
 			}
 		}
 
-		$use_single = get_option( 'simply-static-use-single' );
-		$use_build  = get_option( 'simply-static-use-build' );
+		$use_single = get_option( 'wp-static-export-use-single' );
+		$use_build  = get_option( 'wp-static-export-use-build' );
 		$type       = $this->options->get( 'generate_type' );
 
 		if ( ! $type ) {
@@ -52,12 +52,12 @@ class Setup_Task extends Task {
 		}
 
 		// add origin url and additional urls/files to database.
-		$additional_urls = apply_filters( 'ss_setup_task_additional_urls', $this->options->get( 'additional_urls' ) );
+		$additional_urls = apply_filters( 'wpse_setup_task_additional_urls', $this->options->get( 'additional_urls' ) );
 
 		$this->add_origin_and_additional_urls_to_db( $additional_urls );
 		$this->add_additional_files_to_db( $this->options->get( 'additional_files' ) );
 
-		do_action( 'ss_after_setup_task' );
+		do_action( 'wpse_after_setup_task' );
 
 		return true;
 	}
@@ -73,19 +73,19 @@ class Setup_Task extends Task {
 		$origin_url = trailingslashit( Util::origin_url() );
 		Util::debug_log( 'Adding origin URL to queue: ' . $origin_url );
 		$static_page = Page::query()->find_or_initialize_by( 'url', $origin_url );
-		$static_page->set_status_message( __( 'Origin URL', 'simply-static' ) );
+		$static_page->set_status_message( __( 'Origin URL', 'wp-static-export' ) );
 		$static_page->found_on_id = 0;
 		$static_page->save();
 
 		// Convert raw textarea to array
 		$raw_urls = Util::string_to_array( $additional_urls );
-		$urls     = apply_filters( 'ss_additional_urls', $raw_urls );
+		$urls     = apply_filters( 'wpse_additional_urls', $raw_urls );
 		$parsed   = Util::parse_patterns( (array) $urls );
 		$literals = (array) $parsed['literals'];
 		$regexes  = (array) $parsed['regex'];
 
 		// Process literal Additional URLs in batches to avoid memory exhaustion with very large lists.
-		$batch_size = (int) apply_filters( 'ss_additional_urls_batch_size', 50 );
+		$batch_size = (int) apply_filters( 'wpse_additional_urls_batch_size', 50 );
 		if ( $batch_size < 1 ) { $batch_size = 50; }
 
 		foreach ( array_chunk( $literals, $batch_size ) as $chunk ) {
@@ -94,7 +94,7 @@ class Setup_Task extends Task {
 				if ( Util::is_local_url( $url ) ) {
 					Util::debug_log( 'Adding additional URL to queue: ' . $url );
 					$static_page = Page::query()->find_or_initialize_by( 'url', $url );
-					$static_page->set_status_message( __( 'Additional URL', 'simply-static' ) );
+					$static_page->set_status_message( __( 'Additional URL', 'wp-static-export' ) );
 					$static_page->found_on_id = 0;
 					$path_part = parse_url( $url, PHP_URL_PATH );
 					$lower     = is_string( $path_part ) ? strtolower( $path_part ) : '';
@@ -110,15 +110,15 @@ class Setup_Task extends Task {
 
 		// Handle regex Additional URLs by matching against a candidate set of site URLs
 		if ( ! empty( $regexes ) ) {
-			$candidates = apply_filters( 'ss_regex_candidate_urls', Util::candidate_urls_for_regex() );
-			$max_matches = (int) apply_filters( 'ss_additional_url_regex_max_matches', 10000 );
+			$candidates = apply_filters( 'wpse_regex_candidate_urls', Util::candidate_urls_for_regex() );
+			$max_matches = (int) apply_filters( 'wpse_additional_url_regex_max_matches', 10000 );
 			$added = 0;
 			foreach ( $candidates as $cand ) {
 				foreach ( $regexes as $pattern ) {
 					if ( @preg_match( $pattern, $cand ) && preg_match( $pattern, $cand ) ) {
 						if ( ! Util::is_local_url( $cand ) ) { continue; }
 						$static_page = Page::query()->find_or_initialize_by( 'url', $cand );
-						$static_page->set_status_message( __( 'Additional URL (regex)', 'simply-static' ) );
+						$static_page->set_status_message( __( 'Additional URL (regex)', 'wp-static-export' ) );
 						$static_page->found_on_id = 0;
 						$static_page->save();
 						$added++;
@@ -139,14 +139,14 @@ class Setup_Task extends Task {
 	 * @return void
 	 */
 	public function add_additional_files_to_db( $additional_files ) {
-		$additional_files = apply_filters( 'ss_additional_files', Util::string_to_array( $additional_files ) );
+		$additional_files = apply_filters( 'wpse_additional_files', Util::string_to_array( $additional_files ) );
 		$parsed   = Util::parse_patterns( (array) $additional_files );
 		$file_literals = (array) $parsed['literals'];
 		$file_regexes  = (array) $parsed['regex'];
 
   // Add robots.txt if exists and not globally disabled.
   $robots_txt = ABSPATH . 'robots.txt';
-  $include_robots = (bool) apply_filters( 'ss_include_robots_txt_in_export', true );
+  $include_robots = (bool) apply_filters( 'wpse_include_robots_txt_in_export', true );
 
   if ( $include_robots && file_exists( $robots_txt ) ) {
       $file_literals[] = $robots_txt;
@@ -156,7 +156,7 @@ class Setup_Task extends Task {
 
   // Add llms.txt if exists and not globally disabled.
   $llms_txt = ABSPATH . 'llms.txt';
-  $include_llms = (bool) apply_filters( 'ss_include_llms_txt_in_export', true );
+  $include_llms = (bool) apply_filters( 'wpse_include_llms_txt_in_export', true );
 
   if ( $include_llms && file_exists( $llms_txt ) ) {
       $file_literals[] = $llms_txt;
@@ -166,7 +166,7 @@ class Setup_Task extends Task {
 
   // Add _redirects if exists and not globally disabled.
   $redirects_file = ABSPATH . '_redirects';
-  $include_redirects = (bool) apply_filters( 'ss_include_redirects_in_export', true );
+  $include_redirects = (bool) apply_filters( 'wpse_include_redirects_in_export', true );
 
   if ( $include_redirects && file_exists( $redirects_file ) ) {
       $file_literals[] = $redirects_file;
@@ -176,7 +176,7 @@ class Setup_Task extends Task {
 
   // Add _headers if exists and not globally disabled.
   $headers_file = ABSPATH . '_headers';
-  $include_headers = (bool) apply_filters( 'ss_include_headers_in_export', true );
+  $include_headers = (bool) apply_filters( 'wpse_include_headers_in_export', true );
 
   if ( $include_headers && file_exists( $headers_file ) ) {
       $file_literals[] = $headers_file;
@@ -194,10 +194,10 @@ class Setup_Task extends Task {
 			}
 
 			// Create index.html file for feed directory.
-			$redirect_title = esc_html__( 'Redirecting...', 'simply-static' );
+			$redirect_title = esc_html__( 'Redirecting...', 'wp-static-export' );
 			$redirect_text  = sprintf(
 				/* translators: %s: destination link. */
-				__( 'You are being redirected to %s', 'simply-static' ),
+				__( 'You are being redirected to %s', 'wp-static-export' ),
 				'<a href="index.xml">index.xml</a>'
 			);
 
@@ -227,7 +227,7 @@ class Setup_Task extends Task {
 		}
 
 		// Process Additional Files/Directories in batches to reduce peak memory usage.
-		$batch_size = (int) apply_filters( 'ss_additional_files_batch_size', 50 );
+		$batch_size = (int) apply_filters( 'wpse_additional_files_batch_size', 50 );
 		if ( $batch_size < 1 ) {
 			$batch_size = 50;
 		}
@@ -248,7 +248,7 @@ class Setup_Task extends Task {
 						Util::debug_log( "File " . $item . ' exists; adding to queue as: ' . $url );
 						$static_page = Page::query()
 						                   ->find_or_create_by( 'url', $url );
-						$static_page->set_status_message( __( "Additional File", 'simply-static' ) );
+						$static_page->set_status_message( __( "Additional File", 'wp-static-export' ) );
 						// setting found_on_id to 0 since this was user-specified
 						$static_page->found_on_id = 0;
 						// Use the Text_File_Handler for robots.txt, llms.txt, _redirects, and _headers so URLs are replaced in plain text.
@@ -267,7 +267,7 @@ class Setup_Task extends Task {
 							$url = self::convert_path_to_url( $file_name );
 							Util::debug_log( "Adding file " . $file_name . ' to queue as: ' . $url );
 							$static_page = Page::query()->find_or_initialize_by( 'url', $url );
-							$static_page->set_status_message( __( "Additional Dir", 'simply-static' ) );
+							$static_page->set_status_message( __( "Additional Dir", 'wp-static-export' ) );
 							$base = strtolower( basename( $file_name ) );
 							if ( $base === 'robots.txt' || $base === 'llms.txt' || $base === '_redirects' || $base === '_headers' ) {
 								$static_page->handler = Text_File_Handler::class;
@@ -292,10 +292,10 @@ class Setup_Task extends Task {
 
 		// Resolve regex file/directory patterns by scanning allowed roots
 		if ( ! empty( $file_regexes ) ) {
-			$roots = apply_filters( 'ss_additional_file_regex_roots', [ WP_CONTENT_DIR, untrailingslashit( ABSPATH ) ] );
-			$max_matches = (int) apply_filters( 'ss_additional_file_regex_max_matches', 10000 );
+			$roots = apply_filters( 'wpse_additional_file_regex_roots', [ WP_CONTENT_DIR, untrailingslashit( ABSPATH ) ] );
+			$max_matches = (int) apply_filters( 'wpse_additional_file_regex_max_matches', 10000 );
 			$added = 0;
-			$skip_dirs = (array) apply_filters( 'ss_additional_file_regex_skip_dirs', [ '.git', 'node_modules', 'vendor', 'cache', 'tmp', 'temp', basename( $this->options->get_archive_dir() ) ] );
+			$skip_dirs = (array) apply_filters( 'wpse_additional_file_regex_skip_dirs', [ '.git', 'node_modules', 'vendor', 'cache', 'tmp', 'temp', basename( $this->options->get_archive_dir() ) ] );
 			foreach ( (array) $roots as $root ) {
 				if ( ! is_string( $root ) || ! Util::is_path_allowed_by_open_basedir( $root ) ) { continue; }
 				if ( ! is_dir( $root ) ) { continue; }
@@ -315,7 +315,7 @@ class Setup_Task extends Task {
 								if ( is_dir( $path ) ) { continue; }
 								$url = self::convert_path_to_url( $path );
 									$static_page = Page::query()->find_or_initialize_by( 'url', $url );
-									$static_page->set_status_message( __( 'Additional File (regex)', 'simply-static' ) );
+									$static_page->set_status_message( __( 'Additional File (regex)', 'wp-static-export' ) );
 									$base = strtolower( basename( $path ) );
 									$static_page->handler = ( $base === 'robots.txt' || $base === 'llms.txt' || $base === '_redirects' || $base === '_headers' ) ? Text_File_Handler::class : Additional_File_Handler::class;
 									$static_page->found_on_id = 0;
@@ -365,7 +365,7 @@ class Setup_Task extends Task {
 	public function delete_temp_static_files() {
 		$options           = Options::instance();
 		$dir               = Util::get_temp_dir();
-		$delete_temp_files = apply_filters( 'ss_delete_temp_files', true );
+		$delete_temp_files = apply_filters( 'wpse_delete_temp_files', true );
 
 		if ( ! $delete_temp_files ) {
 			return false;
@@ -387,7 +387,7 @@ class Setup_Task extends Task {
 		$files = new \RecursiveIteratorIterator( new \RecursiveDirectoryIterator( $dir, \RecursiveDirectoryIterator::SKIP_DOTS ), \RecursiveIteratorIterator::CHILD_FIRST );
 
 		foreach ( $files as $fileinfo ) {
-			$can_delete_file = apply_filters( 'ss_can_delete_file', true, $fileinfo, $dir );
+			$can_delete_file = apply_filters( 'wpse_can_delete_file', true, $fileinfo, $dir );
 
 			if ( ! $can_delete_file ) {
 				continue;

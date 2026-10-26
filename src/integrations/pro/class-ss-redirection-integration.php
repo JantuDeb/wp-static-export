@@ -1,5 +1,5 @@
 <?php
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 class Redirection_Integration extends Pro_Integration {
 	/**
@@ -10,8 +10,8 @@ class Redirection_Integration extends Pro_Integration {
 	protected $id = 'redirection';
 
 	public function __construct() {
-		$this->name = __( 'Redirects', 'simply-static' );
-		$this->description = __( 'Automatically includes exact redirects from Redirection, Safe Redirect Manager, and Page Links To in each export.', 'simply-static' );
+		$this->name = __( 'Redirects', 'wp-static-export' );
+		$this->description = __( 'Automatically includes exact redirects from Redirection, Safe Redirect Manager, and Page Links To in each export.', 'wp-static-export' );
 	}
 
 	/**

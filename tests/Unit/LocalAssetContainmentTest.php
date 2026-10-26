@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Options;
-use Simply_Static\Page;
-use Simply_Static\Page_Handler;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
-use Simply_Static\Url_Extractor;
-use Simply_Static\Url_Fetcher;
-use Simply_Static\Util;
+use WP_Static_Export\Options;
+use WP_Static_Export\Page;
+use WP_Static_Export\Page_Handler;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Url_Extractor;
+use WP_Static_Export\Url_Fetcher;
+use WP_Static_Export\Util;
 
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-plugin.php';
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-options.php';
@@ -65,7 +65,7 @@ final class LocalAssetContainmentTest extends UnitTestCase {
 		$token                = str_replace( '.', '', uniqid( 'ss-', true ) );
 		$this->asset_dir        = WP_CONTENT_DIR . '/local-asset-tests-' . $token;
 		$this->asset_url_path   = '/wp-content/' . basename( $this->asset_dir );
-		$this->archive_dir      = sys_get_temp_dir() . '/simply-static-archive-' . $token;
+		$this->archive_dir      = sys_get_temp_dir() . '/wp-static-export-archive-' . $token;
 		$this->upload_asset_dir = WpEnv::$upload_dir['basedir'] . '/local-asset-tests-' . $token;
 		$this->outside_file     = dirname( untrailingslashit( ABSPATH ) ) . '/outside-' . $token . '.json';
 
@@ -73,7 +73,7 @@ final class LocalAssetContainmentTest extends UnitTestCase {
 		wp_mkdir_p( $this->archive_dir );
 		wp_mkdir_p( $this->upload_asset_dir );
 
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'archive_name'              => 'archive',
 			'debugging_mode'            => false,
 			'http_basic_auth_username' => 'crawler',
@@ -130,8 +130,8 @@ final class LocalAssetContainmentTest extends UnitTestCase {
 	}
 
 	public function test_bundled_form_scripts_follow_renamed_content_path_through_export(): void {
-		WpEnv::$options['simply-static'] = array_merge(
-			WpEnv::$options['simply-static'],
+		WpEnv::$options['wp-static-export'] = array_merge(
+			WpEnv::$options['wp-static-export'],
 			array(
 				'temp_files_dir'        => dirname( $this->archive_dir ),
 				'archive_name'          => basename( $this->archive_dir ),
@@ -216,7 +216,7 @@ final class LocalAssetContainmentTest extends UnitTestCase {
 		$resolved = Util::resolve_local_asset_path( $url );
 
 		self::assertInstanceOf( \WP_Error::class, $resolved );
-		self::assertSame( 'simply_static_unsafe_local_asset_path', $resolved->get_error_code() );
+		self::assertSame( 'wpse_unsafe_local_asset_path', $resolved->get_error_code() );
 		self::assertFalse( $this->fetcher->fetch( $this->pageFor( $url ) ) );
 		self::assertSame( array(), WpEnv::$remote_requests );
 		self::assertSame( array( '.', '..' ), scandir( $this->archive_dir ) );
@@ -246,7 +246,7 @@ final class LocalAssetContainmentTest extends UnitTestCase {
 		$resolved = Util::resolve_local_asset_path( $url );
 
 		self::assertInstanceOf( \WP_Error::class, $resolved );
-		self::assertSame( 'simply_static_unsafe_local_asset_path', $resolved->get_error_code() );
+		self::assertSame( 'wpse_unsafe_local_asset_path', $resolved->get_error_code() );
 		self::assertFalse( $this->fetcher->fetch( $this->pageFor( $url ) ) );
 		self::assertSame( '{"secret":true}', file_get_contents( $this->outside_file ) );
 		self::assertSame( array(), WpEnv::$remote_requests );

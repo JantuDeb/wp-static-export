@@ -135,7 +135,7 @@ const SidebarSite = require( './SidebarSite' ).default;
 const actions = [
 	{
 		label: 'Cancel',
-		path: '/simplystatic/v1/cancel-export',
+		path: '/wp-static-export/v1/cancel-export',
 		expected: {
 			setIsResumed: false,
 			setIsPaused: false,
@@ -144,7 +144,7 @@ const actions = [
 	},
 	{
 		label: 'Pause',
-		path: '/simplystatic/v1/pause-export',
+		path: '/wp-static-export/v1/pause-export',
 		expected: {
 			setIsRunning: false,
 			setIsResumed: false,
@@ -153,7 +153,7 @@ const actions = [
 	},
 	{
 		label: 'Resume',
-		path: '/simplystatic/v1/resume-export',
+		path: '/wp-static-export/v1/resume-export',
 		expected: {
 			setIsResumed: true,
 			setIsPaused: false,
@@ -206,12 +206,12 @@ describe( 'SidebarSite actions', () => {
 		actionResponse = JSON.stringify( { status: 200 } );
 		apiFetch.mockReset();
 		apiFetch.mockImplementation( ( { path } ) => {
-			if ( '/simplystatic/v1/unpushed-changes' === path ) {
+			if ( '/wp-static-export/v1/unpushed-changes' === path ) {
 				return Promise.resolve(
 					JSON.stringify( { status: 200, data: { total: 0 } } )
 				);
 			}
-			if ( '/simplystatic/v1/check-can-run' === path ) {
+			if ( '/wp-static-export/v1/check-can-run' === path ) {
 				return Promise.resolve( JSON.stringify( { can_run: true } ) );
 			}
 
@@ -269,12 +269,12 @@ describe( 'SidebarSite actions', () => {
 	it( 'starts progress polling before the export request resolves', async () => {
 		let resolveStart;
 		apiFetch.mockImplementation( ( { path } ) => {
-			if ( '/simplystatic/v1/start-export' === path ) {
+			if ( '/wp-static-export/v1/start-export' === path ) {
 				return new Promise( ( resolve ) => {
 					resolveStart = resolve;
 				} );
 			}
-			if ( '/simplystatic/v1/unpushed-changes' === path ) {
+			if ( '/wp-static-export/v1/unpushed-changes' === path ) {
 				return Promise.resolve(
 					JSON.stringify( { status: 200, data: { total: 0 } } )
 				);
@@ -302,10 +302,8 @@ describe( 'SidebarSite actions', () => {
 
 		expect(
 			screen.getByRole( 'link', { name: 'Documentation' } ).getAttribute( 'href' )
-		).toBe( 'https://docs.simplystatic.com' );
-		expect(
-			screen.getByRole( 'link', { name: 'Tutorials' } ).getAttribute( 'href' )
-		).toBe( 'https://simplystatic.com/tutorials/' );
+		).toBe( 'https://github.com/JantuDeb/wp-static-export#readme' );
+		expect( screen.queryByRole( 'link', { name: 'Tutorials' } ) ).toBeNull();
 		expect( screen.queryByText( 'Video Course' ) ).toBeNull();
 	} );
 

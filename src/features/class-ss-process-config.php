@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -21,9 +21,9 @@ class Process_Config {
 		$type = Options::instance()->get( 'generate_type' ) ?: 'export';
 
 		return ( 'export' === $type
-			&& ! get_option( 'simply-static-use-single' )
-			&& ! get_option( 'simply-static-use-build' )
-			&& ! get_option( 'simply-static-404-only' ) ) ? 'full' : 'partial';
+			&& ! get_option( 'wp-static-export-use-single' )
+			&& ! get_option( 'wp-static-export-use-build' )
+			&& ! get_option( 'wp-static-export-404-only' ) ) ? 'full' : 'partial';
 	}
 
 	/**
@@ -139,14 +139,14 @@ class Process_Config {
 	public static function copy_assets( $archive_dir ) {
 		$written = array();
 		foreach ( self::assets() as $target => $source ) {
-			$from = SIMPLY_STATIC_PATH . $source;
+			$from = WPSE_PATH . $source;
 			if ( ! is_readable( $from ) ) {
-				return new \WP_Error( 'ss_asset_missing', sprintf( /* translators: %s: file */ __( 'Missing script %s. Run "npm run build" in the deployer folder.', 'simply-static' ), $source ) );
+				return new \WP_Error( 'ss_asset_missing', sprintf( /* translators: %s: file */ __( 'Missing script %s. Run "npm run build" in the deployer folder.', 'wp-static-export' ), $source ) );
 			}
 			$to = trailingslashit( $archive_dir ) . $target;
 			wp_mkdir_p( dirname( $to ) );
 			if ( ! copy( $from, $to ) ) {
-				return new \WP_Error( 'ss_asset_copy', sprintf( /* translators: %s: file */ __( 'Could not write %s.', 'simply-static' ), $target ) );
+				return new \WP_Error( 'ss_asset_copy', sprintf( /* translators: %s: file */ __( 'Could not write %s.', 'wp-static-export' ), $target ) );
 			}
 			$written[] = $target;
 		}
@@ -155,26 +155,43 @@ class Process_Config {
 	}
 
 	/**
-	 * Copy files created by processing (WebP twins, search index, scripts) to the local directory,
+	 * Copy files made by processing (WebP twins, search index, scripts, _headers) to the local directory,
 	 * since local transfer only copies files tracked as pages.
+	 *
+	 * They are found by looking at the archive rather than from a list of "files this run created": a list
+	 * is incomplete whenever processing ran in pieces or was skipped for files it had already handled, and
+	 * a missing twin means a broken image on the exported site.
 	 *
 	 * @param string $destination_dir Destination.
 	 * @param string $archive_dir     Archive.
 	 * @return void
 	 */
 	public static function transfer_extra_files( $destination_dir, $archive_dir ) {
-		$extra = Options::instance()->get( 'process_extra_files' );
-		if ( ! is_array( $extra ) ) {
+		$archive_dir = rtrim( (string) $archive_dir, '/\\' );
+		if ( '' === $archive_dir || ! is_dir( $archive_dir ) ) {
 			return;
 		}
-		foreach ( $extra as $rel ) {
+
+		$relatives = (array) Options::instance()->get( 'process_extra_files' );
+		$iterator  = new \RecursiveIteratorIterator( new \RecursiveDirectoryIterator( $archive_dir, \FilesystemIterator::SKIP_DOTS ) );
+		foreach ( $iterator as $file ) {
+			if ( ! $file->isFile() ) {
+				continue;
+			}
+			$rel = ltrim( Util::normalize_slashes( substr( $file->getPathname(), strlen( $archive_dir ) ) ), '/' );
+			if ( 0 === strpos( $rel, Html_Enhancer::ASSET_DIR . '/' ) || '_headers' === $rel || preg_match( '/\.(jpe?g|png)\.webp$/i', $rel ) ) {
+				$relatives[] = $rel;
+			}
+		}
+
+		foreach ( array_unique( $relatives ) as $rel ) {
 			$rel = ltrim( Util::normalize_slashes( (string) $rel ), '/' );
 			if ( '' === $rel || false !== strpos( $rel, '..' ) ) {
 				continue; // Never let a crafted path escape the export.
 			}
-			$from = trailingslashit( $archive_dir ) . $rel;
-			$to   = trailingslashit( $destination_dir ) . $rel;
-			if ( is_file( $from ) ) {
+			$from = $archive_dir . '/' . $rel;
+			$to   = rtrim( (string) $destination_dir, '/\\' ) . '/' . $rel;
+			if ( is_file( $from ) && ( ! is_file( $to ) || filesize( $to ) !== filesize( $from ) || md5_file( $to ) !== md5_file( $from ) ) ) {
 				wp_mkdir_p( dirname( $to ) );
 				copy( $from, $to );
 			}

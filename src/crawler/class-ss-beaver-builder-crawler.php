@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static\Crawler;
+namespace WP_Static_Export\Crawler;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -25,8 +25,8 @@ class Beaver_Builder_Crawler extends Crawler {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->name        = __( 'Beaver Builder Cache', 'simply-static' );
-		$this->description = __( 'Detects Beaver Builder cache files in uploads/bb-plugin/cache.', 'simply-static' );
+		$this->name        = __( 'Beaver Builder Cache', 'wp-static-export' );
+		$this->description = __( 'Detects Beaver Builder cache files in uploads/bb-plugin/cache.', 'wp-static-export' );
 	}
 
 	/**
@@ -72,7 +72,7 @@ class Beaver_Builder_Crawler extends Crawler {
 
 		$urls = $this->scan_directory_for_assets( $dir, $base_url );
 		$urls = array_values( array_unique( $urls ) );
-		\Simply_Static\Util::debug_log( sprintf( 'Beaver Builder crawler detected %d cache URLs', count( $urls ) ) );
+		\WP_Static_Export\Util::debug_log( sprintf( 'Beaver Builder crawler detected %d cache URLs', count( $urls ) ) );
 		return $urls;
 	}
 
@@ -94,9 +94,9 @@ class Beaver_Builder_Crawler extends Crawler {
 				'baseurl' => trailingslashit( $uploads['baseurl'] ) . 'bb-plugin/cache',
 			) ),
 			array( 'css', 'js', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'woff', 'woff2', 'ttf', 'eot', 'otf', 'ico', 'mp4', 'webm', 'json', 'map' ),
-			(array) apply_filters( 'ss_skip_crawl_beaver_builder_directories', array( '.git', 'node_modules', 'vendor/bin', 'vendor/composer', 'tests' ) ),
-			'simply_static_beaver_builder_crawler_max_entries_per_batch',
-			'simply_static_beaver_builder_crawler_max_batch_seconds'
+			(array) apply_filters( 'wpse_skip_crawl_beaver_builder_directories', array( '.git', 'node_modules', 'vendor/bin', 'vendor/composer', 'tests' ) ),
+			'wpse_beaver_builder_crawler_max_entries_per_batch',
+			'wpse_beaver_builder_crawler_max_batch_seconds'
 		);
 	}
 
@@ -109,11 +109,11 @@ class Beaver_Builder_Crawler extends Crawler {
 	 */
 	protected function scan_directory_for_assets( $dir_root, $url_base ) : array {
 		$urls = [];
-		$max_entries = max( 1, min( 100000, (int) apply_filters( 'simply_static_beaver_builder_detection_max_entries', 5000 ) ) );
-		$deadline    = microtime( true ) + max( 0.5, min( 15, (float) apply_filters( 'simply_static_beaver_builder_detection_max_seconds', 5 ) ) );
+		$max_entries = max( 1, min( 100000, (int) apply_filters( 'wpse_beaver_builder_detection_max_entries', 5000 ) ) );
+		$deadline    = microtime( true ) + max( 0.5, min( 15, (float) apply_filters( 'wpse_beaver_builder_detection_max_seconds', 5 ) ) );
 		$scanned     = 0;
 		$extensions = [ 'css','js','png','jpg','jpeg','gif','svg','webp','woff','woff2','ttf','eot','otf','ico','mp4','webm','json','map' ];
-		$skip_dirs  = apply_filters( 'ss_skip_crawl_beaver_builder_directories', [ '.git','node_modules','vendor/bin','vendor/composer','tests' ] );
+		$skip_dirs  = apply_filters( 'wpse_skip_crawl_beaver_builder_directories', [ '.git','node_modules','vendor/bin','vendor/composer','tests' ] );
 
 		try {
 			$it = new \RecursiveIteratorIterator(
@@ -126,7 +126,7 @@ class Beaver_Builder_Crawler extends Crawler {
 					break;
 				}
 				if ( $file->isDir() ) { continue; }
-				$rel = \Simply_Static\Util::safe_relative_path( $dir_root, $file->getPathname() );
+				$rel = \WP_Static_Export\Util::safe_relative_path( $dir_root, $file->getPathname() );
 				$skip = false;
 				foreach ( (array) $skip_dirs as $sd ) {
 					if ( $sd && strpos( $rel, '/' . $sd . '/' ) !== false ) { $skip = true; break; }
@@ -134,10 +134,10 @@ class Beaver_Builder_Crawler extends Crawler {
 				if ( $skip ) { continue; }
 				$ext = strtolower( pathinfo( $rel, PATHINFO_EXTENSION ) );
 				if ( $ext && ! in_array( $ext, $extensions, true ) ) { continue; }
-				$urls[] = \Simply_Static\Util::safe_join_url( $url_base, $rel );
+				$urls[] = \WP_Static_Export\Util::safe_join_url( $url_base, $rel );
 			}
 		} catch ( \Exception $e ) {
-			\Simply_Static\Util::debug_log( 'Error scanning Beaver Builder cache: ' . $e->getMessage() );
+			\WP_Static_Export\Util::debug_log( 'Error scanning Beaver Builder cache: ' . $e->getMessage() );
 		}
 
 		return $urls;

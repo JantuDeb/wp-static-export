@@ -20,10 +20,10 @@ namespace {
 	}
 }
 
-namespace Simply_Static\Tests\Unit {
+namespace WP_Static_Export\Tests\Unit {
 
-	use Simply_Static\Query;
-	use Simply_Static\Tests\Support\UnitTestCase;
+	use WP_Static_Export\Query;
+	use WP_Static_Export\Tests\Support\UnitTestCase;
 
 	final class QueryUpdateWpdb {
 
@@ -38,7 +38,7 @@ namespace Simply_Static\Tests\Unit {
 
 	final class QueryUpdateTestModel {
 		public static function table_name(): string {
-			return 'wp_simply_static_test';
+			return 'wp_wpse_test';
 		}
 	}
 
@@ -68,7 +68,7 @@ namespace Simply_Static\Tests\Unit {
 				)
 			);
 			self::assertSame(
-				"UPDATE  wp_simply_static_test SET widget_id = '2', type = 'sprocket' ",
+				"UPDATE  wp_wpse_test SET widget_id = '2', type = 'sprocket' ",
 				$this->wpdb->queries[0]
 			);
 		}

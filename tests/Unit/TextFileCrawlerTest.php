@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
 use ReflectionMethod;
-use Simply_Static\Crawler\Text_File_Crawler;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Crawler\Text_File_Crawler;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 final class TextFileCrawlerTest extends UnitTestCase {
 
@@ -58,7 +58,7 @@ final class TextFileCrawlerTest extends UnitTestCase {
 	}
 
 	public function test_it_respects_the_existing_llms_exclusion_filter_without_a_request(): void {
-		add_filter( 'ss_include_llms_txt_in_export', static function () {
+		add_filter( 'wpse_include_llms_txt_in_export', static function () {
 			return false;
 		} );
 
@@ -67,7 +67,7 @@ final class TextFileCrawlerTest extends UnitTestCase {
 	}
 
 	public function test_it_rejects_a_filtered_external_llms_endpoint_before_requesting_it(): void {
-		add_filter( 'simply_static_llms_txt_url', static function () {
+		add_filter( 'wpse_llms_txt_url', static function () {
 			return 'https://attacker.test/llms.txt';
 		} );
 
@@ -76,7 +76,7 @@ final class TextFileCrawlerTest extends UnitTestCase {
 	}
 
 	public function test_it_rejects_an_alternate_port_before_requesting_it(): void {
-		add_filter( 'simply_static_llms_txt_url', static function () {
+		add_filter( 'wpse_llms_txt_url', static function () {
 			return 'https://example.test:8443/llms.txt';
 		} );
 
@@ -90,7 +90,7 @@ final class TextFileCrawlerTest extends UnitTestCase {
 		$method->setAccessible( true );
 		$method->invoke( new Text_File_Crawler(), $page, 'https://example.test/llms.txt' );
 
-		self::assertSame( 'Simply_Static\\Text_File_Handler', $page->handler );
+		self::assertSame( 'WP_Static_Export\\Text_File_Handler', $page->handler );
 	}
 
 	private function setResponse( int $status, string $body ): void {

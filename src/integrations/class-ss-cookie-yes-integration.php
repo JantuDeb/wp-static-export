@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 use DOMDocument;
 use DOMXPath;
@@ -15,8 +15,8 @@ class CookieYes_Integration extends Integration {
 	protected $id = 'cookieyes';
 
 	public function __construct() {
-		$this->name = __( 'CookieYes | GDPR Cookie Consent', 'simply-static' );
-		$this->description = __( 'Fixes scripts given by CookieYes to work on exported pages.', 'simply-static' );
+		$this->name = __( 'CookieYes | GDPR Cookie Consent', 'wp-static-export' );
+		$this->description = __( 'Fixes scripts given by CookieYes to work on exported pages.', 'wp-static-export' );
 	}
 
 	/**
@@ -34,7 +34,7 @@ class CookieYes_Integration extends Integration {
 	 * @return void
 	 */
 	public function run() {
-		add_action( 'ss_after_extract_and_replace_urls_in_html', [ $this, 'fix_cookieyes_template' ] );
+		add_action( 'wpse_after_extract_and_replace_urls_in_html', [ $this, 'fix_cookieyes_template' ] );
 	}
 
 	/**

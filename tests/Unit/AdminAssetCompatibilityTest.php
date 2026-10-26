@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
 use ReflectionClass;
-use Simply_Static\Admin_Settings;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Admin_Settings;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 final class AdminAssetCompatibilityTest extends UnitTestCase {
 
@@ -27,9 +27,9 @@ final class AdminAssetCompatibilityTest extends UnitTestCase {
 
 		self::assertSame(
 			array(
-				'src'       => SIMPLY_STATIC_URL . '/assets/react-jsx-runtime.js',
+				'src'       => WPSE_URL . '/assets/react-jsx-runtime.js',
 				'deps'      => array( 'react' ),
-				'ver'       => SIMPLY_STATIC_VERSION,
+				'ver'       => WPSE_VERSION,
 				'in_footer' => true,
 			),
 			WpEnv::$registered_scripts['react-jsx-runtime'] ?? null

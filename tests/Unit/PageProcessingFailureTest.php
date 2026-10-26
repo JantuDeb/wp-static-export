@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\Options;
-use Simply_Static\Task;
-use Simply_Static\Tests\Support\UnitTestCase;
-use Simply_Static\Tests\Support\WpTestEnvironment as WpEnv;
+use WP_Static_Export\Options;
+use WP_Static_Export\Task;
+use WP_Static_Export\Tests\Support\UnitTestCase;
+use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-plugin.php';
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-options.php';
@@ -79,7 +79,7 @@ final class RetryStatePage {
 
 final class RetryStateTask extends Task {
 
-	use \Simply_Static\canProcessPages;
+	use \WP_Static_Export\canProcessPages;
 
 	/** @var RetryStatePage */
 	private $page;
@@ -135,7 +135,7 @@ final class RetryStateTask extends Task {
 
 final class ExhaustedPagesTask extends Task {
 
-	use \Simply_Static\canProcessPages;
+	use \WP_Static_Export\canProcessPages;
 
 	/** @var int */
 	public $failed_pages = 0;
@@ -178,7 +178,7 @@ final class PageProcessingFailureTest extends UnitTestCase {
 		parent::setUp();
 		$this->wpdb       = new PageProcessingWpdb();
 		$GLOBALS['wpdb'] = $this->wpdb;
-		WpEnv::$options['simply-static'] = array(
+		WpEnv::$options['wp-static-export'] = array(
 			'archive_status_messages' => array(),
 		);
 		Options::reinstance();

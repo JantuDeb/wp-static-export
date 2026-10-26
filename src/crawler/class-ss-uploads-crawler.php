@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static\Crawler;
+namespace WP_Static_Export\Crawler;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -33,8 +33,8 @@ class Uploads_Crawler extends Crawler {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->name        = __( 'Uploads Directory', 'simply-static' );
-		$this->description = __( 'Detects URLs for media files in the uploads directory.', 'simply-static' );
+		$this->name        = __( 'Uploads Directory', 'wp-static-export' );
+		$this->description = __( 'Detects URLs for media files in the uploads directory.', 'wp-static-export' );
 	}
 
 	/**
@@ -63,7 +63,7 @@ class Uploads_Crawler extends Crawler {
 			],
 		];
 
-		$additional_dirs = apply_filters( 'ss_uploads_additional_directories', $additional_dirs );
+		$additional_dirs = apply_filters( 'wpse_uploads_additional_directories', $additional_dirs );
 
 		$scan_dirs = [
 			[
@@ -81,7 +81,7 @@ class Uploads_Crawler extends Crawler {
 		foreach ( $scan_dirs as $scan_dir ) {
 			// Skip if the directory doesn't exist
 			if ( ! is_dir( $scan_dir['basedir'] ) ) {
-				\Simply_Static\Util::debug_log( "Directory does not exist: " . $scan_dir['basedir'] );
+				\WP_Static_Export\Util::debug_log( "Directory does not exist: " . $scan_dir['basedir'] );
 				continue;
 			}
 
@@ -108,11 +108,11 @@ class Uploads_Crawler extends Crawler {
 		$scan_dirs      = $this->get_scan_directories();
 		$signature      = $this->get_state_signature( $scan_dirs );
 		$state          = $this->load_state( $signature );
-		$extensions     = (array) apply_filters( 'ss_uploads_media_extensions', $this->get_media_extensions() );
-		$skip_dirs      = (array) apply_filters( 'ss_skip_crawl_uploads_directories', array( '.git', 'node_modules', 'cache', 'tmp', 'temp', 'compatibility-check', 'simply-static/temp-files' ) );
-		$queue_batch    = max( 1, min( 1000, (int) apply_filters( 'simply_static_crawler_batch_size', 100 ) ) );
-		$entry_limit    = max( 1, min( 10000, (int) apply_filters( 'simply_static_uploads_crawler_max_entries_per_batch', 500 ) ) );
-		$seconds        = (float) apply_filters( 'simply_static_uploads_crawler_max_batch_seconds', 10 );
+		$extensions     = (array) apply_filters( 'wpse_uploads_media_extensions', $this->get_media_extensions() );
+		$skip_dirs      = (array) apply_filters( 'wpse_skip_crawl_uploads_directories', array( '.git', 'node_modules', 'cache', 'tmp', 'temp', 'compatibility-check', 'wp-static-export/temp-files' ) );
+		$queue_batch    = max( 1, min( 1000, (int) apply_filters( 'wpse_crawler_batch_size', 100 ) ) );
+		$entry_limit    = max( 1, min( 10000, (int) apply_filters( 'wpse_uploads_crawler_max_entries_per_batch', 500 ) ) );
+		$seconds        = (float) apply_filters( 'wpse_uploads_crawler_max_batch_seconds', 10 );
 		$deadline       = microtime( true ) + max( 0.5, min( 15, $seconds ) );
 		$processed        = 0;
 		$invocation_added = 0;
@@ -134,7 +134,7 @@ class Uploads_Crawler extends Crawler {
 
 			$directory = $this->resolve_scan_directory( $scan['basedir'], $state['current_dir'] );
 			if ( false === $directory ) {
-				\Simply_Static\Util::debug_log( 'Uploads crawler skipped a missing or unsafe directory cursor.' );
+				\WP_Static_Export\Util::debug_log( 'Uploads crawler skipped a missing or unsafe directory cursor.' );
 				$state['current_dir']  = null;
 				$state['entry_offset'] = 0;
 				continue;
@@ -146,7 +146,7 @@ class Uploads_Crawler extends Crawler {
 					$iterator->seek( $state['entry_offset'] );
 				}
 			} catch ( \UnexpectedValueException $exception ) {
-				\Simply_Static\Util::debug_log( 'Uploads crawler could not read directory: ' . $exception->getMessage() );
+				\WP_Static_Export\Util::debug_log( 'Uploads crawler could not read directory: ' . $exception->getMessage() );
 				$state['current_dir']  = null;
 				$state['entry_offset'] = 0;
 				continue;
@@ -165,7 +165,7 @@ class Uploads_Crawler extends Crawler {
 				$processed++;
 
 				if ( $file instanceof \SplFileInfo && ! $file->isLink() ) {
-					$relative_path = ltrim( \Simply_Static\Util::safe_relative_path( $scan['basedir'], $file->getPathname() ), '/' );
+					$relative_path = ltrim( \WP_Static_Export\Util::safe_relative_path( $scan['basedir'], $file->getPathname() ), '/' );
 					if ( $file->isDir() ) {
 						if ( ! $this->should_skip_path( $relative_path, $skip_dirs ) ) {
 							if ( count( $state['pending_dirs'] ) >= 50000 ) {
@@ -176,7 +176,7 @@ class Uploads_Crawler extends Crawler {
 					} elseif ( $file->isFile() && ! $this->should_skip_path( $relative_path, $skip_dirs ) ) {
 						$extension = strtolower( pathinfo( $relative_path, PATHINFO_EXTENSION ) );
 						if ( in_array( $extension, $extensions, true ) ) {
-							$buffer[] = \Simply_Static\Util::safe_join_url( $scan['baseurl'], $relative_path );
+							$buffer[] = \WP_Static_Export\Util::safe_join_url( $scan['baseurl'], $relative_path );
 							if ( count( $buffer ) >= $queue_batch ) {
 								$added             = $this->enqueue_urls_batch( $buffer );
 								$invocation_added += $added;
@@ -207,7 +207,7 @@ class Uploads_Crawler extends Crawler {
 					'scanned' => $state['scanned'],
 				);
 				$this->save_state( $state );
-				\Simply_Static\Util::debug_log( sprintf( 'Uploads crawler checkpointed after %d entries with %d URLs queued.', $state['scanned'], $state['added'] ) );
+				\WP_Static_Export\Util::debug_log( sprintf( 'Uploads crawler checkpointed after %d entries with %d URLs queued.', $state['scanned'], $state['added'] ) );
 
 				return $invocation_added;
 			}
@@ -231,7 +231,7 @@ class Uploads_Crawler extends Crawler {
 			'scanned' => $state['scanned'],
 		);
 		$this->clear_state();
-		\Simply_Static\Util::debug_log( sprintf( 'Uploads crawler added %d URLs across resumable batches.', $state['added'] ) );
+		\WP_Static_Export\Util::debug_log( sprintf( 'Uploads crawler added %d URLs across resumable batches.', $state['added'] ) );
 
 		return $invocation_added;
 	}
@@ -255,7 +255,7 @@ class Uploads_Crawler extends Crawler {
 				'baseurl' => $uploads['baseurl'],
 			);
 		}
-		$additional = apply_filters( 'ss_uploads_additional_directories', array(
+		$additional = apply_filters( 'wpse_uploads_additional_directories', array(
 			array(
 				'basedir' => WP_CONTENT_DIR . '/webp-express/webp-images/uploads',
 				'baseurl' => content_url( 'webp-express/webp-images/uploads' ),
@@ -290,7 +290,7 @@ class Uploads_Crawler extends Crawler {
 	/** @param string[] $skip_dirs */
 	protected function should_skip_path( string $relative_path, array $skip_dirs ) : bool {
 		$path = trim( str_replace( '\\', '/', $relative_path ), '/' );
-		if ( \Simply_Static\Util::is_private_backup_path( $path ) ) {
+		if ( \WP_Static_Export\Util::is_private_backup_path( $path ) ) {
 			return true;
 		}
 		foreach ( $skip_dirs as $skip_dir ) {
@@ -338,14 +338,14 @@ class Uploads_Crawler extends Crawler {
 	/** @param array<int,array{basedir:string,baseurl:string}> $scan_dirs */
 	protected function get_state_signature( array $scan_dirs ) : string {
 		return hash( 'sha256', serialize( array(
-			'archive_start_time' => \Simply_Static\Options::instance()->get( 'archive_start_time' ),
+			'archive_start_time' => \WP_Static_Export\Options::instance()->get( 'archive_start_time' ),
 			'scan_dirs'          => $scan_dirs,
 		) ) );
 	}
 
 	/** @return array<string,mixed> */
 	protected function load_state( string $signature ) : array {
-		$state = \Simply_Static\Options::instance()->get( 'uploads_crawler_state' );
+		$state = \WP_Static_Export\Options::instance()->get( 'uploads_crawler_state' );
 		if ( ! is_array( $state ) || 1 !== ( $state['version'] ?? null ) || $signature !== ( $state['signature'] ?? null ) ) {
 			return $this->new_state( $signature );
 		}
@@ -388,13 +388,13 @@ class Uploads_Crawler extends Crawler {
 
 	/** @param array<string,mixed> $state */
 	protected function save_state( array $state ) : void {
-		if ( ! \Simply_Static\Options::instance()->set( 'uploads_crawler_state', $state )->save() ) {
+		if ( ! \WP_Static_Export\Options::instance()->set( 'uploads_crawler_state', $state )->save() ) {
 			throw new \RuntimeException( 'Unable to save the uploads crawler checkpoint.' );
 		}
 	}
 
 	protected function clear_state() : void {
-		$options = \Simply_Static\Options::instance();
+		$options = \WP_Static_Export\Options::instance();
 		$options->destroy( 'uploads_crawler_state' );
 		if ( ! $options->save() ) {
 			throw new \RuntimeException( 'Unable to clear the uploads crawler checkpoint.' );
@@ -410,17 +410,17 @@ class Uploads_Crawler extends Crawler {
 	 */
 	private function enqueue_urls_batch( array $urls ): int {
 		$count = 0;
-		\Simply_Static\Util::debug_log( sprintf( 'Processing batch of %d URLs for %s crawler', count( $urls ), $this->name ) );
+		\WP_Static_Export\Util::debug_log( sprintf( 'Processing batch of %d URLs for %s crawler', count( $urls ), $this->name ) );
 
 		foreach ( $urls as $url ) {
 			// Skip URLs that are excluded by settings/patterns to avoid adding them to the DB at all
-			if ( \Simply_Static\Util::is_url_excluded( $url ) ) {
-				\Simply_Static\Util::debug_log( sprintf( 'Uploads crawler skipping excluded URL: %s', $url ) );
+			if ( \WP_Static_Export\Util::is_url_excluded( $url ) ) {
+				\WP_Static_Export\Util::debug_log( sprintf( 'Uploads crawler skipping excluded URL: %s', $url ) );
 				continue;
 			}
 
-			$static_page = \Simply_Static\Page::query()->find_or_initialize_by( 'url', $url );
-			$static_page->set_status_message( sprintf( __( 'Added by %s Crawler', 'simply-static' ), $this->name ) );
+			$static_page = \WP_Static_Export\Page::query()->find_or_initialize_by( 'url', $url );
+			$static_page->set_status_message( sprintf( __( 'Added by %s Crawler', 'wp-static-export' ), $this->name ) );
 			$static_page->found_on_id = 0;
 			$static_page->save();
 			$count ++;
@@ -439,8 +439,8 @@ class Uploads_Crawler extends Crawler {
 	 */
 	private function scan_directory_for_media_files( $dir, $url_base ): array {
 		$urls            = [];
-		$max_entries     = max( 1, min( 100000, (int) apply_filters( 'simply_static_uploads_detection_max_entries', 5000 ) ) );
-		$deadline        = microtime( true ) + max( 0.5, min( 15, (float) apply_filters( 'simply_static_uploads_detection_max_seconds', 5 ) ) );
+		$max_entries     = max( 1, min( 100000, (int) apply_filters( 'wpse_uploads_detection_max_entries', 5000 ) ) );
+		$deadline        = microtime( true ) + max( 0.5, min( 15, (float) apply_filters( 'wpse_uploads_detection_max_seconds', 5 ) ) );
 		$entries_scanned = 0;
 
 		// Media file extensions to look for
@@ -482,19 +482,19 @@ class Uploads_Crawler extends Crawler {
 		];
 
 		// Skip these directories
-		$skip_dirs = apply_filters( 'ss_skip_crawl_uploads_directories', [
+		$skip_dirs = apply_filters( 'wpse_skip_crawl_uploads_directories', [
 			'.git',
 			'node_modules',
 			'cache',
 			'tmp',
 			'temp',
 			'compatibility-check',
-			'simply-static/temp-files'
+			'wp-static-export/temp-files'
 		] );
 
 		// Check if directory exists
 		if ( ! is_dir( $dir ) ) {
-			\Simply_Static\Util::debug_log( "Directory does not exist: $dir" );
+			\WP_Static_Export\Util::debug_log( "Directory does not exist: $dir" );
 
 			return $urls;
 		}
@@ -507,7 +507,7 @@ class Uploads_Crawler extends Crawler {
 			);
 
 			// Process files in batches to prevent memory issues
-			$batch_size  = apply_filters( 'simply_static_uploads_batch_size', 500 );
+			$batch_size  = apply_filters( 'wpse_uploads_batch_size', 500 );
 			$file_count  = 0;
 			$batch_count = 0;
 			$file_batch  = [];
@@ -528,7 +528,7 @@ class Uploads_Crawler extends Crawler {
 				// Process batch when it reaches the batch size
 				if ( $file_count % $batch_size === 0 ) {
 					$batch_count ++;
-					\Simply_Static\Util::debug_log( "Processing uploads batch $batch_count with $batch_size files" );
+					\WP_Static_Export\Util::debug_log( "Processing uploads batch $batch_count with $batch_size files" );
 					$urls       = array_merge( $urls, $this->process_file_batch( $file_batch, $dir, $url_base, $skip_dirs, $media_extensions ) );
 					$file_batch = []; // Reset batch
 				}
@@ -537,13 +537,13 @@ class Uploads_Crawler extends Crawler {
 			// Process any remaining files
 			if ( ! empty( $file_batch ) ) {
 				$batch_count ++;
-				\Simply_Static\Util::debug_log( "Processing final uploads batch $batch_count with " . count( $file_batch ) . " files" );
+				\WP_Static_Export\Util::debug_log( "Processing final uploads batch $batch_count with " . count( $file_batch ) . " files" );
 				$urls = array_merge( $urls, $this->process_file_batch( $file_batch, $dir, $url_base, $skip_dirs, $media_extensions ) );
 			}
 
-			\Simply_Static\Util::debug_log( "Found " . count( $urls ) . " media URLs in $dir" );
+			\WP_Static_Export\Util::debug_log( "Found " . count( $urls ) . " media URLs in $dir" );
 		} catch ( \Exception $e ) {
-			\Simply_Static\Util::debug_log( "Error scanning directory $dir: " . $e->getMessage() );
+			\WP_Static_Export\Util::debug_log( "Error scanning directory $dir: " . $e->getMessage() );
 		}
 
 		return $urls;
@@ -565,8 +565,8 @@ class Uploads_Crawler extends Crawler {
 
 		foreach ( $files as $file ) {
 			// Build a safe relative path and evaluate skip rules
-			$relative_path = \Simply_Static\Util::safe_relative_path( $dir, $file->getPathname() );
-			if ( \Simply_Static\Util::is_private_backup_path( $relative_path ) ) {
+			$relative_path = \WP_Static_Export\Util::safe_relative_path( $dir, $file->getPathname() );
+			if ( \WP_Static_Export\Util::is_private_backup_path( $relative_path ) ) {
 				continue;
 			}
 
@@ -587,7 +587,7 @@ class Uploads_Crawler extends Crawler {
 			$extension = strtolower( pathinfo( $relative_path, PATHINFO_EXTENSION ) );
 			if ( in_array( $extension, $media_extensions, true ) ) {
 				// Convert the file path to a URL and join safely
-				$url    = \Simply_Static\Util::safe_join_url( $url_base, $relative_path );
+				$url    = \WP_Static_Export\Util::safe_join_url( $url_base, $relative_path );
 				$urls[] = $url;
 			}
 		}

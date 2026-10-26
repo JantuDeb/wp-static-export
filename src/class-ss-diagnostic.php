@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) {
@@ -41,57 +41,57 @@ class Diagnostic {
 
 	/**
 	 * An instance of the options structure containing all options for this plugin
-	 * @var Simply_Static\Options
+	 * @var WP_Static_Export\Options
 	 */
 	protected $options = null;
 
 	public function __construct() {
 		$this->options = Options::instance();
 		$sections      = array(
-			'urls'       => __( 'URLs', 'simply-static' ),
-			'server'     => __( 'Server', 'simply-static' ),
-			'wordpress'  => __( 'WordPress', 'simply-static' ),
-			'plugins'    => __( 'Plugins', 'simply-static' ),
-			'filesystem' => __( 'Filesystem', 'simply-static' ),
-			'mysql'      => __( 'MySQL', 'simply-static' ),
+			'urls'       => __( 'URLs', 'wp-static-export' ),
+			'server'     => __( 'Server', 'wp-static-export' ),
+			'wordpress'  => __( 'WordPress', 'wp-static-export' ),
+			'plugins'    => __( 'Plugins', 'wp-static-export' ),
+			'filesystem' => __( 'Filesystem', 'wp-static-export' ),
+			'mysql'      => __( 'MySQL', 'wp-static-export' ),
 		);
 
 		$this->checks = array(
 			$sections['urls']       => array(),
 			$sections['server']     => array(
-				__( 'PHP Version', 'simply-static' ) => $this->php_version(),
-				__( 'Basic Auth', 'simply-static' )  => $this->check_basic_auth_status(),
-				__( 'php-xml', 'simply-static' )     => $this->is_xml_active(),
-				__( 'cURL', 'simply-static' )        => $this->has_curl(),
-				__( 'Docker', 'simply-static' )      => $this->docker_environment_check(),
+				__( 'PHP Version', 'wp-static-export' ) => $this->php_version(),
+				__( 'Basic Auth', 'wp-static-export' )  => $this->check_basic_auth_status(),
+				__( 'php-xml', 'wp-static-export' )     => $this->is_xml_active(),
+				__( 'cURL', 'wp-static-export' )        => $this->has_curl(),
+				__( 'Docker', 'wp-static-export' )      => $this->docker_environment_check(),
 			),
 			$sections['wordpress']  => array(
-				__( 'Permalinks', 'simply-static' ) => $this->is_permalink_structure_set(),
-				__( 'Indexable', 'simply-static' )  => $this->is_set_to_index(),
-				__( 'Caching', 'simply-static' )    => $this->is_cache_set(),
-				__( 'WP-CRON', 'simply-static' )    => $this->is_wp_cron_running(),
+				__( 'Permalinks', 'wp-static-export' ) => $this->is_permalink_structure_set(),
+				__( 'Indexable', 'wp-static-export' )  => $this->is_set_to_index(),
+				__( 'Caching', 'wp-static-export' )    => $this->is_cache_set(),
+				__( 'WP-CRON', 'wp-static-export' )    => $this->is_wp_cron_running(),
 			),
 			$sections['plugins']    => array(),
 			$sections['filesystem'] => array(
-				__( 'Temp dir readable', 'simply-static' )  => $this->is_temp_files_dir_readable(),
-				__( 'Temp dir writable', 'simply-static' ) => $this->is_temp_files_dir_writeable(),
+				__( 'Temp dir readable', 'wp-static-export' )  => $this->is_temp_files_dir_readable(),
+				__( 'Temp dir writable', 'wp-static-export' ) => $this->is_temp_files_dir_writeable(),
 			),
 			$sections['mysql']      => array(
-				__( 'DELETE', 'simply-static' ) => $this->user_can_delete(),
-				__( 'INSERT', 'simply-static' ) => $this->user_can_insert(),
-				__( 'SELECT', 'simply-static' ) => $this->user_can_select(),
-				__( 'CREATE', 'simply-static' ) => $this->user_can_create(),
-				__( 'ALTER', 'simply-static' )  => $this->user_can_alter(),
-				__( 'DROP', 'simply-static' )   => $this->user_can_drop(),
+				__( 'DELETE', 'wp-static-export' ) => $this->user_can_delete(),
+				__( 'INSERT', 'wp-static-export' ) => $this->user_can_insert(),
+				__( 'SELECT', 'wp-static-export' ) => $this->user_can_select(),
+				__( 'CREATE', 'wp-static-export' ) => $this->user_can_create(),
+				__( 'ALTER', 'wp-static-export' )  => $this->user_can_alter(),
+				__( 'DROP', 'wp-static-export' )   => $this->user_can_drop(),
 			)
 		);
 
 		if ( $this->options->get( 'destination_url_type' ) == 'absolute' ) {
-			$this->checks[ $sections['urls'] ][ __( 'Destination URL', 'simply-static' ) ] = $this->is_destination_host_a_valid_url();
+			$this->checks[ $sections['urls'] ][ __( 'Destination URL', 'wp-static-export' ) ] = $this->is_destination_host_a_valid_url();
 		}
 
 		if ( $this->options->get( 'delivery_method' ) == 'local' ) {
-			$this->checks[ $sections['filesystem'] ][ __( 'Local Dir', 'simply-static' ) ] = $this->is_local_dir_writeable();
+			$this->checks[ $sections['filesystem'] ][ __( 'Local Dir', 'wp-static-export' ) ] = $this->is_local_dir_writeable();
 		}
 
 		$additional_urls = Util::string_to_array( $this->options->get( 'additional_urls' ) );
@@ -122,7 +122,7 @@ class Diagnostic {
 			}
 		}
 
-		$this->incompatible_plugins = apply_filters( 'ss_incompatible_plugins', $this->get_incompatible_plugins() );
+		$this->incompatible_plugins = apply_filters( 'wpse_incompatible_plugins', $this->get_incompatible_plugins() );
 
 		foreach ( $activated_plugins as $plugin ) {
 			if ( in_array( $plugin['TextDomain'], $this->incompatible_plugins ) ) {
@@ -133,10 +133,10 @@ class Diagnostic {
 
 		if ( $plugin_count === 0 ) {
 			/* translators: %d: number of incompatible plugins. */
-			$incompatible_plugins_error = sprintf( __( '%d incompatible plugins are active', 'simply-static' ), $plugin_count );
-			$this->checks[ $sections['plugins'] ][ __( 'Incompatible Plugins', 'simply-static' ) ] = array(
+			$incompatible_plugins_error = sprintf( __( '%d incompatible plugins are active', 'wp-static-export' ), $plugin_count );
+			$this->checks[ $sections['plugins'] ][ __( 'Incompatible Plugins', 'wp-static-export' ) ] = array(
 				'test'        => true,
-				'description' => __( 'No incompatible plugins are active on your website!', 'simply-static' ),
+				'description' => __( 'No incompatible plugins are active on your website!', 'wp-static-export' ),
 				'error'       => $incompatible_plugins_error,
 			);
 		}
@@ -144,12 +144,12 @@ class Diagnostic {
 		$this->checks = $this->filter_checks( $this->checks );
 
 		// Set transient for checks.
-		if ( ! get_transient( 'simply_static_checks' ) ) {
-			set_transient( 'simply_static_checks', $this->checks, 5 * MINUTE_IN_SECONDS );
+		if ( ! get_transient( 'wpse_checks' ) ) {
+			set_transient( 'wpse_checks', $this->checks, 5 * MINUTE_IN_SECONDS );
 		}
 
 		// Set transient for failed tests.
-		if ( ! get_transient( 'simply_static_failed_tests' ) ) {
+		if ( ! get_transient( 'wpse_failed_tests' ) ) {
 			$failed_tests = 0;
 
 			foreach ( $this->checks as $test ) {
@@ -159,7 +159,7 @@ class Diagnostic {
 					}
 				}
 			}
-			set_transient( 'simply_static_failed_tests', $failed_tests, 5 * MINUTE_IN_SECONDS );
+			set_transient( 'wpse_failed_tests', $failed_tests, 5 * MINUTE_IN_SECONDS );
 		}
 	}
 
@@ -181,7 +181,7 @@ class Diagnostic {
 		 * @param array      $checks      Diagnostic sections and checks.
 		 * @param Diagnostic $diagnostic Current diagnostic instance.
 		 */
-		$filtered_checks = apply_filters( 'ss_diagnostic_checks', $checks, $this );
+		$filtered_checks = apply_filters( 'wpse_diagnostic_checks', $checks, $this );
 
 		return is_array( $filtered_checks ) ? $filtered_checks : $checks;
 	}
@@ -191,9 +191,9 @@ class Diagnostic {
 		$destination_host   = $this->options->get( 'destination_host' );
 		$destination_url    = $destination_scheme . $destination_host;
 		/* translators: %s: destination URL. */
-		$valid_message      = sprintf( __( 'Destination URL %s is valid', 'simply-static' ), $destination_url );
+		$valid_message      = sprintf( __( 'Destination URL %s is valid', 'wp-static-export' ), $destination_url );
 		/* translators: %s: destination URL. */
-		$invalid_message    = sprintf( __( 'Destination URL %s is not valid', 'simply-static' ), $destination_url );
+		$invalid_message    = sprintf( __( 'Destination URL %s is not valid', 'wp-static-export' ), $destination_url );
 
 		return array(
 			'test'        => filter_var( $destination_url, FILTER_VALIDATE_URL ) !== false,
@@ -208,8 +208,8 @@ class Diagnostic {
 
 		return array(
 			'test'        => $infos['test'],
-			'description' => __( 'Is a valid URL.', 'simply-static' ),
-			'error'       => __( 'Is not a valid URL.', 'simply-static' )
+			'description' => __( 'Is a valid URL.', 'wp-static-export' ),
+			'error'       => __( 'Is not a valid URL.', 'wp-static-export' )
 		);
 	}
 
@@ -222,17 +222,17 @@ class Diagnostic {
 			$message = null;
 		} elseif ( stripos( $file, get_home_path() ) !== 0 && stripos( $file, WP_PLUGIN_DIR ) !== 0 && stripos( $file, WP_CONTENT_DIR ) !== 0 ) {
 			$test    = false;
-			$message = __( 'Not a valid path', 'simply-static' );
+			$message = __( 'Not a valid path', 'wp-static-export' );
 		} elseif ( ! is_readable( $file ) ) {
 			$test    = false;
-			$message = __( 'Not readable', 'simply-static' );;
+			$message = __( 'Not readable', 'wp-static-export' );;
 		} else {
 			$test    = true;
 			$message = null;
 		}
 
 		/* translators: %s: additional file or directory path. */
-		$valid_message = sprintf( __( 'Additional File/Dir %s is valid', 'simply-static' ), $file );
+		$valid_message = sprintf( __( 'Additional File/Dir %s is valid', 'wp-static-export' ), $file );
 
 		return array(
 			'test'        => $test,
@@ -244,16 +244,16 @@ class Diagnostic {
 	public function is_permalink_structure_set() {
 		return array(
 			'test'        => strlen( get_option( 'permalink_structure' ) ) !== 0,
-			'description' => __( 'WordPress permalink structure is set', 'simply-static' ),
-			'error'       => __( 'WordPress permalink structure is not set', 'simply-static' ),
+			'description' => __( 'WordPress permalink structure is set', 'wp-static-export' ),
+			'error'       => __( 'WordPress permalink structure is not set', 'wp-static-export' ),
 		);
 	}
 
 	public function is_set_to_index() {
 		return array(
 			'test'        => get_option( 'blog_public' ) === '1',
-			'description' => __( 'Discourage search engines from indexing this site is disabled', 'simply-static' ),
-			'error'       => __( 'Discourage search engines from indexing this site is enabled', 'simply-static' ),
+			'description' => __( 'Discourage search engines from indexing this site is disabled', 'wp-static-export' ),
+			'error'       => __( 'Discourage search engines from indexing this site is enabled', 'wp-static-export' ),
 		);
 	}
 
@@ -268,8 +268,8 @@ class Diagnostic {
 
 		return array(
 			'test'        => $is_cron,
-			'description' => __( 'WordPress cron is available and running', 'simply-static' ),
-			'error'       => __( 'WordPress cron is not available and not running', 'simply-static' ),
+			'description' => __( 'WordPress cron is available and running', 'wp-static-export' ),
+			'error'       => __( 'WordPress cron is not available and not running', 'wp-static-export' ),
 		);
 	}
 
@@ -278,8 +278,8 @@ class Diagnostic {
 
 		$response = array(
 			'test'        => true,
-			'description' => __( 'Caching is disabled, great!', 'simply-static' ),
-			'error'       => __( 'Please disable caching before running a static export', 'simply-static' ),
+			'description' => __( 'Caching is disabled, great!', 'wp-static-export' ),
+			'error'       => __( 'Please disable caching before running a static export', 'wp-static-export' ),
 		);
 
 		if ( ! function_exists( 'is_plugin_active' ) ) {
@@ -290,73 +290,73 @@ class Diagnostic {
 		if ( defined( 'W3TC_VERSION' ) && is_plugin_active( 'w3-total-cache/w3-total-cache.php' ) && in_array( 'w3-total-cache', $incompatible_plugins ) ) {
 			$response['test']  = false;
 			/* translators: %s: caching plugin name. */
-			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'simply-static' ), esc_html( 'W3 Total Cache' ) );
+			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'wp-static-export' ), esc_html( 'W3 Total Cache' ) );
 		}
 
 		// WP Fastest Cache.
 		if ( defined( 'WPFC_WP_PLUGIN_DIR' ) && is_plugin_active( 'wp-fastest-cache/wpFastestCache.php' ) && in_array( 'wp-fastest-cache', $incompatible_plugins ) ) {
 			$response['test']  = false;
-			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'simply-static' ), esc_html( 'WP Fastest Cache' ) );
+			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'wp-static-export' ), esc_html( 'WP Fastest Cache' ) );
 		}
 
 		// WP Rocket.
 		if ( defined( 'WP_ROCKET_VERSION' ) && is_plugin_active( 'wp-rocket/wp-rocket.php' ) && in_array( 'wp-rocket', $incompatible_plugins ) ) {
 			$response['test']  = false;
-			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'simply-static' ), esc_html( 'WP Rocket' ) );
+			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'wp-static-export' ), esc_html( 'WP Rocket' ) );
 		}
 
 		// Litespeed Cache.
 		if ( defined( 'LSCWP_V' ) && is_plugin_active( 'litespeed-cache/litespeed-cache.php' ) && in_array( 'litespeed-cache', $incompatible_plugins ) ) {
 			$response['test']  = false;
-			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'simply-static' ), esc_html( 'LiteSpeed Cache' ) );
+			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'wp-static-export' ), esc_html( 'LiteSpeed Cache' ) );
 		}
 
 		// Speed Optimizer (Siteground)
 		if ( defined( 'SiteGround_Optimizer\VERSION' ) && is_plugin_active( 'sg-cachepress/sg-cachepress.php' ) && in_array( 'sg-cachepress', $incompatible_plugins ) ) {
 			$response['test']  = false;
-			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'simply-static' ), esc_html( 'Speed Optimizer' ) );
+			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'wp-static-export' ), esc_html( 'Speed Optimizer' ) );
 		}
 
 		// WP Super Cache.
 		if ( defined( 'WPSC_VERSION' ) && is_plugin_active( 'wp-super-cache/wp-cache.php' ) && in_array( 'wp-super-cache', $incompatible_plugins ) ) {
 			$response['test']  = false;
-			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'simply-static' ), esc_html( 'WP Super Cache' ) );
+			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'wp-static-export' ), esc_html( 'WP Super Cache' ) );
 		}
 
 		// Hummingbird.
 		if ( defined( 'WPHB_VERSION' ) && is_plugin_active( 'hummingbird-performance/wp-hummingbird.php' ) && in_array( 'hummingbird-performance', $incompatible_plugins ) ) {
 			$response['test']  = false;
-			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'simply-static' ), esc_html( 'Hummingbird' ) );
+			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'wp-static-export' ), esc_html( 'Hummingbird' ) );
 		}
 
 		// Autoptimize.
 		if ( defined( 'AUTOPTIMIZE_PLUGIN_VERSION' ) && is_plugin_active( 'autoptimize/autoptimize.php' ) && in_array( 'autoptimize', $incompatible_plugins ) ) {
 			$response['test']  = false;
-			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'simply-static' ), esc_html( 'Autoptimize' ) );
+			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'wp-static-export' ), esc_html( 'Autoptimize' ) );
 		}
 
 		// Breeze (Cloudways)
 		if ( defined( 'BREEZE_VERSION' ) && is_plugin_active( 'breeze/breeze.php' ) && in_array( 'breeze', $incompatible_plugins ) ) {
 			$response['test']  = false;
-			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'simply-static' ), esc_html( 'Breeze' ) );
+			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'wp-static-export' ), esc_html( 'Breeze' ) );
 		}
 
 		// Cache Enabler.
 		if ( defined( 'CACHE_ENABLER_VERSION' ) && is_plugin_active( 'cache-enabler/cache-enabler.php' ) && in_array( 'cache-enabler', $incompatible_plugins ) ) {
 			$response['test']  = false;
-			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'simply-static' ), esc_html( 'Cache Enabler' ) );
+			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'wp-static-export' ), esc_html( 'Cache Enabler' ) );
 		}
 
 		// Redis Object Cache.
 		if ( defined( 'WP_REDIS_VERSION' ) && is_plugin_active( 'redis-cache/redis-cache.php' ) && in_array( 'wp-redis', $incompatible_plugins ) ) {
 			$response['test']  = false;
-			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'simply-static' ), esc_html( 'Redis Object Cache' ) );
+			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'wp-static-export' ), esc_html( 'Redis Object Cache' ) );
 		}
 
 		// Cloudflare.
 		if ( defined( 'CLOUDFLARE_PLUGIN_DIR' ) && is_plugin_active( 'cloudflare/cloudflare.php' ) && in_array( 'cloudflare', $incompatible_plugins ) ) {
 			$response['test']  = false;
-			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'simply-static' ), esc_html( 'Cloudflare' ) );
+			$response['error'] = sprintf( esc_html__( 'Please disable caching (%s) before running a static export.', 'wp-static-export' ), esc_html( 'Cloudflare' ) );
 		}
 
 		return $response;
@@ -441,7 +441,7 @@ class Diagnostic {
 	 */
 	public function is_incompatible_plugin( $plugin ) {
 		/* translators: %s: plugin name. */
-		$error_message = sprintf( __( '%s is not compatible with WP Static Export.', 'simply-static' ), $plugin['Name'] );
+		$error_message = sprintf( __( '%s is not compatible with WP Static Export.', 'wp-static-export' ), $plugin['Name'] );
 
 		return array(
 			'test'  => false,
@@ -452,9 +452,9 @@ class Diagnostic {
 	public function is_temp_files_dir_readable() {
 		$temp_files_dir = Util::get_temp_dir();
 		/* translators: %s: temporary files directory path. */
-		$readable_message = sprintf( __( 'Web server can read from Temp Files Directory: %s', 'simply-static' ), $temp_files_dir );
+		$readable_message = sprintf( __( 'Web server can read from Temp Files Directory: %s', 'wp-static-export' ), $temp_files_dir );
 		/* translators: %s: temporary files directory path. */
-		$unreadable_message = sprintf( __( "Web server can't read from Temp Files Directory: %s", 'simply-static' ), $temp_files_dir );
+		$unreadable_message = sprintf( __( "Web server can't read from Temp Files Directory: %s", 'wp-static-export' ), $temp_files_dir );
 
 		return array(
 			'test'        => is_readable( $temp_files_dir ),
@@ -466,9 +466,9 @@ class Diagnostic {
 	public function is_temp_files_dir_writeable() {
 		$temp_files_dir = Util::get_temp_dir();
 		/* translators: %s: temporary files directory path. */
-		$writable_message = sprintf( __( 'Web server can write to Temp Files Directory: %s', 'simply-static' ), $temp_files_dir );
+		$writable_message = sprintf( __( 'Web server can write to Temp Files Directory: %s', 'wp-static-export' ), $temp_files_dir );
 		/* translators: %s: temporary files directory path. */
-		$unwritable_message = sprintf( __( "Web server can't write to Temp Files Directory: %s", 'simply-static' ), $temp_files_dir );
+		$unwritable_message = sprintf( __( "Web server can't write to Temp Files Directory: %s", 'wp-static-export' ), $temp_files_dir );
 
 		return array(
 			'test'        => is_writable( $temp_files_dir ),
@@ -480,9 +480,9 @@ class Diagnostic {
 	public function is_local_dir_writeable() {
 		$local_dir = $this->options->get( 'local_dir' );
 		/* translators: %s: local destination directory path. */
-		$writable_message = sprintf( __( 'Web server can write to Local Directory: %s', 'simply-static' ), $local_dir );
+		$writable_message = sprintf( __( 'Web server can write to Local Directory: %s', 'wp-static-export' ), $local_dir );
 		/* translators: %s: local destination directory path. */
-		$unwritable_message = sprintf( __( 'Web server can not write to Local Directory: %s', 'simply-static' ), $local_dir );
+		$unwritable_message = sprintf( __( 'Web server can not write to Local Directory: %s', 'wp-static-export' ), $local_dir );
 
 		return array(
 			'test'        => is_string( $local_dir ) && Util::is_path_allowed_by_open_basedir( $local_dir ) && is_writable( $local_dir ),
@@ -494,56 +494,56 @@ class Diagnostic {
 	public function user_can_delete() {
 		return array(
 			'test'        => Sql_Permissions::instance()->can( 'delete' ),
-			'description' => __( 'MySQL user has DELETE privilege', 'simply-static' ),
-			'error'       => __( 'MySQL user has no DELETE privilege', 'simply-static' )
+			'description' => __( 'MySQL user has DELETE privilege', 'wp-static-export' ),
+			'error'       => __( 'MySQL user has no DELETE privilege', 'wp-static-export' )
 		);
 	}
 
 	public function user_can_insert() {
 		return array(
 			'test'        => Sql_Permissions::instance()->can( 'insert' ),
-			'description' => __( 'MySQL user has INSERT privilege', 'simply-static' ),
-			'error'       => __( 'MySQL user has no INSERT privilege', 'simply-static' )
+			'description' => __( 'MySQL user has INSERT privilege', 'wp-static-export' ),
+			'error'       => __( 'MySQL user has no INSERT privilege', 'wp-static-export' )
 		);
 	}
 
 	public function user_can_select() {
 		return array(
 			'test'        => Sql_Permissions::instance()->can( 'select' ),
-			'description' => __( 'MySQL user has SELECT privilege', 'simply-static' ),
-			'error'       => __( 'MySQL user has no SELECT privilege', 'simply-static' )
+			'description' => __( 'MySQL user has SELECT privilege', 'wp-static-export' ),
+			'error'       => __( 'MySQL user has no SELECT privilege', 'wp-static-export' )
 		);
 	}
 
 	public function user_can_create() {
 		return array(
 			'test'        => Sql_Permissions::instance()->can( 'create' ),
-			'description' => __( 'MySQL user has CREATE privilege', 'simply-static' ),
-			'error'       => __( 'MySQL user has no CREATE privilege', 'simply-static' )
+			'description' => __( 'MySQL user has CREATE privilege', 'wp-static-export' ),
+			'error'       => __( 'MySQL user has no CREATE privilege', 'wp-static-export' )
 		);
 	}
 
 	public function user_can_alter() {
 		return array(
 			'test'        => Sql_Permissions::instance()->can( 'alter' ),
-			'description' => __( 'MySQL user has ALTER privilege', 'simply-static' ),
-			'error'       => __( 'MySQL user has no ALTER privilege', 'simply-static' )
+			'description' => __( 'MySQL user has ALTER privilege', 'wp-static-export' ),
+			'error'       => __( 'MySQL user has no ALTER privilege', 'wp-static-export' )
 		);
 	}
 
 	public function user_can_drop() {
 		return array(
 			'test'        => Sql_Permissions::instance()->can( 'drop' ),
-			'description' => __( 'MySQL user has DROP privilege', 'simply-static' ),
-			'error'       => __( 'MySQL user has no DROP privilege', 'simply-static' )
+			'description' => __( 'MySQL user has DROP privilege', 'wp-static-export' ),
+			'error'       => __( 'MySQL user has no DROP privilege', 'wp-static-export' )
 		);
 	}
 
 	public function php_version() {
 		/* translators: %s: minimum supported PHP version. */
-		$supported_message = sprintf( __( 'PHP version is >= %s', 'simply-static' ), self::$min_version['php'] );
+		$supported_message = sprintf( __( 'PHP version is >= %s', 'wp-static-export' ), self::$min_version['php'] );
 		/* translators: %s: minimum supported PHP version. */
-		$unsupported_message = sprintf( __( 'PHP version < %s', 'simply-static' ), self::$min_version['php'] );
+		$unsupported_message = sprintf( __( 'PHP version < %s', 'wp-static-export' ), self::$min_version['php'] );
 
 		return array(
 			'test'        => version_compare( phpversion(), self::$min_version['php'], '>=' ),
@@ -555,8 +555,8 @@ class Diagnostic {
 	public function is_xml_active() {
 		return array(
 			'test'        => extension_loaded( 'xml' ) ? true : false,
-			'description' => __( 'php-xml is available', 'simply-static' ),
-			'error'       => __( 'php-xml is not available', 'simply-static' )
+			'description' => __( 'php-xml is available', 'wp-static-export' ),
+			'error'       => __( 'php-xml is not available', 'wp-static-export' )
 		);
 	}
 
@@ -569,11 +569,11 @@ class Diagnostic {
 		}
 
 		/* translators: %s: minimum supported cURL version. */
-		$version_error = sprintf( __( 'cURL version < %s', 'simply-static' ), self::$min_version['curl'] );
+		$version_error = sprintf( __( 'cURL version < %s', 'wp-static-export' ), self::$min_version['curl'] );
 
 		return array(
 			'test'        => $test,
-			'description' => __( 'cURL is available', 'simply-static' ),
+			'description' => __( 'cURL is available', 'wp-static-export' ),
 			'error'       => $version_error,
 		);
 	}
@@ -595,8 +595,8 @@ class Diagnostic {
 		if ( ! $is_docker ) {
 			return array(
 				'test'        => true,
-				'description' => __( 'Docker not detected', 'simply-static' ),
-				'error'       => __( 'Docker misconfiguration detected', 'simply-static' ), // never shown when test is true
+				'description' => __( 'Docker not detected', 'wp-static-export' ),
+				'error'       => __( 'Docker misconfiguration detected', 'wp-static-export' ), // never shown when test is true
 			);
 		}
 
@@ -607,7 +607,7 @@ class Diagnostic {
 		$port   = isset( $parsed['port'] ) ? intval( $parsed['port'] ) : ( $scheme === 'https' ? 443 : 80 );
 		$server_port = isset( $_SERVER['SERVER_PORT'] ) ? intval( $_SERVER['SERVER_PORT'] ) : null;
 
-		$docs_url = 'https://docs.simplystatic.com/article/151-working-with-docker-environments';
+		$docs_url = 'https://github.com/JantuDeb/wp-static-export#readme';
 		$docs_url = esc_url( $docs_url );
 
 		$likely_misconfig = false;
@@ -619,7 +619,7 @@ class Diagnostic {
 			$likely_misconfig = true;
 			$error_message    = sprintf(
 			/* translators: 1: current site url, 2: example of host.docker.internal with port, 3: docs url */
-				__( 'Your WordPress Address appears to be %1$s which is usually not reachable from inside the container. Consider using %2$s (and map host.docker.internal), or the container service name, or adjust your Site URL. See instructions: %3$s', 'simply-static' ),
+				__( 'Your WordPress Address appears to be %1$s which is usually not reachable from inside the container. Consider using %2$s (and map host.docker.internal), or the container service name, or adjust your Site URL. See instructions: %3$s', 'wp-static-export' ),
 				esc_url( $home ),
 				esc_html( sprintf( '%s://host.docker.internal:%d', $scheme, $port ) ),
 				$docs_url
@@ -631,7 +631,7 @@ class Diagnostic {
 			$likely_misconfig = true;
 			$error_message    = sprintf(
 			/* translators: 1: current site url, 2: server port, 3: docs url */
-				__( 'Site URL %1$s uses a different port than the web server (%2$d). This is often unreachable from within the container. See Docker guide: %3$s', 'simply-static' ),
+				__( 'Site URL %1$s uses a different port than the web server (%2$d). This is often unreachable from within the container. See Docker guide: %3$s', 'wp-static-export' ),
 				esc_url( $home ),
 				$server_port,
 				$docs_url
@@ -641,24 +641,24 @@ class Diagnostic {
 		if ( $likely_misconfig ) {
 			return array(
 				'test'        => false,
-				'description' => __( 'Site URL looks reachable.', 'simply-static' ), // not shown when test is false
+				'description' => __( 'Site URL looks reachable.', 'wp-static-export' ), // not shown when test is false
 				'error'       => $error_message,
 			);
 		}
 
 		/* translators: %s: URL of the Docker setup guide. */
-		$review_message = sprintf( __( 'If exports fail, please review: %s', 'simply-static' ), $docs_url );
+		$review_message = sprintf( __( 'If exports fail, please review: %s', 'wp-static-export' ), $docs_url );
 
 		return array(
 			'test'        => true,
-			'description' => __( 'Site URL looks fine for container access.', 'simply-static' ),
+			'description' => __( 'Site URL looks fine for container access.', 'wp-static-export' ),
 			'error'       => $review_message,
 		);
 	}
 
 	public function check_basic_auth_status() {
 		$test    = true;
-		$message = __( 'Basic Auth is not enabled.', 'simply-static' );
+		$message = __( 'Basic Auth is not enabled.', 'wp-static-export' );
 
 		// Determine server type for basic auth check.
 		$server_type   = isset( $_SERVER['SERVER_SOFTWARE'] ) && is_string( $_SERVER['SERVER_SOFTWARE'] )
@@ -691,9 +691,9 @@ class Diagnostic {
 
 			if ( ! is_string( $basic_auth_user ) || ! is_string( $basic_auth_pass ) || '' === $basic_auth_user || '' === $basic_auth_pass ) {
 				$test    = false;
-				$message = __( 'Basic Auth is enabled, but no username or password is set in WP Static Export -> Settings -> Debug -> Basic Auth', 'simply-static' );
+				$message = __( 'Basic Auth is enabled, but no username or password is set in WP Static Export -> Settings -> Debug -> Basic Auth', 'wp-static-export' );
 			} else {
-				$message = __( 'Basic Auth is enabled, and username and password are set in WP Static Export -> Settings -> Debug -> Basic Auth', 'simply-static' );
+				$message = __( 'Basic Auth is enabled, and username and password are set in WP Static Export -> Settings -> Debug -> Basic Auth', 'wp-static-export' );
 			}
 		}
 
@@ -714,7 +714,7 @@ class Diagnostic {
 	public function check_error_from_response( $response ) {
 		if ( is_wp_error( $response ) ) {
 			$test    = false;
-			$message = __( 'Not a valid URL.', 'simply-static' );
+			$message = __( 'Not a valid URL.', 'wp-static-export' );
 		} else {
 			$code = $response['response']['code'];
 
@@ -725,14 +725,14 @@ class Diagnostic {
 				$test    = false;
 				$message = sprintf(
 					/* translators: %s: HTTP status code. */
-					__( 'Received a %s response. This might indicate a problem.', 'simply-static' ),
+					__( 'Received a %s response. This might indicate a problem.', 'wp-static-export' ),
 					$code
 				);
 			} else {
 				$test    = true;
 				$message = sprintf(
 					/* translators: %s: HTTP status code. */
-					__( 'Received a %s response.', 'simply-static' ),
+					__( 'Received a %s response.', 'wp-static-export' ),
 					$code
 				);
 			}

@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -331,7 +331,7 @@ class Page extends Model {
 		$handler = $this->handler ?? Page_Handler::class;
 
 		if ( ! class_exists( $handler ) ) {
-			$handler = '\Simply_Static\\' . $handler;
+			$handler = '\WP_Static_Export\\' . $handler;
 		}
 
 		if ( ! class_exists( $handler ) ) {

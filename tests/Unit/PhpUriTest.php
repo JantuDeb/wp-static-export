@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Simply_Static\Tests\Unit;
+namespace WP_Static_Export\Tests\Unit;
 
-use Simply_Static\PhpUri;
-use Simply_Static\Tests\Support\UnitTestCase;
+use WP_Static_Export\PhpUri;
+use WP_Static_Export\Tests\Support\UnitTestCase;
 
 final class PhpUriTest extends UnitTestCase {
 

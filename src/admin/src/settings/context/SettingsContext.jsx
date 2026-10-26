@@ -12,7 +12,7 @@ export const parseActionResponse = ( response ) => {
         try {
             parsed = JSON.parse( response );
         } catch ( error ) {
-            throw new Error( __( 'The server returned an invalid response.', 'simply-static' ) );
+            throw new Error( __( 'The server returned an invalid response.', 'wp-static-export' ) );
         }
     }
 
@@ -20,7 +20,7 @@ export const parseActionResponse = ( response ) => {
         const status = Number.parseInt( parsed.status, 10 );
         if ( Number.isFinite( status ) && status >= 400 ) {
             throw new Error(
-                parsed.message || __( 'The requested action could not be completed.', 'simply-static' )
+                parsed.message || __( 'The requested action could not be completed.', 'wp-static-export' )
             );
         }
     }
@@ -34,7 +34,7 @@ function SettingsContextProvider(props) {
             running: !!rollback.running,
             status: rollback.status || {},
             progress: rollback.progress || {},
-            message: rollback.message || __('Rollback in progress. WP Static Export export actions are locked until the rollback has finished.', 'simply-static'),
+            message: rollback.message || __('Rollback in progress. WP Static Export export actions are locked until the rollback has finished.', 'wp-static-export'),
         };
     };
 
@@ -54,7 +54,7 @@ function SettingsContextProvider(props) {
     const isRollbackRunning = !!snapshotRollback.running;
 
     const getSettings = () => {
-        return apiFetch({path: '/simplystatic/v1/settings'}).then((options) => {
+        return apiFetch({path: '/wp-static-export/v1/settings'}).then((options) => {
             settingsRef.current = options;
             setSettings(options);
             return options;
@@ -66,7 +66,7 @@ function SettingsContextProvider(props) {
         const shouldReload = queuedIntegrations && queuedIntegrations.length > 0;
 
         return apiFetch({
-            path: '/simplystatic/v1/settings',
+            path: '/wp-static-export/v1/settings',
             method: 'POST',
             data: settingsRef.current,
         }).then(resp => {
@@ -78,7 +78,7 @@ function SettingsContextProvider(props) {
 
     const resetSettings = () => {
         return apiFetch({
-            path: '/simplystatic/v1/settings/reset',
+            path: '/wp-static-export/v1/settings/reset',
             method: 'POST'
         }).then(resp => {
             const response = parseActionResponse(resp);
@@ -92,21 +92,21 @@ function SettingsContextProvider(props) {
 
     const resetDatabase = () => {
         return apiFetch({
-            path: '/simplystatic/v1/settings/reset-database',
+            path: '/wp-static-export/v1/settings/reset-database',
             method: 'POST',
         }).then(parseActionResponse);
     }
 
     const resetBackgroundQueue = () => {
         return apiFetch({
-            path: '/simplystatic/v1/settings/reset-background-queue',
+            path: '/wp-static-export/v1/settings/reset-background-queue',
             method: 'POST',
         }).then(parseActionResponse);
     }
 
     const updateFromNetwork = (blogId) => {
         return apiFetch({
-            path: '/simplystatic/v1/update-from-network',
+            path: '/wp-static-export/v1/update-from-network',
             method: 'POST',
             data: {
                 'blog_id': blogId,
@@ -116,7 +116,7 @@ function SettingsContextProvider(props) {
 
     const checkIfRunning = () => {
         apiFetch({
-            path: '/simplystatic/v1/is-running',
+            path: '/wp-static-export/v1/is-running',
             method: 'GET'
         }).then(resp => {
             var json = 'string' === typeof resp ? JSON.parse(resp) : resp;
@@ -133,18 +133,18 @@ function SettingsContextProvider(props) {
 
     const importSettings = (newSettings) => {
         return apiFetch({
-            path: '/simplystatic/v1/settings',
+            path: '/wp-static-export/v1/settings',
             method: 'POST',
             data: {
                 ...newSettings,
-                __simply_static_import: true,
+                __wpse_import: true,
             },
         }).then(parseActionResponse).then(getSettings);
     }
 
     const migrateSettings = () => {
         return apiFetch({
-            path: '/simplystatic/v1/migrate',
+            path: '/wp-static-export/v1/migrate',
             method: 'POST',
             data: { migrate: true },
         }).then(parseActionResponse).then(getSettings);
@@ -161,7 +161,7 @@ function SettingsContextProvider(props) {
     };
 
     const getStatus = () => {
-        apiFetch({path: '/simplystatic/v1/system-status'}).then((configs) => {
+        apiFetch({path: '/wp-static-export/v1/system-status'}).then((configs) => {
             setConfigs(configs);
 
             getStatusPassed();
@@ -170,7 +170,7 @@ function SettingsContextProvider(props) {
     }
 
     const getStatusPassed = () => {
-        apiFetch({path: '/simplystatic/v1/system-status/passed'}).then((result) => {
+        apiFetch({path: '/wp-static-export/v1/system-status/passed'}).then((result) => {
             let test = JSON.parse(result);
             setPassedChecks(test.passed);
         });
@@ -178,7 +178,7 @@ function SettingsContextProvider(props) {
 
     const resetDiagnostics = () => {
         apiFetch({
-            path: '/simplystatic/v1/reset-diagnostics',
+            path: '/wp-static-export/v1/reset-diagnostics',
             method: 'POST',
         });
     }

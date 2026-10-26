@@ -1,6 +1,6 @@
 <?php
 
-namespace Simply_Static;
+namespace WP_Static_Export;
 
 use RankMath\Sitemap\Router;
 
@@ -23,8 +23,8 @@ class Rank_Math_Integration extends Integration {
 	protected $static_redirects = null;
 
 	public function __construct() {
-		$this->name        = __( 'Rank Math', 'simply-static' );
-		$this->description = __( 'Automatically includes your XML sitemaps, handles URL replacements in schema.org markup, and creates redirects on your static site for you.', 'simply-static' );
+		$this->name        = __( 'Rank Math', 'wp-static-export' );
+		$this->description = __( 'Automatically includes your XML sitemaps, handles URL replacements in schema.org markup, and creates redirects on your static site for you.', 'wp-static-export' );
 	}
 
 	/**
@@ -33,12 +33,12 @@ class Rank_Math_Integration extends Integration {
 	 * @return void
 	 */
 	public function run() {
-		add_action( 'ss_after_setup_task', [ $this, 'register_sitemap_page' ] );
-		add_action( 'ss_after_setup_task', [ $this, 'register_redirections' ] );
-		add_filter( 'simply_static_registered_redirect', [ $this, 'get_registered_redirect' ], 10, 2 );
-		add_action( 'ss_dom_before_save', [ $this, 'replace_json_schema' ], 10, 2 );
-		add_filter( 'ss_additional_urls', [ $this, 'add_dynamic_robots_url' ] );
-		add_filter( 'ss_additional_files', [ $this, 'maybe_add_text_files' ] );
+		add_action( 'wpse_after_setup_task', [ $this, 'register_sitemap_page' ] );
+		add_action( 'wpse_after_setup_task', [ $this, 'register_redirections' ] );
+		add_filter( 'wpse_registered_redirect', [ $this, 'get_registered_redirect' ], 10, 2 );
+		add_action( 'wpse_dom_before_save', [ $this, 'replace_json_schema' ], 10, 2 );
+		add_filter( 'wpse_additional_urls', [ $this, 'add_dynamic_robots_url' ] );
+		add_filter( 'wpse_additional_files', [ $this, 'maybe_add_text_files' ] );
 
 		// Maybe update sitemap on single export.
 		$add_sitemap_single_export = apply_filters( 'ssp_single_export_add_xml_sitemap', false );
@@ -64,8 +64,8 @@ class Rank_Math_Integration extends Integration {
         $additional_files = is_array( $additional_files ) ? $additional_files : [];
 
         // Global flags to allow disabling robots.txt and llms.txt entirely.
-        $include_robots = (bool) apply_filters( 'ss_include_robots_txt_in_export', true );
-        $include_llms   = (bool) apply_filters( 'ss_include_llms_txt_in_export', true );
+        $include_robots = (bool) apply_filters( 'wpse_include_robots_txt_in_export', true );
+        $include_llms   = (bool) apply_filters( 'wpse_include_llms_txt_in_export', true );
 
         // If physical files exist, Setup_Task will already include them.
         $robots_physical = ABSPATH . 'robots.txt';
@@ -225,8 +225,8 @@ class Rank_Math_Integration extends Integration {
 	 */
 	public function register_redirections() {
 		// Only on full or update exports.
-		$use_single = get_option( 'simply-static-use-single' );
-		$use_build  = get_option( 'simply-static-use-build' );
+		$use_single = get_option( 'wp-static-export-use-single' );
+		$use_build  = get_option( 'wp-static-export-use-build' );
 
 		if ( ! empty( $use_build ) || ! empty( $use_single ) ) {
 			return;
@@ -247,9 +247,9 @@ class Rank_Math_Integration extends Integration {
 
 		foreach ( $redirections as $url => $redirection ) {
 			Util::debug_log( 'Adding Rank Math redirection URL to queue: ' . $url );
-			/** @var \Simply_Static\Page $static_page */
+			/** @var \WP_Static_Export\Page $static_page */
 			$static_page = Page::query()->find_or_initialize_by( 'url', $url );
-			$static_page->set_status_message( __( 'RankMath Redirection URL', 'simply-static' ) );
+			$static_page->set_status_message( __( 'RankMath Redirection URL', 'wp-static-export' ) );
 
 			// wpdb hydrates numeric columns as strings. Avoid dirtying an unchanged
 			// redirect page by assigning integer 0 over an existing string "0".
@@ -279,8 +279,8 @@ class Rank_Math_Integration extends Integration {
 		}
 
 		// Single and build exports do not refresh registered redirect metadata.
-		$use_single = get_option( 'simply-static-use-single' );
-		$use_build  = get_option( 'simply-static-use-build' );
+		$use_single = get_option( 'wp-static-export-use-single' );
+		$use_build  = get_option( 'wp-static-export-use-build' );
 
 		if ( ! empty( $use_build ) || ! empty( $use_single ) ) {
 			return $redirect;
@@ -370,7 +370,7 @@ class Rank_Math_Integration extends Integration {
 			$url = untrailingslashit( Util::origin_url() ) . '/' . ltrim( $url, '/' );
 		}
 
-		return remove_query_arg( 'simply_static_page', $url );
+		return remove_query_arg( 'wpse_page', $url );
 	}
 
 	/**
@@ -442,7 +442,7 @@ class Rank_Math_Integration extends Integration {
 	 * @return void
 	 */
 	protected function clear_stale_static_redirects( $redirections ) {
-		$batch_size = max( 1, (int) apply_filters( 'simply_static_rank_math_redirect_cleanup_batch_size', 500 ) );
+		$batch_size = max( 1, (int) apply_filters( 'wpse_rank_math_redirect_cleanup_batch_size', 500 ) );
 		$last_id    = 0;
 
 		do {
@@ -515,9 +515,9 @@ class Rank_Math_Integration extends Integration {
 
 		foreach ( $urls as $url ) {
 
-			/** @var \Simply_Static\Page $static_page */
+			/** @var \WP_Static_Export\Page $static_page */
 			$static_page = Page::query()->find_or_initialize_by( 'url', $url );
-			$static_page->set_status_message( __( 'Sitemap URL', 'simply-static' ) );
+			$static_page->set_status_message( __( 'Sitemap URL', 'wp-static-export' ) );
 			$static_page->found_on_id = 0;
 			$static_page->handler     = Rank_Math_Sitemap_Handler::class;
 			$static_page->save();
@@ -632,9 +632,9 @@ class Rank_Math_Integration extends Integration {
 
 		foreach ( $this->extract_sitemap_index_urls( $response ) as $sitemap_url ) {
 			// Add the sitemap URL to the queue.
-			/** @var \Simply_Static\Page $static_page */
+			/** @var \WP_Static_Export\Page $static_page */
 			$static_page = Page::query()->find_or_initialize_by( 'url', $sitemap_url );
-			$static_page->set_status_message( __( 'Sitemap URL', 'simply-static' ) );
+			$static_page->set_status_message( __( 'Sitemap URL', 'wp-static-export' ) );
 			$static_page->found_on_id = 0;
 			$static_page->handler     = Rank_Math_Sitemap_Handler::class;
 			$static_page->save();
