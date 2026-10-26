@@ -15,18 +15,26 @@ export function sha(algo: 'sha1' | 'sha256', file: string): Promise<string> {
 }
 
 export async function scanDir(root: string): Promise<FileEntry[]> {
-  const out: FileEntry[] = [];
+  const found: { rel: string; abs: string }[] = [];
   async function walk(dir: string): Promise<void> {
     for (const e of await readdir(dir, { withFileTypes: true })) {
       const abs = path.join(dir, e.name);
       if (e.isDirectory()) await walk(abs);
-      else if (e.isFile()) {
-        const rel = path.relative(root, abs).split(path.sep).join('/');
-        out.push({ path: rel, abs, size: (await stat(abs)).size, sha256: await sha('sha256', abs) });
-      }
+      else if (e.isFile()) found.push({ rel: path.relative(root, abs).split(path.sep).join('/'), abs });
     }
   }
   await walk(root);
+
+  // Hashing one file at a time leaves the disk idle between small files; a handful in flight is much faster on big sites.
+  const out: FileEntry[] = new Array(found.length);
+  let next = 0;
+  const worker = async () => {
+    for (let i = next++; i < found.length; i = next++) {
+      const f = found[i]!;
+      out[i] = { path: f.rel, abs: f.abs, size: (await stat(f.abs)).size, sha256: await sha('sha256', f.abs) };
+    }
+  };
+  await Promise.all(Array.from({ length: 16 }, worker));
   return out.sort((a, b) => a.path.localeCompare(b.path));
 }
 

@@ -92,6 +92,16 @@ class Features_Schema {
 				),
 			),
 			array(
+				'id'          => 'report',
+				'label'       => __( 'Export report', 'wp-static-export' ),
+				'description' => __( 'After each export every published post and page is compared with the exported files, so you can see what is missing before the site goes live. Open the report under "Export Report".', 'wp-static-export' ),
+				'fields'      => array(
+					self::f( 'report_enabled', __( 'Verify every export', 'wp-static-export' ), 'checkbox', array( 'default' => true ) ),
+					self::f( 'report_block_delivery', __( 'Stop before delivery if published items are missing or broken', 'wp-static-export' ), 'checkbox', array( 'help' => __( 'Nothing is uploaded or deployed when the check finds problems. The files stay in the export folder.', 'wp-static-export' ), 'show_if' => array( 'report_enabled' => true ) ) ),
+					self::f( 'report_keep', __( 'Reports to keep', 'wp-static-export' ), 'number', array( 'default' => 5, 'show_if' => array( 'report_enabled' => true ) ) ),
+				),
+			),
+			array(
 				'id'          => 'instant',
 				'label'       => __( 'Instant publishing', 'wp-static-export' ),
 				'description' => __( 'Publish one post to the static site without exporting everything. Use "Publish to static site" in the post list, "wp static-export run --post=ID", or turn on automatic publishing. Single exports never delete anything and do not refresh the search index, archives or home page: run a full export for those.', 'wp-static-export' ),

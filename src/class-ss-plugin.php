@@ -152,6 +152,8 @@ class Plugin {
 				Admin_Rest::get_instance();
 				Features_Admin::get_instance();
 				Deploy_Manifest_Service::get_instance();
+				Report_Admin::get_instance();
+				Report_Service::maybe_update_schema();
 
 				// Dashboard widget.
 				Admin_Dashboard_Widget::get_instance();
@@ -206,9 +208,13 @@ class Plugin {
 		require_once $path . 'src/tasks/class-ss-cancel-task.php';
 		require_once $path . 'src/tasks/class-ss-generate-404-task.php';
 		require_once $path . 'src/tasks/traits/trait-ss-runs-node-job.php';
+		require_once $path . 'src/tasks/class-ss-verify-task.php';
 		require_once $path . 'src/deploy/class-ss-deploy-config.php';
 		require_once $path . 'src/deploy/class-ss-deploy-runner.php';
 		require_once $path . 'src/features/class-ss-features-schema.php';
+		require_once $path . 'src/features/class-ss-report-service.php';
+		require_once $path . 'src/features/class-ss-verifier.php';
+		require_once $path . 'src/features/class-ss-report-admin.php';
 		require_once $path . 'src/features/class-ss-multilingual.php';
 		require_once $path . 'src/features/class-ss-process-config.php';
 		require_once $path . 'src/features/class-ss-html-enhancer.php';
@@ -229,6 +235,8 @@ class Plugin {
 		require_once $path . 'src/models/class-ss-page.php';
 		require_once $path . 'src/models/class-ss-deploy-manifest.php';
 		require_once $path . 'src/models/class-ss-deploy-manifest-url.php';
+		require_once $path . 'src/models/class-ss-report.php';
+		require_once $path . 'src/models/class-ss-report-item.php';
 		require_once $path . 'src/class-ss-deploy-manifest-service.php';
 		require_once $path . 'src/class-ss-diagnostic.php';
 		require_once $path . 'src/class-ss-sql-permissions.php';
@@ -810,6 +818,11 @@ class Plugin {
 
 		if ( Process_Config::needed() ) {
 			$task_list[] = 'process';
+		}
+
+		$export_type = $this->options->get( 'generate_type' );
+		if ( Report_Service::enabled() && empty( get_option( 'wp-static-export-use-build' ) ) && 'update' !== $export_type ) {
+			$task_list[] = 'verify';
 		}
 
 		if ( 'zip' === $delivery_method ) {

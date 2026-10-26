@@ -7774,7 +7774,7 @@ var require_agent = __commonJS({
     var { Socket } = require("net");
     var { Duplex } = require("stream");
     var { resolve: resolve2 } = require("path");
-    var { readFile: readFile13 } = require("fs");
+    var { readFile: readFile14 } = require("fs");
     var { execFile, spawn } = require("child_process");
     var { isParsedKey, parseKey } = require_keyParser();
     var {
@@ -7992,7 +7992,7 @@ var require_agent = __commonJS({
           cb = once(cb);
           let socketPath = this.socketPath;
           let triedCygpath = false;
-          readFile13(socketPath, function readCygsocket(err, data) {
+          readFile14(socketPath, function readCygsocket(err, data) {
             if (err) {
               if (triedCygpath)
                 return cb(new Error("Invalid cygwin unix socket path"));
@@ -8001,7 +8001,7 @@ var require_agent = __commonJS({
                   return cb(new Error("Invalid cygwin unix socket path"));
                 triedCygpath = true;
                 socketPath = stdout.toString().replace(/[\r\n]/g, "");
-                readFile13(socketPath, readCygsocket);
+                readFile14(socketPath, readCygsocket);
               });
               return;
             }
@@ -8075,11 +8075,11 @@ var require_agent = __commonJS({
       };
     })();
     var WINDOWS_PIPE_REGEX = /^[/\\][/\\]\.[/\\]pipe[/\\].+/;
-    function createAgent(path9) {
-      if (process.platform === "win32" && !WINDOWS_PIPE_REGEX.test(path9)) {
-        return path9 === "pageant" ? new PageantAgent() : new CygwinAgent(path9);
+    function createAgent(path10) {
+      if (process.platform === "win32" && !WINDOWS_PIPE_REGEX.test(path10)) {
+        return path10 === "pageant" ? new PageantAgent() : new CygwinAgent(path10);
       }
-      return new OpenSSHAgent(path9);
+      return new OpenSSHAgent(path10);
     }
     var AgentProtocol = (() => {
       const SSH_AGENTC_REQUEST_IDENTITIES = 11;
@@ -13323,17 +13323,17 @@ var require_SFTP = __commonJS({
       // ===========================================================================
       // Client-specific ===========================================================
       // ===========================================================================
-      createReadStream(path9, options) {
+      createReadStream(path10, options) {
         if (this.server)
           throw new Error("Client-only method called in server mode");
-        return new ReadStream(this, path9, options);
+        return new ReadStream(this, path10, options);
       }
-      createWriteStream(path9, options) {
+      createWriteStream(path10, options) {
         if (this.server)
           throw new Error("Client-only method called in server mode");
-        return new WriteStream(this, path9, options);
+        return new WriteStream(this, path10, options);
       }
-      open(path9, flags_, attrs, cb) {
+      open(path10, flags_, attrs, cb) {
         if (this.server)
           throw new Error("Client-only method called in server mode");
         if (typeof attrs === "function") {
@@ -13352,7 +13352,7 @@ var require_SFTP = __commonJS({
           attrsFlags = attrs.flags;
           attrsLen = attrs.nb;
         }
-        const pathLen = Buffer.byteLength(path9);
+        const pathLen = Buffer.byteLength(path10);
         let p = 9;
         const buf = Buffer.allocUnsafe(4 + 1 + 4 + 4 + pathLen + 4 + 4 + attrsLen);
         writeUInt32BE(buf, buf.length - 4, 0);
@@ -13360,7 +13360,7 @@ var require_SFTP = __commonJS({
         const reqid = this._writeReqid = this._writeReqid + 1 & MAX_REQID;
         writeUInt32BE(buf, reqid, 5);
         writeUInt32BE(buf, pathLen, p);
-        buf.utf8Write(path9, p += 4, pathLen);
+        buf.utf8Write(path10, p += 4, pathLen);
         writeUInt32BE(buf, flags, p += pathLen);
         writeUInt32BE(buf, attrsFlags, p += 4);
         if (attrsLen) {
@@ -13491,7 +13491,7 @@ var require_SFTP = __commonJS({
           throw new Error("Client-only method called in server mode");
         fastXfer(fs, this, localPath, remotePath, opts, cb);
       }
-      readFile(path9, options, callback_) {
+      readFile(path10, options, callback_) {
         if (this.server)
           throw new Error("Client-only method called in server mode");
         let callback;
@@ -13564,13 +13564,13 @@ var require_SFTP = __commonJS({
             return callback && callback(er, buffer);
           });
         };
-        this.open(path9, flag, 438, (er, handle_) => {
+        this.open(path10, flag, 438, (er, handle_) => {
           if (er)
             return callback && callback(er);
           handle = handle_;
           const tryStat = (er2, st) => {
             if (er2) {
-              this.stat(path9, (er_, st_) => {
+              this.stat(path10, (er_, st_) => {
                 if (er_) {
                   return this.close(handle, () => {
                     callback && callback(er2);
@@ -13591,7 +13591,7 @@ var require_SFTP = __commonJS({
           this.fstat(handle, tryStat);
         });
       }
-      writeFile(path9, data, options, callback_) {
+      writeFile(path10, data, options, callback_) {
         if (this.server)
           throw new Error("Client-only method called in server mode");
         let callback;
@@ -13610,7 +13610,7 @@ var require_SFTP = __commonJS({
         if (options.encoding && !Buffer.isEncoding(options.encoding))
           throw new Error(`Unknown encoding: ${options.encoding}`);
         const flag = options.flag || "w";
-        this.open(path9, flag, options.mode, (openErr, handle) => {
+        this.open(path10, flag, options.mode, (openErr, handle) => {
           if (openErr) {
             callback && callback(openErr);
           } else {
@@ -13619,7 +13619,7 @@ var require_SFTP = __commonJS({
             if (position === null) {
               const tryStat = (er, st) => {
                 if (er) {
-                  this.stat(path9, (er_, st_) => {
+                  this.stat(path10, (er_, st_) => {
                     if (er_) {
                       return this.close(handle, () => {
                         callback && callback(er);
@@ -13638,7 +13638,7 @@ var require_SFTP = __commonJS({
           }
         });
       }
-      appendFile(path9, data, options, callback_) {
+      appendFile(path10, data, options, callback_) {
         if (this.server)
           throw new Error("Client-only method called in server mode");
         let callback;
@@ -13656,12 +13656,12 @@ var require_SFTP = __commonJS({
           throw new TypeError("Bad arguments");
         if (!options.flag)
           options = Object.assign({ flag: "a" }, options);
-        this.writeFile(path9, data, options, callback);
+        this.writeFile(path10, data, options, callback);
       }
-      exists(path9, cb) {
+      exists(path10, cb) {
         if (this.server)
           throw new Error("Client-only method called in server mode");
-        this.stat(path9, (err) => {
+        this.stat(path10, (err) => {
           cb && cb(err ? false : true);
         });
       }
@@ -13704,7 +13704,7 @@ var require_SFTP = __commonJS({
           `SFTP: Outbound: ${isBuffered ? "Buffered" : "Sending"} RENAME`
         );
       }
-      mkdir(path9, attrs, cb) {
+      mkdir(path10, attrs, cb) {
         if (this.server)
           throw new Error("Client-only method called in server mode");
         let flags = 0;
@@ -13718,7 +13718,7 @@ var require_SFTP = __commonJS({
           flags = attrs.flags;
           attrsLen = attrs.nb;
         }
-        const pathLen = Buffer.byteLength(path9);
+        const pathLen = Buffer.byteLength(path10);
         let p = 9;
         const buf = Buffer.allocUnsafe(4 + 1 + 4 + 4 + pathLen + 4 + attrsLen);
         writeUInt32BE(buf, buf.length - 4, 0);
@@ -13726,7 +13726,7 @@ var require_SFTP = __commonJS({
         const reqid = this._writeReqid = this._writeReqid + 1 & MAX_REQID;
         writeUInt32BE(buf, reqid, 5);
         writeUInt32BE(buf, pathLen, p);
-        buf.utf8Write(path9, p += 4, pathLen);
+        buf.utf8Write(path10, p += 4, pathLen);
         writeUInt32BE(buf, flags, p += pathLen);
         if (attrsLen) {
           p += 4;
@@ -13742,10 +13742,10 @@ var require_SFTP = __commonJS({
           `SFTP: Outbound: ${isBuffered ? "Buffered" : "Sending"} MKDIR`
         );
       }
-      rmdir(path9, cb) {
+      rmdir(path10, cb) {
         if (this.server)
           throw new Error("Client-only method called in server mode");
-        const pathLen = Buffer.byteLength(path9);
+        const pathLen = Buffer.byteLength(path10);
         let p = 9;
         const buf = Buffer.allocUnsafe(4 + 1 + 4 + 4 + pathLen);
         writeUInt32BE(buf, buf.length - 4, 0);
@@ -13753,7 +13753,7 @@ var require_SFTP = __commonJS({
         const reqid = this._writeReqid = this._writeReqid + 1 & MAX_REQID;
         writeUInt32BE(buf, reqid, 5);
         writeUInt32BE(buf, pathLen, p);
-        buf.utf8Write(path9, p += 4, pathLen);
+        buf.utf8Write(path10, p += 4, pathLen);
         this._requests[reqid] = { cb };
         const isBuffered = sendOrBuffer(this, buf);
         this._debug && this._debug(
@@ -13843,10 +13843,10 @@ var require_SFTP = __commonJS({
           `SFTP: Outbound: ${isBuffered ? "Buffered" : "Sending"} FSTAT`
         );
       }
-      stat(path9, cb) {
+      stat(path10, cb) {
         if (this.server)
           throw new Error("Client-only method called in server mode");
-        const pathLen = Buffer.byteLength(path9);
+        const pathLen = Buffer.byteLength(path10);
         let p = 9;
         const buf = Buffer.allocUnsafe(4 + 1 + 4 + 4 + pathLen);
         writeUInt32BE(buf, buf.length - 4, 0);
@@ -13854,17 +13854,17 @@ var require_SFTP = __commonJS({
         const reqid = this._writeReqid = this._writeReqid + 1 & MAX_REQID;
         writeUInt32BE(buf, reqid, 5);
         writeUInt32BE(buf, pathLen, p);
-        buf.utf8Write(path9, p += 4, pathLen);
+        buf.utf8Write(path10, p += 4, pathLen);
         this._requests[reqid] = { cb };
         const isBuffered = sendOrBuffer(this, buf);
         this._debug && this._debug(
           `SFTP: Outbound: ${isBuffered ? "Buffered" : "Sending"} STAT`
         );
       }
-      lstat(path9, cb) {
+      lstat(path10, cb) {
         if (this.server)
           throw new Error("Client-only method called in server mode");
-        const pathLen = Buffer.byteLength(path9);
+        const pathLen = Buffer.byteLength(path10);
         let p = 9;
         const buf = Buffer.allocUnsafe(4 + 1 + 4 + 4 + pathLen);
         writeUInt32BE(buf, buf.length - 4, 0);
@@ -13872,17 +13872,17 @@ var require_SFTP = __commonJS({
         const reqid = this._writeReqid = this._writeReqid + 1 & MAX_REQID;
         writeUInt32BE(buf, reqid, 5);
         writeUInt32BE(buf, pathLen, p);
-        buf.utf8Write(path9, p += 4, pathLen);
+        buf.utf8Write(path10, p += 4, pathLen);
         this._requests[reqid] = { cb };
         const isBuffered = sendOrBuffer(this, buf);
         this._debug && this._debug(
           `SFTP: Outbound: ${isBuffered ? "Buffered" : "Sending"} LSTAT`
         );
       }
-      opendir(path9, cb) {
+      opendir(path10, cb) {
         if (this.server)
           throw new Error("Client-only method called in server mode");
-        const pathLen = Buffer.byteLength(path9);
+        const pathLen = Buffer.byteLength(path10);
         let p = 9;
         const buf = Buffer.allocUnsafe(4 + 1 + 4 + 4 + pathLen);
         writeUInt32BE(buf, buf.length - 4, 0);
@@ -13890,14 +13890,14 @@ var require_SFTP = __commonJS({
         const reqid = this._writeReqid = this._writeReqid + 1 & MAX_REQID;
         writeUInt32BE(buf, reqid, 5);
         writeUInt32BE(buf, pathLen, p);
-        buf.utf8Write(path9, p += 4, pathLen);
+        buf.utf8Write(path10, p += 4, pathLen);
         this._requests[reqid] = { cb };
         const isBuffered = sendOrBuffer(this, buf);
         this._debug && this._debug(
           `SFTP: Outbound: ${isBuffered ? "Buffered" : "Sending"} OPENDIR`
         );
       }
-      setstat(path9, attrs, cb) {
+      setstat(path10, attrs, cb) {
         if (this.server)
           throw new Error("Client-only method called in server mode");
         let flags = 0;
@@ -13909,7 +13909,7 @@ var require_SFTP = __commonJS({
         } else if (typeof attrs === "function") {
           cb = attrs;
         }
-        const pathLen = Buffer.byteLength(path9);
+        const pathLen = Buffer.byteLength(path10);
         let p = 9;
         const buf = Buffer.allocUnsafe(4 + 1 + 4 + 4 + pathLen + 4 + attrsLen);
         writeUInt32BE(buf, buf.length - 4, 0);
@@ -13917,7 +13917,7 @@ var require_SFTP = __commonJS({
         const reqid = this._writeReqid = this._writeReqid + 1 & MAX_REQID;
         writeUInt32BE(buf, reqid, 5);
         writeUInt32BE(buf, pathLen, p);
-        buf.utf8Write(path9, p += 4, pathLen);
+        buf.utf8Write(path10, p += 4, pathLen);
         writeUInt32BE(buf, flags, p += pathLen);
         if (attrsLen) {
           p += 4;
@@ -13977,8 +13977,8 @@ var require_SFTP = __commonJS({
           mtime: toUnixTimestamp(mtime)
         }, cb);
       }
-      utimes(path9, atime, mtime, cb) {
-        return this.setstat(path9, {
+      utimes(path10, atime, mtime, cb) {
+        return this.setstat(path10, {
           atime: toUnixTimestamp(atime),
           mtime: toUnixTimestamp(mtime)
         }, cb);
@@ -13989,8 +13989,8 @@ var require_SFTP = __commonJS({
           gid
         }, cb);
       }
-      chown(path9, uid, gid, cb) {
-        return this.setstat(path9, {
+      chown(path10, uid, gid, cb) {
+        return this.setstat(path10, {
           uid,
           gid
         }, cb);
@@ -14000,15 +14000,15 @@ var require_SFTP = __commonJS({
           mode
         }, cb);
       }
-      chmod(path9, mode, cb) {
-        return this.setstat(path9, {
+      chmod(path10, mode, cb) {
+        return this.setstat(path10, {
           mode
         }, cb);
       }
-      readlink(path9, cb) {
+      readlink(path10, cb) {
         if (this.server)
           throw new Error("Client-only method called in server mode");
-        const pathLen = Buffer.byteLength(path9);
+        const pathLen = Buffer.byteLength(path10);
         let p = 9;
         const buf = Buffer.allocUnsafe(4 + 1 + 4 + 4 + pathLen);
         writeUInt32BE(buf, buf.length - 4, 0);
@@ -14016,7 +14016,7 @@ var require_SFTP = __commonJS({
         const reqid = this._writeReqid = this._writeReqid + 1 & MAX_REQID;
         writeUInt32BE(buf, reqid, 5);
         writeUInt32BE(buf, pathLen, p);
-        buf.utf8Write(path9, p += 4, pathLen);
+        buf.utf8Write(path10, p += 4, pathLen);
         this._requests[reqid] = {
           cb: (err, names) => {
             if (typeof cb !== "function")
@@ -14061,10 +14061,10 @@ var require_SFTP = __commonJS({
           `SFTP: Outbound: ${isBuffered ? "Buffered" : "Sending"} SYMLINK`
         );
       }
-      realpath(path9, cb) {
+      realpath(path10, cb) {
         if (this.server)
           throw new Error("Client-only method called in server mode");
-        const pathLen = Buffer.byteLength(path9);
+        const pathLen = Buffer.byteLength(path10);
         let p = 9;
         const buf = Buffer.allocUnsafe(4 + 1 + 4 + 4 + pathLen);
         writeUInt32BE(buf, buf.length - 4, 0);
@@ -14072,7 +14072,7 @@ var require_SFTP = __commonJS({
         const reqid = this._writeReqid = this._writeReqid + 1 & MAX_REQID;
         writeUInt32BE(buf, reqid, 5);
         writeUInt32BE(buf, pathLen, p);
-        buf.utf8Write(path9, p += 4, pathLen);
+        buf.utf8Write(path10, p += 4, pathLen);
         this._requests[reqid] = {
           cb: (err, names) => {
             if (typeof cb !== "function")
@@ -14117,13 +14117,13 @@ var require_SFTP = __commonJS({
           this._debug(`SFTP: Outbound: ${which} posix-rename@openssh.com`);
         }
       }
-      ext_openssh_statvfs(path9, cb) {
+      ext_openssh_statvfs(path10, cb) {
         if (this.server)
           throw new Error("Client-only method called in server mode");
         const ext2 = this._extensions["statvfs@openssh.com"];
         if (!ext2 || ext2 !== "2")
           throw new Error("Server does not support this extended request");
-        const pathLen = Buffer.byteLength(path9);
+        const pathLen = Buffer.byteLength(path10);
         let p = 9;
         const buf = Buffer.allocUnsafe(4 + 1 + 4 + 4 + 19 + 4 + pathLen);
         writeUInt32BE(buf, buf.length - 4, 0);
@@ -14133,7 +14133,7 @@ var require_SFTP = __commonJS({
         writeUInt32BE(buf, 19, p);
         buf.utf8Write("statvfs@openssh.com", p += 4, 19);
         writeUInt32BE(buf, pathLen, p += 19);
-        buf.utf8Write(path9, p += 4, pathLen);
+        buf.utf8Write(path10, p += 4, pathLen);
         this._requests[reqid] = { extended: "statvfs@openssh.com", cb };
         const isBuffered = sendOrBuffer(this, buf);
         if (this._debug) {
@@ -14219,7 +14219,7 @@ var require_SFTP = __commonJS({
           `SFTP: Outbound: ${isBuffered ? "Buffered" : "Sending"} fsync@openssh.com`
         );
       }
-      ext_openssh_lsetstat(path9, attrs, cb) {
+      ext_openssh_lsetstat(path10, attrs, cb) {
         if (this.server)
           throw new Error("Client-only method called in server mode");
         const ext2 = this._extensions["lsetstat@openssh.com"];
@@ -14234,7 +14234,7 @@ var require_SFTP = __commonJS({
         } else if (typeof attrs === "function") {
           cb = attrs;
         }
-        const pathLen = Buffer.byteLength(path9);
+        const pathLen = Buffer.byteLength(path10);
         let p = 9;
         const buf = Buffer.allocUnsafe(4 + 1 + 4 + 4 + 20 + 4 + pathLen + 4 + attrsLen);
         writeUInt32BE(buf, buf.length - 4, 0);
@@ -14244,7 +14244,7 @@ var require_SFTP = __commonJS({
         writeUInt32BE(buf, 20, p);
         buf.utf8Write("lsetstat@openssh.com", p += 4, 20);
         writeUInt32BE(buf, pathLen, p += 20);
-        buf.utf8Write(path9, p += 4, pathLen);
+        buf.utf8Write(path10, p += 4, pathLen);
         writeUInt32BE(buf, flags, p += pathLen);
         if (attrsLen) {
           p += 4;
@@ -14261,13 +14261,13 @@ var require_SFTP = __commonJS({
           this._debug(`SFTP: Outbound: ${status} lsetstat@openssh.com`);
         }
       }
-      ext_openssh_expandPath(path9, cb) {
+      ext_openssh_expandPath(path10, cb) {
         if (this.server)
           throw new Error("Client-only method called in server mode");
         const ext2 = this._extensions["expand-path@openssh.com"];
         if (ext2 !== "1")
           throw new Error("Server does not support this extended request");
-        const pathLen = Buffer.byteLength(path9);
+        const pathLen = Buffer.byteLength(path10);
         let p = 9;
         const buf = Buffer.allocUnsafe(4 + 1 + 4 + 4 + 23 + 4 + pathLen);
         writeUInt32BE(buf, buf.length - 4, 0);
@@ -14277,7 +14277,7 @@ var require_SFTP = __commonJS({
         writeUInt32BE(buf, 23, p);
         buf.utf8Write("expand-path@openssh.com", p += 4, 23);
         writeUInt32BE(buf, pathLen, p += 20);
-        buf.utf8Write(path9, p += 4, pathLen);
+        buf.utf8Write(path10, p += 4, pathLen);
         this._requests[reqid] = {
           cb: (err, names) => {
             if (typeof cb !== "function")
@@ -15555,12 +15555,12 @@ var require_SFTP = __commonJS({
       [REQUEST.LSTAT]: (sftp2, payload) => {
         bufferParser.init(payload, 1);
         const reqID = bufferParser.readUInt32BE();
-        const path9 = bufferParser.readString(true);
+        const path10 = bufferParser.readString(true);
         bufferParser.clear();
-        if (path9 === void 0)
+        if (path10 === void 0)
           return doFatalSFTPError(sftp2, "Malformed LSTAT packet");
         sftp2._debug && sftp2._debug(`SFTP: Inbound: Received LSTAT (id:${reqID})`);
-        if (!sftp2.emit("LSTAT", reqID, path9)) {
+        if (!sftp2.emit("LSTAT", reqID, path10)) {
           sftp2.status(reqID, STATUS_CODE.OP_UNSUPPORTED);
         }
       },
@@ -15579,13 +15579,13 @@ var require_SFTP = __commonJS({
       [REQUEST.SETSTAT]: (sftp2, payload) => {
         bufferParser.init(payload, 1);
         const reqID = bufferParser.readUInt32BE();
-        const path9 = bufferParser.readString(true);
+        const path10 = bufferParser.readString(true);
         const attrs = readAttrs(sftp2._biOpt);
         bufferParser.clear();
         if (attrs === void 0)
           return doFatalSFTPError(sftp2, "Malformed SETSTAT packet");
         sftp2._debug && sftp2._debug(`SFTP: Inbound: Received SETSTAT (id:${reqID})`);
-        if (!sftp2.emit("SETSTAT", reqID, path9, attrs)) {
+        if (!sftp2.emit("SETSTAT", reqID, path10, attrs)) {
           sftp2.status(reqID, STATUS_CODE.OP_UNSUPPORTED);
         }
       },
@@ -15607,12 +15607,12 @@ var require_SFTP = __commonJS({
       [REQUEST.OPENDIR]: (sftp2, payload) => {
         bufferParser.init(payload, 1);
         const reqID = bufferParser.readUInt32BE();
-        const path9 = bufferParser.readString(true);
+        const path10 = bufferParser.readString(true);
         bufferParser.clear();
-        if (path9 === void 0)
+        if (path10 === void 0)
           return doFatalSFTPError(sftp2, "Malformed OPENDIR packet");
         sftp2._debug && sftp2._debug(`SFTP: Inbound: Received OPENDIR (id:${reqID})`);
-        if (!sftp2.emit("OPENDIR", reqID, path9)) {
+        if (!sftp2.emit("OPENDIR", reqID, path10)) {
           sftp2.status(reqID, STATUS_CODE.OP_UNSUPPORTED);
         }
       },
@@ -15631,63 +15631,63 @@ var require_SFTP = __commonJS({
       [REQUEST.REMOVE]: (sftp2, payload) => {
         bufferParser.init(payload, 1);
         const reqID = bufferParser.readUInt32BE();
-        const path9 = bufferParser.readString(true);
+        const path10 = bufferParser.readString(true);
         bufferParser.clear();
-        if (path9 === void 0)
+        if (path10 === void 0)
           return doFatalSFTPError(sftp2, "Malformed REMOVE packet");
         sftp2._debug && sftp2._debug(`SFTP: Inbound: Received REMOVE (id:${reqID})`);
-        if (!sftp2.emit("REMOVE", reqID, path9)) {
+        if (!sftp2.emit("REMOVE", reqID, path10)) {
           sftp2.status(reqID, STATUS_CODE.OP_UNSUPPORTED);
         }
       },
       [REQUEST.MKDIR]: (sftp2, payload) => {
         bufferParser.init(payload, 1);
         const reqID = bufferParser.readUInt32BE();
-        const path9 = bufferParser.readString(true);
+        const path10 = bufferParser.readString(true);
         const attrs = readAttrs(sftp2._biOpt);
         bufferParser.clear();
         if (attrs === void 0)
           return doFatalSFTPError(sftp2, "Malformed MKDIR packet");
         sftp2._debug && sftp2._debug(`SFTP: Inbound: Received MKDIR (id:${reqID})`);
-        if (!sftp2.emit("MKDIR", reqID, path9, attrs)) {
+        if (!sftp2.emit("MKDIR", reqID, path10, attrs)) {
           sftp2.status(reqID, STATUS_CODE.OP_UNSUPPORTED);
         }
       },
       [REQUEST.RMDIR]: (sftp2, payload) => {
         bufferParser.init(payload, 1);
         const reqID = bufferParser.readUInt32BE();
-        const path9 = bufferParser.readString(true);
+        const path10 = bufferParser.readString(true);
         bufferParser.clear();
-        if (path9 === void 0)
+        if (path10 === void 0)
           return doFatalSFTPError(sftp2, "Malformed RMDIR packet");
         sftp2._debug && sftp2._debug(`SFTP: Inbound: Received RMDIR (id:${reqID})`);
-        if (!sftp2.emit("RMDIR", reqID, path9)) {
+        if (!sftp2.emit("RMDIR", reqID, path10)) {
           sftp2.status(reqID, STATUS_CODE.OP_UNSUPPORTED);
         }
       },
       [REQUEST.REALPATH]: (sftp2, payload) => {
         bufferParser.init(payload, 1);
         const reqID = bufferParser.readUInt32BE();
-        const path9 = bufferParser.readString(true);
+        const path10 = bufferParser.readString(true);
         bufferParser.clear();
-        if (path9 === void 0)
+        if (path10 === void 0)
           return doFatalSFTPError(sftp2, "Malformed REALPATH packet");
         sftp2._debug && sftp2._debug(
           `SFTP: Inbound: Received REALPATH (id:${reqID})`
         );
-        if (!sftp2.emit("REALPATH", reqID, path9)) {
+        if (!sftp2.emit("REALPATH", reqID, path10)) {
           sftp2.status(reqID, STATUS_CODE.OP_UNSUPPORTED);
         }
       },
       [REQUEST.STAT]: (sftp2, payload) => {
         bufferParser.init(payload, 1);
         const reqID = bufferParser.readUInt32BE();
-        const path9 = bufferParser.readString(true);
+        const path10 = bufferParser.readString(true);
         bufferParser.clear();
-        if (path9 === void 0)
+        if (path10 === void 0)
           return doFatalSFTPError(sftp2, "Malformed STAT packet");
         sftp2._debug && sftp2._debug(`SFTP: Inbound: Received STAT (id:${reqID})`);
-        if (!sftp2.emit("STAT", reqID, path9)) {
+        if (!sftp2.emit("STAT", reqID, path10)) {
           sftp2.status(reqID, STATUS_CODE.OP_UNSUPPORTED);
         }
       },
@@ -15707,14 +15707,14 @@ var require_SFTP = __commonJS({
       [REQUEST.READLINK]: (sftp2, payload) => {
         bufferParser.init(payload, 1);
         const reqID = bufferParser.readUInt32BE();
-        const path9 = bufferParser.readString(true);
+        const path10 = bufferParser.readString(true);
         bufferParser.clear();
-        if (path9 === void 0)
+        if (path10 === void 0)
           return doFatalSFTPError(sftp2, "Malformed READLINK packet");
         sftp2._debug && sftp2._debug(
           `SFTP: Inbound: Received READLINK (id:${reqID})`
         );
-        if (!sftp2.emit("READLINK", reqID, path9)) {
+        if (!sftp2.emit("READLINK", reqID, path10)) {
           sftp2.status(reqID, STATUS_CODE.OP_UNSUPPORTED);
         }
       },
@@ -15785,7 +15785,7 @@ var require_SFTP = __commonJS({
     function roundUpToMultipleOf8(n) {
       return n + 7 & ~7;
     }
-    function ReadStream(sftp2, path9, options) {
+    function ReadStream(sftp2, path10, options) {
       if (options === void 0)
         options = {};
       else if (typeof options === "string")
@@ -15799,7 +15799,7 @@ var require_SFTP = __commonJS({
       options.emitClose = false;
       options.autoDestroy = false;
       ReadableStream.call(this, options);
-      this.path = path9;
+      this.path = path10;
       this.flags = options.flags === void 0 ? "r" : options.flags;
       this.mode = options.mode === void 0 ? 438 : options.mode;
       this.start = options.start;
@@ -15930,7 +15930,7 @@ var require_SFTP = __commonJS({
       },
       configurable: true
     });
-    function WriteStream(sftp2, path9, options) {
+    function WriteStream(sftp2, path10, options) {
       if (options === void 0)
         options = {};
       else if (typeof options === "string")
@@ -15942,7 +15942,7 @@ var require_SFTP = __commonJS({
       options.emitClose = false;
       options.autoDestroy = false;
       WritableStream.call(this, options);
-      this.path = path9;
+      this.path = path10;
       this.flags = options.flags === void 0 ? "w" : options.flags;
       this.mode = options.mode === void 0 ? 438 : options.mode;
       this.start = options.start;
@@ -25136,13 +25136,13 @@ var require_src = __commonJS({
             removeTempListeners(this, listeners, "_rmdir");
           });
         };
-        const _delFiles = (path9, fileList) => {
+        const _delFiles = (path10, fileList) => {
           let listeners;
           return new Promise((resolve2, reject) => {
             listeners = addTempListeners(this, "_delFiles", reject);
             const pList = [];
             for (const f of fileList) {
-              pList.push(this.delete(`${path9}/${f.name}`, true, false));
+              pList.push(this.delete(`${path10}/${f.name}`, true, false));
             }
             resolve2(pList);
           }).then((p) => {
@@ -34760,9 +34760,9 @@ var require_rebase = __commonJS({
 // node_modules/clean-css/lib/options/rebase-to.js
 var require_rebase_to = __commonJS({
   "node_modules/clean-css/lib/options/rebase-to.js"(exports2, module2) {
-    var path9 = require("path");
+    var path10 = require("path");
     function rebaseToFrom(option) {
-      return option ? path9.resolve(option) : process.cwd();
+      return option ? path10.resolve(option) : process.cwd();
     }
     module2.exports = rebaseToFrom;
   }
@@ -34914,16 +34914,16 @@ var require_util = __commonJS({
     }
     exports2.urlGenerate = urlGenerate;
     function normalize(aPath) {
-      var path9 = aPath;
+      var path10 = aPath;
       var url = urlParse(aPath);
       if (url) {
         if (!url.path) {
           return aPath;
         }
-        path9 = url.path;
+        path10 = url.path;
       }
-      var isAbsolute = exports2.isAbsolute(path9);
-      var parts = path9.split(/\/+/);
+      var isAbsolute = exports2.isAbsolute(path10);
+      var parts = path10.split(/\/+/);
       for (var part, up = 0, i = parts.length - 1; i >= 0; i--) {
         part = parts[i];
         if (part === ".") {
@@ -34940,15 +34940,15 @@ var require_util = __commonJS({
           }
         }
       }
-      path9 = parts.join("/");
-      if (path9 === "") {
-        path9 = isAbsolute ? "/" : ".";
+      path10 = parts.join("/");
+      if (path10 === "") {
+        path10 = isAbsolute ? "/" : ".";
       }
       if (url) {
-        url.path = path9;
+        url.path = path10;
         return urlGenerate(url);
       }
-      return path9;
+      return path10;
     }
     exports2.normalize = normalize;
     function join(aRoot, aPath) {
@@ -36591,7 +36591,7 @@ var require_has_protocol = __commonJS({
 // node_modules/clean-css/lib/reader/is-allowed-resource.js
 var require_is_allowed_resource = __commonJS({
   "node_modules/clean-css/lib/reader/is-allowed-resource.js"(exports2, module2) {
-    var path9 = require("path");
+    var path10 = require("path");
     var url = require("url");
     var isRemoteResource = require_is_remote_resource();
     var hasProtocol = require_has_protocol();
@@ -36611,7 +36611,7 @@ var require_is_allowed_resource = __commonJS({
         uri = HTTP_PROTOCOL + uri;
       }
       match = isRemote ? url.parse(uri).host : uri;
-      absoluteUri = isRemote ? uri : path9.resolve(uri);
+      absoluteUri = isRemote ? uri : path10.resolve(uri);
       for (i = 0; i < rules.length; i++) {
         rule = rules[i];
         isNegated = rule[0] == "!";
@@ -36638,7 +36638,7 @@ var require_is_allowed_resource = __commonJS({
           allowed = true;
         } else if (isRemote && absoluteUri.indexOf(rule) === 0) {
           allowed = true;
-        } else if (!isRemote && absoluteUri.indexOf(path9.resolve(rule)) === 0) {
+        } else if (!isRemote && absoluteUri.indexOf(path10.resolve(rule)) === 0) {
           allowed = true;
         } else if (isRemote != isRemoteRule(normalizedRule)) {
           allowed = allowed && true;
@@ -36669,13 +36669,13 @@ var require_match_data_uri = __commonJS({
 // node_modules/clean-css/lib/reader/rebase-local-map.js
 var require_rebase_local_map = __commonJS({
   "node_modules/clean-css/lib/reader/rebase-local-map.js"(exports2, module2) {
-    var path9 = require("path");
+    var path10 = require("path");
     function rebaseLocalMap(sourceMap, sourceUri, rebaseTo) {
-      var currentPath = path9.resolve("");
-      var absoluteUri = path9.resolve(currentPath, sourceUri);
-      var absoluteUriDirectory = path9.dirname(absoluteUri);
+      var currentPath = path10.resolve("");
+      var absoluteUri = path10.resolve(currentPath, sourceUri);
+      var absoluteUriDirectory = path10.dirname(absoluteUri);
       sourceMap.sources = sourceMap.sources.map(function(source) {
-        return path9.relative(rebaseTo, path9.resolve(absoluteUriDirectory, source));
+        return path10.relative(rebaseTo, path10.resolve(absoluteUriDirectory, source));
       });
       return sourceMap;
     }
@@ -36686,10 +36686,10 @@ var require_rebase_local_map = __commonJS({
 // node_modules/clean-css/lib/reader/rebase-remote-map.js
 var require_rebase_remote_map = __commonJS({
   "node_modules/clean-css/lib/reader/rebase-remote-map.js"(exports2, module2) {
-    var path9 = require("path");
+    var path10 = require("path");
     var url = require("url");
     function rebaseRemoteMap(sourceMap, sourceUri) {
-      var sourceDirectory = path9.dirname(sourceUri);
+      var sourceDirectory = path10.dirname(sourceUri);
       sourceMap.sources = sourceMap.sources.map(function(source) {
         return url.resolve(sourceDirectory, source);
       });
@@ -36714,7 +36714,7 @@ var require_is_data_uri_resource = __commonJS({
 var require_apply_source_maps = __commonJS({
   "node_modules/clean-css/lib/reader/apply-source-maps.js"(exports2, module2) {
     var fs = require("fs");
-    var path9 = require("path");
+    var path10 = require("path");
     var isAllowedResource = require_is_allowed_resource();
     var matchDataUri = require_match_data_uri();
     var rebaseLocalMap = require_rebase_local_map();
@@ -36804,7 +36804,7 @@ var require_apply_source_maps = __commonJS({
           }
         });
       }
-      absoluteUri = path9.resolve(applyContext.rebaseTo, uri);
+      absoluteUri = path10.resolve(applyContext.rebaseTo, uri);
       sourceMap = loadInputSourceMapFromLocalUri(absoluteUri, applyContext);
       if (sourceMap) {
         rebasedMap = rebaseLocalMap(sourceMap, absoluteUri, applyContext.rebaseTo);
@@ -36954,7 +36954,7 @@ var require_extract_import_url_and_media = __commonJS({
 var require_load_original_sources = __commonJS({
   "node_modules/clean-css/lib/reader/load-original-sources.js"(exports2, module2) {
     var fs = require("fs");
-    var path9 = require("path");
+    var path10 = require("path");
     var isAllowedResource = require_is_allowed_resource();
     var hasProtocol = require_has_protocol();
     var isRemoteResource = require_is_remote_resource();
@@ -37044,7 +37044,7 @@ var require_load_original_sources = __commonJS({
     }
     function loadOriginalSourceFromLocalUri(relativeUri, loadContext) {
       var isAllowed = isAllowedResource(relativeUri, false, loadContext.inline);
-      var absoluteUri = path9.resolve(loadContext.rebaseTo, relativeUri);
+      var absoluteUri = path10.resolve(loadContext.rebaseTo, relativeUri);
       if (!fs.existsSync(absoluteUri) || !fs.statSync(absoluteUri).isFile()) {
         loadContext.warnings.push('Ignoring local source map at "' + absoluteUri + '" as resource is missing.');
         return null;
@@ -37068,8 +37068,8 @@ var require_normalize_path = __commonJS({
   "node_modules/clean-css/lib/reader/normalize-path.js"(exports2, module2) {
     var UNIX_SEPARATOR = "/";
     var WINDOWS_SEPARATOR_PATTERN = /\\/g;
-    function normalizePath2(path9) {
-      return path9.replace(WINDOWS_SEPARATOR_PATTERN, UNIX_SEPARATOR);
+    function normalizePath2(path10) {
+      return path10.replace(WINDOWS_SEPARATOR_PATTERN, UNIX_SEPARATOR);
     }
     module2.exports = normalizePath2;
   }
@@ -37088,7 +37088,7 @@ var require_restore_import = __commonJS({
 // node_modules/clean-css/lib/reader/rewrite-url.js
 var require_rewrite_url = __commonJS({
   "node_modules/clean-css/lib/reader/rewrite-url.js"(exports2, module2) {
-    var path9 = require("path");
+    var path10 = require("path");
     var url = require("url");
     var isDataUriResource = require_is_data_uri_resource();
     var DOUBLE_QUOTE = '"';
@@ -37119,7 +37119,7 @@ var require_rewrite_url = __commonJS({
       return rebaseConfig.absolute ? normalize(absolute(uri, rebaseConfig)) : normalize(relative(uri, rebaseConfig));
     }
     function isAbsolute(uri) {
-      return path9.isAbsolute(uri);
+      return path10.isAbsolute(uri);
     }
     function isSVGMarker(uri) {
       return uri[0] == "#";
@@ -37131,10 +37131,10 @@ var require_rewrite_url = __commonJS({
       return /^[^:]+?:\/\//.test(uri) || PROTOCOL_LESS_PREFIX_PATTERN.test(uri);
     }
     function absolute(uri, rebaseConfig) {
-      return path9.resolve(path9.join(rebaseConfig.fromBase || "", uri)).replace(rebaseConfig.toBase, "");
+      return path10.resolve(path10.join(rebaseConfig.fromBase || "", uri)).replace(rebaseConfig.toBase, "");
     }
     function relative(uri, rebaseConfig) {
-      return path9.relative(rebaseConfig.toBase, path9.join(rebaseConfig.fromBase || "", uri));
+      return path10.relative(rebaseConfig.toBase, path10.join(rebaseConfig.fromBase || "", uri));
     }
     function normalize(uri) {
       return isWindows ? uri.replace(/\\/g, "/") : uri;
@@ -37930,7 +37930,7 @@ var require_tokenize = __commonJS({
 var require_read_sources = __commonJS({
   "node_modules/clean-css/lib/reader/read-sources.js"(exports2, module2) {
     var fs = require("fs");
-    var path9 = require("path");
+    var path10 = require("path");
     var applySourceMaps = require_apply_source_maps();
     var extractImportUrlAndMedia = require_extract_import_url_and_media();
     var isAllowedResource = require_is_allowed_resource();
@@ -38010,15 +38010,15 @@ var require_read_sources = __commonJS({
       return imports;
     }
     function normalizeUri(uri) {
-      var currentPath = path9.resolve("");
+      var currentPath = path10.resolve("");
       var absoluteUri;
       var relativeToCurrentPath;
       var normalizedUri;
       if (isRemoteResource(uri)) {
         return uri;
       }
-      absoluteUri = path9.isAbsolute(uri) ? uri : path9.resolve(uri);
-      relativeToCurrentPath = path9.relative(currentPath, absoluteUri);
+      absoluteUri = path10.isAbsolute(uri) ? uri : path10.resolve(uri);
+      relativeToCurrentPath = path10.relative(currentPath, absoluteUri);
       normalizedUri = normalizePath2(relativeToCurrentPath);
       return normalizedUri;
     }
@@ -38034,16 +38034,16 @@ var require_read_sources = __commonJS({
       var tokens;
       var rebaseConfig = {};
       if (!context.source) {
-        rebaseConfig.fromBase = path9.resolve("");
+        rebaseConfig.fromBase = path10.resolve("");
         rebaseConfig.toBase = context.options.rebaseTo;
       } else if (isRemoteResource(context.source)) {
         rebaseConfig.fromBase = context.source;
         rebaseConfig.toBase = context.source;
-      } else if (path9.isAbsolute(context.source)) {
-        rebaseConfig.fromBase = path9.dirname(context.source);
+      } else if (path10.isAbsolute(context.source)) {
+        rebaseConfig.fromBase = path10.dirname(context.source);
         rebaseConfig.toBase = context.options.rebaseTo;
       } else {
-        rebaseConfig.fromBase = path9.dirname(path9.resolve(context.source));
+        rebaseConfig.fromBase = path10.dirname(path10.resolve(context.source));
         rebaseConfig.toBase = context.options.rebaseTo;
       }
       tokens = tokenize(styles, context);
@@ -38163,9 +38163,9 @@ var require_read_sources = __commonJS({
     }
     function inlineLocalStylesheet(uri, mediaQuery, metadata, inlinerContext) {
       var protocolLessUri = uri.replace(FILE_RESOURCE_PROTOCOL, "");
-      var currentPath = path9.resolve("");
-      var absoluteUri = path9.isAbsolute(protocolLessUri) ? path9.resolve(currentPath, protocolLessUri[0] == "/" ? protocolLessUri.substring(1) : protocolLessUri) : path9.resolve(inlinerContext.rebaseTo, protocolLessUri);
-      var relativeToCurrentPath = path9.relative(currentPath, absoluteUri);
+      var currentPath = path10.resolve("");
+      var absoluteUri = path10.isAbsolute(protocolLessUri) ? path10.resolve(currentPath, protocolLessUri[0] == "/" ? protocolLessUri.substring(1) : protocolLessUri) : path10.resolve(inlinerContext.rebaseTo, protocolLessUri);
+      var relativeToCurrentPath = path10.relative(currentPath, absoluteUri);
       var importedStyles;
       var isAllowed = isAllowedResource(protocolLessUri, false, inlinerContext.inline);
       var normalizedPath = normalizePath2(relativeToCurrentPath);
@@ -38770,36 +38770,36 @@ var require_path = __commonJS({
       return verdict;
     }
     function parsePath(urlObj, options) {
-      var path9 = urlObj.path.absolute.string;
-      if (path9) {
-        var lastSlash = path9.lastIndexOf("/");
+      var path10 = urlObj.path.absolute.string;
+      if (path10) {
+        var lastSlash = path10.lastIndexOf("/");
         if (lastSlash > -1) {
-          if (++lastSlash < path9.length) {
-            var resource = path9.substr(lastSlash);
+          if (++lastSlash < path10.length) {
+            var resource = path10.substr(lastSlash);
             if (resource !== "." && resource !== "..") {
               urlObj.resource = resource;
-              path9 = path9.substr(0, lastSlash);
+              path10 = path10.substr(0, lastSlash);
             } else {
-              path9 += "/";
+              path10 += "/";
             }
           }
-          urlObj.path.absolute.string = path9;
-          urlObj.path.absolute.array = splitPath(path9);
-        } else if (path9 === "." || path9 === "..") {
-          path9 += "/";
-          urlObj.path.absolute.string = path9;
-          urlObj.path.absolute.array = splitPath(path9);
+          urlObj.path.absolute.string = path10;
+          urlObj.path.absolute.array = splitPath(path10);
+        } else if (path10 === "." || path10 === "..") {
+          path10 += "/";
+          urlObj.path.absolute.string = path10;
+          urlObj.path.absolute.array = splitPath(path10);
         } else {
-          urlObj.resource = path9;
+          urlObj.resource = path10;
           urlObj.path.absolute.string = null;
         }
         urlObj.extra.resourceIsIndex = isDirectoryIndex(urlObj.resource, options);
       }
     }
-    function splitPath(path9) {
-      if (path9 !== "/") {
+    function splitPath(path10) {
+      if (path10 !== "/") {
         var cleaned = [];
-        path9.split("/").forEach(function(dir) {
+        path10.split("/").forEach(function(dir) {
           if (dir !== "") {
             cleaned.push(dir);
           }
@@ -39254,7 +39254,7 @@ var require_lib3 = __commonJS({
 });
 
 // src/cli.ts
-var import_promises12 = require("node:fs/promises");
+var import_promises13 = require("node:fs/promises");
 
 // src/providers/bunny.ts
 var import_promises2 = require("node:fs/promises");
@@ -39277,18 +39277,24 @@ function sha(algo, file) {
   });
 }
 async function scanDir(root) {
-  const out = [];
-  async function walk2(dir) {
+  const found2 = [];
+  async function walk3(dir) {
     for (const e of await (0, import_promises.readdir)(dir, { withFileTypes: true })) {
       const abs = import_node_path.default.join(dir, e.name);
-      if (e.isDirectory()) await walk2(abs);
-      else if (e.isFile()) {
-        const rel = import_node_path.default.relative(root, abs).split(import_node_path.default.sep).join("/");
-        out.push({ path: rel, abs, size: (await (0, import_promises.stat)(abs)).size, sha256: await sha("sha256", abs) });
-      }
+      if (e.isDirectory()) await walk3(abs);
+      else if (e.isFile()) found2.push({ rel: import_node_path.default.relative(root, abs).split(import_node_path.default.sep).join("/"), abs });
     }
   }
-  await walk2(root);
+  await walk3(root);
+  const out = new Array(found2.length);
+  let next = 0;
+  const worker = async () => {
+    for (let i = next++; i < found2.length; i = next++) {
+      const f = found2[i];
+      out[i] = { path: f.rel, abs: f.abs, size: (await (0, import_promises.stat)(f.abs)).size, sha256: await sha("sha256", f.abs) };
+    }
+  };
+  await Promise.all(Array.from({ length: 16 }, worker));
   return out.sort((a, b) => a.path.localeCompare(b.path));
 }
 async function loadState(file) {
@@ -40202,18 +40208,18 @@ async function invalidate(cfg, paths, _prefix) {
   }
   const items = urls.size > 500 ? ["/*"] : [...urls];
   const xml = `<?xml version="1.0" encoding="UTF-8"?><InvalidationBatch xmlns="http://cloudfront.amazonaws.com/doc/2020-05-31/"><CallerReference>${Date.now()}</CallerReference><Paths><Quantity>${items.length}</Quantity><Items>` + items.map((i) => `<Path>${escapeXml(i)}</Path>`).join("") + "</Items></Paths></InvalidationBatch>";
-  const path9 = `/2020-05-31/distribution/${cfg.cloudfrontDistributionId}/invalidation`;
+  const path10 = `/2020-05-31/distribution/${cfg.cloudfrontDistributionId}/invalidation`;
   const headers = signV4({
     method: "POST",
     host: "cloudfront.amazonaws.com",
-    path: path9,
+    path: path10,
     headers: { "content-type": "application/xml" },
     body: xml,
     region: "us-east-1",
     service: "cloudfront",
     creds: cfg
   });
-  await http(`https://cloudfront.amazonaws.com${path9}`, { method: "POST", headers, body: xml });
+  await http(`https://cloudfront.amazonaws.com${path10}`, { method: "POST", headers, body: xml });
 }
 
 // src/providers/sftp.ts
@@ -40292,13 +40298,13 @@ var providers = {
 };
 
 // src/process/glob.ts
-function matchesAny(path9, patterns) {
+function matchesAny(path10, patterns) {
   if (!patterns?.length) return false;
   return patterns.some((p) => {
     const trimmed = p.trim();
     if (!trimmed) return false;
     const re = new RegExp("^" + trimmed.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*") + "$");
-    return re.test(path9) || re.test("/" + path9);
+    return re.test(path10) || re.test("/" + path10);
   });
 }
 
@@ -44976,8 +44982,8 @@ async function applyFixes(dir, files, opts, log2) {
   }
   if (opts.headers) {
     const target2 = import_node_path4.default.join(dir, "_headers");
-    const exists = await (0, import_promises8.stat)(target2).then(() => true).catch(() => false);
-    if (!exists) {
+    const exists2 = await (0, import_promises8.stat)(target2).then(() => true).catch(() => false);
+    if (!exists2) {
       await (0, import_promises8.writeFile)(target2, headersFile());
       result.created.push("_headers");
     }
@@ -46753,8 +46759,8 @@ function parse2($TEXT, options) {
             S.in_directives = false;
           }
         }
-        var dir = S.in_directives, stat3 = simple_statement();
-        return dir && stat3.body instanceof AST_String ? new AST_Directive(stat3.body) : stat3;
+        var dir = S.in_directives, stat5 = simple_statement();
+        return dir && stat5.body instanceof AST_String ? new AST_Directive(stat5.body) : stat5;
       case "template_head":
       case "num":
       case "big_int":
@@ -46955,9 +46961,9 @@ function parse2($TEXT, options) {
     }
     expect(":");
     S.labels.push(label);
-    var stat3 = statement();
+    var stat5 = statement();
     S.labels.pop();
-    if (!(stat3 instanceof AST_IterationStatement)) {
+    if (!(stat5 instanceof AST_IterationStatement)) {
       label.references.forEach(function(ref) {
         if (ref instanceof AST_Continue) {
           ref = ref.label.start;
@@ -46970,7 +46976,7 @@ function parse2($TEXT, options) {
         }
       });
     }
-    return new AST_LabeledStatement({ body: stat3, label });
+    return new AST_LabeledStatement({ body: stat5, label });
   }
   function simple_statement(tmp) {
     return new AST_SimpleStatement({ body: (tmp = expression(true), semicolon2(), tmp) });
@@ -46988,9 +46994,9 @@ function parse2($TEXT, options) {
     } else if (S.in_loop == 0)
       croak(type.TYPE + " not inside a loop or switch");
     semicolon2();
-    var stat3 = new type({ label });
-    if (ldef) ldef.references.push(stat3);
-    return stat3;
+    var stat5 = new type({ label });
+    if (ldef) ldef.references.push(stat5);
+    return stat5;
   }
   function for_() {
     var for_await_error = "`for await` invalid in this context";
@@ -53006,13 +53012,13 @@ def_transform(AST_PrefixedTemplateString, function(self2, tw) {
       try {
         const label = from_moz_symbol(AST_Label, M.label);
         FROM_MOZ_LABELS.push(label);
-        const stat3 = new AST_LabeledStatement({
+        const stat5 = new AST_LabeledStatement({
           start: my_start_token(M),
           end: my_end_token(M),
           label,
           body: from_moz(M.body)
         });
-        return stat3;
+        return stat5;
       } finally {
         FROM_MOZ_LABELS.pop();
       }
@@ -56136,16 +56142,16 @@ function OutputStream(options) {
       output.print(" ");
     }
   });
-  function print_maybe_braced_body(stat3, output) {
+  function print_maybe_braced_body(stat5, output) {
     if (output.option("braces")) {
-      make_block(stat3, output);
+      make_block(stat5, output);
     } else {
-      if (!stat3 || stat3 instanceof AST_EmptyStatement)
+      if (!stat5 || stat5 instanceof AST_EmptyStatement)
         output.force_semicolon();
-      else if (stat3 instanceof AST_DefinitionsLike && !(stat3 instanceof AST_Var) || stat3 instanceof AST_Class)
-        make_block(stat3, output);
+      else if (stat5 instanceof AST_DefinitionsLike && !(stat5 instanceof AST_Var) || stat5 instanceof AST_Class)
+        make_block(stat5, output);
       else
-        stat3.print(output);
+        stat5.print(output);
     }
   }
   function best_of2(a) {
@@ -58713,10 +58719,10 @@ function is_lhs(node, parent) {
   function best(orig, alt, first_in_statement2) {
     var negated = basic_negation(orig);
     if (first_in_statement2) {
-      var stat3 = make_node(AST_SimpleStatement, alt, {
+      var stat5 = make_node(AST_SimpleStatement, alt, {
         body: alt
       });
-      return best_of_expression(negated, stat3) === stat3 ? alt : negated;
+      return best_of_expression(negated, stat5) === stat5 ? alt : negated;
     }
     return best_of_expression(negated, alt);
   }
@@ -60528,15 +60534,15 @@ function remove_initializers(var_statement) {
   });
   return decls.length ? make_node(AST_Var, var_statement, { definitions: decls }) : null;
 }
-function extract_from_unreachable_code(compressor, stat3, target2) {
-  walk(stat3, (node) => {
+function extract_from_unreachable_code(compressor, stat5, target2) {
+  walk(stat5, (node) => {
     if (node instanceof AST_Var) {
       const no_initializers = remove_initializers(node);
       if (no_initializers) target2.push(no_initializers);
       return true;
     }
-    if (node instanceof AST_Defun && (node === stat3 || !compressor.has_directive("use strict"))) {
-      target2.push(node === stat3 ? node : make_node(AST_Var, node, {
+    if (node instanceof AST_Defun && (node === stat5 || !compressor.has_directive("use strict"))) {
+      target2.push(node === stat5 ? node : make_node(AST_Var, node, {
         definitions: [
           make_node(AST_VarDef, node, {
             name: make_node(AST_SymbolVar, node.name, node.name),
@@ -61160,19 +61166,19 @@ function tighten_body(statements, compressor) {
   function eliminate_spurious_blocks(statements2) {
     var seen_dirs = [];
     for (var i = 0; i < statements2.length; ) {
-      var stat3 = statements2[i];
-      if (stat3 instanceof AST_BlockStatement && stat3.body.every(can_be_evicted_from_block)) {
+      var stat5 = statements2[i];
+      if (stat5 instanceof AST_BlockStatement && stat5.body.every(can_be_evicted_from_block)) {
         CHANGED = true;
-        eliminate_spurious_blocks(stat3.body);
-        statements2.splice(i, 1, ...stat3.body);
-        i += stat3.body.length;
-      } else if (stat3 instanceof AST_EmptyStatement) {
+        eliminate_spurious_blocks(stat5.body);
+        statements2.splice(i, 1, ...stat5.body);
+        i += stat5.body.length;
+      } else if (stat5 instanceof AST_EmptyStatement) {
         CHANGED = true;
         statements2.splice(i, 1);
-      } else if (stat3 instanceof AST_Directive) {
-        if (seen_dirs.indexOf(stat3.value) < 0) {
+      } else if (stat5 instanceof AST_Directive) {
+        if (seen_dirs.indexOf(stat5.value) < 0) {
           i++;
-          seen_dirs.push(stat3.value);
+          seen_dirs.push(stat5.value);
         } else {
           CHANGED = true;
           statements2.splice(i, 1);
@@ -61187,92 +61193,92 @@ function tighten_body(statements, compressor) {
     var in_lambda = self2 instanceof AST_Lambda;
     const iteration_start = Math.min(statements2.length, 500);
     for (var i = iteration_start; --i >= 0; ) {
-      var stat3 = statements2[i];
+      var stat5 = statements2[i];
       var j = next_index(i);
       var next = statements2[j];
-      if (in_lambda && !next && stat3 instanceof AST_Return) {
-        if (!stat3.value) {
+      if (in_lambda && !next && stat5 instanceof AST_Return) {
+        if (!stat5.value) {
           CHANGED = true;
           statements2.splice(i, 1);
           continue;
         }
-        if (stat3.value instanceof AST_UnaryPrefix && stat3.value.operator == "void") {
+        if (stat5.value instanceof AST_UnaryPrefix && stat5.value.operator == "void") {
           CHANGED = true;
-          statements2[i] = make_node(AST_SimpleStatement, stat3, {
-            body: stat3.value.expression
+          statements2[i] = make_node(AST_SimpleStatement, stat5, {
+            body: stat5.value.expression
           });
           continue;
         }
       }
-      if (stat3 instanceof AST_If) {
+      if (stat5 instanceof AST_If) {
         let ab, new_else;
-        ab = aborts(stat3.body);
-        if (can_merge_flow(ab) && (new_else = as_statement_array_with_return(stat3.body, ab))) {
+        ab = aborts(stat5.body);
+        if (can_merge_flow(ab) && (new_else = as_statement_array_with_return(stat5.body, ab))) {
           if (ab.label) {
             remove(ab.label.thedef.references, ab);
           }
           CHANGED = true;
-          stat3 = stat3.clone();
-          stat3.condition = stat3.condition.negate(compressor2);
-          stat3.body = make_node(AST_BlockStatement, stat3, {
-            body: as_statement_array(stat3.alternative).concat(extract_defuns())
+          stat5 = stat5.clone();
+          stat5.condition = stat5.condition.negate(compressor2);
+          stat5.body = make_node(AST_BlockStatement, stat5, {
+            body: as_statement_array(stat5.alternative).concat(extract_defuns())
           });
-          stat3.alternative = make_node(AST_BlockStatement, stat3, {
+          stat5.alternative = make_node(AST_BlockStatement, stat5, {
             body: new_else
           });
-          statements2[i] = stat3.transform(compressor2);
+          statements2[i] = stat5.transform(compressor2);
           continue;
         }
-        ab = aborts(stat3.alternative);
-        if (can_merge_flow(ab) && (new_else = as_statement_array_with_return(stat3.alternative, ab))) {
+        ab = aborts(stat5.alternative);
+        if (can_merge_flow(ab) && (new_else = as_statement_array_with_return(stat5.alternative, ab))) {
           if (ab.label) {
             remove(ab.label.thedef.references, ab);
           }
           CHANGED = true;
-          stat3 = stat3.clone();
-          stat3.body = make_node(AST_BlockStatement, stat3.body, {
-            body: as_statement_array(stat3.body).concat(extract_defuns())
+          stat5 = stat5.clone();
+          stat5.body = make_node(AST_BlockStatement, stat5.body, {
+            body: as_statement_array(stat5.body).concat(extract_defuns())
           });
-          stat3.alternative = make_node(AST_BlockStatement, stat3.alternative, {
+          stat5.alternative = make_node(AST_BlockStatement, stat5.alternative, {
             body: new_else
           });
-          statements2[i] = stat3.transform(compressor2);
+          statements2[i] = stat5.transform(compressor2);
           continue;
         }
       }
-      if (stat3 instanceof AST_If && stat3.body instanceof AST_Return) {
-        var value = stat3.body.value;
-        if (!value && !stat3.alternative && (in_lambda && !next || next instanceof AST_Return && !next.value)) {
+      if (stat5 instanceof AST_If && stat5.body instanceof AST_Return) {
+        var value = stat5.body.value;
+        if (!value && !stat5.alternative && (in_lambda && !next || next instanceof AST_Return && !next.value)) {
           CHANGED = true;
-          statements2[i] = make_node(AST_SimpleStatement, stat3.condition, {
-            body: stat3.condition
+          statements2[i] = make_node(AST_SimpleStatement, stat5.condition, {
+            body: stat5.condition
           });
           continue;
         }
-        if (value && !stat3.alternative && next instanceof AST_Return && next.value) {
+        if (value && !stat5.alternative && next instanceof AST_Return && next.value) {
           CHANGED = true;
-          stat3 = stat3.clone();
-          stat3.alternative = next;
-          statements2[i] = stat3.transform(compressor2);
+          stat5 = stat5.clone();
+          stat5.alternative = next;
+          statements2[i] = stat5.transform(compressor2);
           statements2.splice(j, 1);
           continue;
         }
-        if (value && !stat3.alternative && (!next && in_lambda && multiple_if_returns || next instanceof AST_Return)) {
+        if (value && !stat5.alternative && (!next && in_lambda && multiple_if_returns || next instanceof AST_Return)) {
           CHANGED = true;
-          stat3 = stat3.clone();
-          stat3.alternative = next || make_node(AST_Return, stat3, {
+          stat5 = stat5.clone();
+          stat5.alternative = next || make_node(AST_Return, stat5, {
             value: null
           });
-          statements2[i] = stat3.transform(compressor2);
+          statements2[i] = stat5.transform(compressor2);
           if (next)
             statements2.splice(j, 1);
           continue;
         }
         var prev = statements2[prev_index(i)];
-        if (compressor2.option("sequences") && in_lambda && !stat3.alternative && prev instanceof AST_If && prev.body instanceof AST_Return && next_index(j) == statements2.length && next instanceof AST_SimpleStatement) {
+        if (compressor2.option("sequences") && in_lambda && !stat5.alternative && prev instanceof AST_If && prev.body instanceof AST_Return && next_index(j) == statements2.length && next instanceof AST_SimpleStatement) {
           CHANGED = true;
-          stat3 = stat3.clone();
-          stat3.alternative = make_node(AST_BlockStatement, next, {
+          stat5 = stat5.clone();
+          stat5.alternative = make_node(AST_BlockStatement, next, {
             body: [
               next,
               make_node(AST_Return, next, {
@@ -61280,7 +61286,7 @@ function tighten_body(statements, compressor) {
               })
             ]
           });
-          statements2[i] = stat3.transform(compressor2);
+          statements2[i] = stat5.transform(compressor2);
           statements2.splice(j, 1);
           continue;
         }
@@ -61289,8 +61295,8 @@ function tighten_body(statements, compressor) {
     function has_multiple_if_returns(statements3) {
       var n = 0;
       for (var i2 = statements3.length; --i2 >= 0; ) {
-        var stat4 = statements3[i2];
-        if (stat4 instanceof AST_If && stat4.body instanceof AST_Return) {
+        var stat6 = statements3[i2];
+        if (stat6 instanceof AST_If && stat6.body instanceof AST_Return) {
           if (++n > 1)
             return true;
         }
@@ -61304,8 +61310,8 @@ function tighten_body(statements, compressor) {
       if (!ab)
         return false;
       for (var j2 = i + 1, len = statements2.length; j2 < len; j2++) {
-        var stat4 = statements2[j2];
-        if (stat4 instanceof AST_DefinitionsLike && !(stat4 instanceof AST_Var))
+        var stat6 = statements2[j2];
+        if (stat6 instanceof AST_DefinitionsLike && !(stat6 instanceof AST_Var))
           return false;
       }
       var lct = ab instanceof AST_LoopControl ? compressor2.loopcontrol_target(ab) : null;
@@ -61314,9 +61320,9 @@ function tighten_body(statements, compressor) {
     function extract_defuns() {
       var tail = statements2.slice(i + 1);
       statements2.length = i + 1;
-      return tail.filter(function(stat4) {
-        if (stat4 instanceof AST_Defun) {
-          statements2.push(stat4);
+      return tail.filter(function(stat6) {
+        if (stat6 instanceof AST_Defun) {
+          statements2.push(stat6);
           return false;
         }
         return true;
@@ -61328,7 +61334,7 @@ function tighten_body(statements, compressor) {
         return void 0;
       }
       body = body.slice(0, -1);
-      if (!body.every((stat4) => can_be_evicted_from_block(stat4))) {
+      if (!body.every((stat6) => can_be_evicted_from_block(stat6))) {
         return void 0;
       }
       if (ab.value) {
@@ -61340,8 +61346,8 @@ function tighten_body(statements, compressor) {
     }
     function next_index(i2) {
       for (var j2 = i2 + 1, len = statements2.length; j2 < len; j2++) {
-        var stat4 = statements2[j2];
-        if (!(stat4 instanceof AST_Var && declarations_only(stat4))) {
+        var stat6 = statements2[j2];
+        if (!(stat6 instanceof AST_Var && declarations_only(stat6))) {
           break;
         }
       }
@@ -61349,8 +61355,8 @@ function tighten_body(statements, compressor) {
     }
     function prev_index(i2) {
       for (var j2 = i2; --j2 >= 0; ) {
-        var stat4 = statements2[j2];
-        if (!(stat4 instanceof AST_Var && declarations_only(stat4))) {
+        var stat6 = statements2[j2];
+        if (!(stat6 instanceof AST_Var && declarations_only(stat6))) {
           break;
         }
       }
@@ -61361,20 +61367,20 @@ function tighten_body(statements, compressor) {
     var has_quit;
     var self2 = compressor2.self();
     for (var i = 0, n = 0, len = statements2.length; i < len; i++) {
-      var stat3 = statements2[i];
-      if (stat3 instanceof AST_LoopControl) {
-        var lct = compressor2.loopcontrol_target(stat3);
-        if (stat3 instanceof AST_Break && !(lct instanceof AST_IterationStatement) && loop_body(lct) === self2 || stat3 instanceof AST_Continue && loop_body(lct) === self2) {
-          if (stat3.label) {
-            remove(stat3.label.thedef.references, stat3);
+      var stat5 = statements2[i];
+      if (stat5 instanceof AST_LoopControl) {
+        var lct = compressor2.loopcontrol_target(stat5);
+        if (stat5 instanceof AST_Break && !(lct instanceof AST_IterationStatement) && loop_body(lct) === self2 || stat5 instanceof AST_Continue && loop_body(lct) === self2) {
+          if (stat5.label) {
+            remove(stat5.label.thedef.references, stat5);
           }
         } else {
-          statements2[n++] = stat3;
+          statements2[n++] = stat5;
         }
       } else {
-        statements2[n++] = stat3;
+        statements2[n++] = stat5;
       }
-      if (aborts(stat3)) {
+      if (aborts(stat5)) {
         has_quit = statements2.slice(i + 1);
         break;
       }
@@ -61382,8 +61388,8 @@ function tighten_body(statements, compressor) {
     statements2.length = n;
     CHANGED = n != len;
     if (has_quit)
-      has_quit.forEach(function(stat4) {
-        extract_from_unreachable_code(compressor2, stat4, statements2);
+      has_quit.forEach(function(stat6) {
+        extract_from_unreachable_code(compressor2, stat6, statements2);
       });
   }
   function declarations_only(node) {
@@ -61401,20 +61407,20 @@ function tighten_body(statements, compressor) {
       seq = [];
     }
     for (var i = 0, len = statements2.length; i < len; i++) {
-      var stat3 = statements2[i];
-      if (stat3 instanceof AST_SimpleStatement) {
+      var stat5 = statements2[i];
+      if (stat5 instanceof AST_SimpleStatement) {
         if (seq.length >= compressor2.sequences_limit)
           push_seq();
-        var body = stat3.body;
+        var body = stat5.body;
         if (seq.length > 0)
           body = body.drop_side_effect_free(compressor2);
         if (body)
           merge_sequence(seq, body);
-      } else if (stat3 instanceof AST_Definitions && declarations_only(stat3) || stat3 instanceof AST_Defun) {
-        statements2[n++] = stat3;
+      } else if (stat5 instanceof AST_Definitions && declarations_only(stat5) || stat5 instanceof AST_Defun) {
+        statements2[n++] = stat5;
       } else {
         push_seq();
-        statements2[n++] = stat3;
+        statements2[n++] = stat5;
       }
     }
     push_seq();
@@ -61425,18 +61431,18 @@ function tighten_body(statements, compressor) {
   function to_simple_statement(block, decls) {
     if (!(block instanceof AST_BlockStatement))
       return block;
-    var stat3 = null;
+    var stat5 = null;
     for (var i = 0, len = block.body.length; i < len; i++) {
       var line = block.body[i];
       if (line instanceof AST_Var && declarations_only(line)) {
         decls.push(line);
-      } else if (stat3 || line instanceof AST_DefinitionsLike && !(line instanceof AST_Var)) {
+      } else if (stat5 || line instanceof AST_DefinitionsLike && !(line instanceof AST_Var)) {
         return false;
       } else {
-        stat3 = line;
+        stat5 = line;
       }
     }
-    return stat3;
+    return stat5;
   }
   function sequencesize_2(statements2, compressor2) {
     function cons_seq(right) {
@@ -61447,12 +61453,12 @@ function tighten_body(statements, compressor) {
     }
     var n = 0, prev;
     for (var i = 0; i < statements2.length; i++) {
-      var stat3 = statements2[i];
+      var stat5 = statements2[i];
       if (prev) {
-        if (stat3 instanceof AST_Exit) {
-          stat3.value = cons_seq(stat3.value || make_void_0(stat3).transform(compressor2));
-        } else if (stat3 instanceof AST_For) {
-          if (!(stat3.init instanceof AST_DefinitionsLike)) {
+        if (stat5 instanceof AST_Exit) {
+          stat5.value = cons_seq(stat5.value || make_void_0(stat5).transform(compressor2));
+        } else if (stat5 instanceof AST_For) {
+          if (!(stat5.init instanceof AST_DefinitionsLike)) {
             const abort = walk(prev.body, (node) => {
               if (node instanceof AST_Scope)
                 return true;
@@ -61461,36 +61467,36 @@ function tighten_body(statements, compressor) {
               }
             });
             if (!abort) {
-              if (stat3.init)
-                stat3.init = cons_seq(stat3.init);
+              if (stat5.init)
+                stat5.init = cons_seq(stat5.init);
               else {
-                stat3.init = prev.body;
+                stat5.init = prev.body;
                 n--;
                 CHANGED = true;
               }
             }
           }
-        } else if (stat3 instanceof AST_ForIn) {
-          if (!(stat3.init instanceof AST_DefinitionsLike) || stat3.init instanceof AST_Var) {
-            stat3.object = cons_seq(stat3.object);
+        } else if (stat5 instanceof AST_ForIn) {
+          if (!(stat5.init instanceof AST_DefinitionsLike) || stat5.init instanceof AST_Var) {
+            stat5.object = cons_seq(stat5.object);
           }
-        } else if (stat3 instanceof AST_If) {
-          stat3.condition = cons_seq(stat3.condition);
-        } else if (stat3 instanceof AST_Switch) {
-          stat3.expression = cons_seq(stat3.expression);
-        } else if (stat3 instanceof AST_With) {
-          stat3.expression = cons_seq(stat3.expression);
+        } else if (stat5 instanceof AST_If) {
+          stat5.condition = cons_seq(stat5.condition);
+        } else if (stat5 instanceof AST_Switch) {
+          stat5.expression = cons_seq(stat5.expression);
+        } else if (stat5 instanceof AST_With) {
+          stat5.expression = cons_seq(stat5.expression);
         }
       }
-      if (compressor2.option("conditionals") && stat3 instanceof AST_If) {
+      if (compressor2.option("conditionals") && stat5 instanceof AST_If) {
         var decls = [];
-        var body = to_simple_statement(stat3.body, decls);
-        var alt = to_simple_statement(stat3.alternative, decls);
+        var body = to_simple_statement(stat5.body, decls);
+        var alt = to_simple_statement(stat5.alternative, decls);
         if (body !== false && alt !== false && decls.length > 0) {
           var len = decls.length;
-          decls.push(make_node(AST_If, stat3, {
-            condition: stat3.condition,
-            body: body || make_node(AST_EmptyStatement, stat3.body),
+          decls.push(make_node(AST_If, stat5, {
+            condition: stat5.condition,
+            body: body || make_node(AST_EmptyStatement, stat5.body),
             alternative: alt
           }));
           decls.unshift(n, 1);
@@ -61502,8 +61508,8 @@ function tighten_body(statements, compressor) {
           continue;
         }
       }
-      statements2[n++] = stat3;
-      prev = stat3 instanceof AST_SimpleStatement ? stat3 : null;
+      statements2[n++] = stat5;
+      prev = stat5 instanceof AST_SimpleStatement ? stat5 : null;
     }
     statements2.length = n;
   }
@@ -61574,68 +61580,68 @@ function tighten_body(statements, compressor) {
   function join_consecutive_vars(statements2) {
     var defs;
     for (var i = 0, j = -1, len = statements2.length; i < len; i++) {
-      var stat3 = statements2[i];
+      var stat5 = statements2[i];
       var prev = statements2[j];
-      if (stat3 instanceof AST_Definitions) {
-        if (prev && prev.TYPE == stat3.TYPE) {
-          prev.definitions = prev.definitions.concat(stat3.definitions);
+      if (stat5 instanceof AST_Definitions) {
+        if (prev && prev.TYPE == stat5.TYPE) {
+          prev.definitions = prev.definitions.concat(stat5.definitions);
           CHANGED = true;
-        } else if (defs && defs.TYPE == stat3.TYPE && declarations_only(stat3)) {
-          defs.definitions = defs.definitions.concat(stat3.definitions);
+        } else if (defs && defs.TYPE == stat5.TYPE && declarations_only(stat5)) {
+          defs.definitions = defs.definitions.concat(stat5.definitions);
           CHANGED = true;
         } else {
-          statements2[++j] = stat3;
-          defs = stat3;
+          statements2[++j] = stat5;
+          defs = stat5;
         }
-      } else if (stat3 instanceof AST_Using && prev instanceof AST_Using && prev.await === stat3.await) {
-        prev.definitions = prev.definitions.concat(stat3.definitions);
-      } else if (stat3 instanceof AST_Exit) {
-        stat3.value = extract_object_assignments(stat3.value);
-      } else if (stat3 instanceof AST_For) {
-        var exprs = join_object_assignments(prev, stat3.init);
+      } else if (stat5 instanceof AST_Using && prev instanceof AST_Using && prev.await === stat5.await) {
+        prev.definitions = prev.definitions.concat(stat5.definitions);
+      } else if (stat5 instanceof AST_Exit) {
+        stat5.value = extract_object_assignments(stat5.value);
+      } else if (stat5 instanceof AST_For) {
+        var exprs = join_object_assignments(prev, stat5.init);
         if (exprs) {
           CHANGED = true;
-          stat3.init = exprs.length ? make_sequence(stat3.init, exprs) : null;
-          statements2[++j] = stat3;
-        } else if (prev instanceof AST_Var && (!stat3.init || stat3.init.TYPE == prev.TYPE)) {
-          if (stat3.init) {
-            prev.definitions = prev.definitions.concat(stat3.init.definitions);
+          stat5.init = exprs.length ? make_sequence(stat5.init, exprs) : null;
+          statements2[++j] = stat5;
+        } else if (prev instanceof AST_Var && (!stat5.init || stat5.init.TYPE == prev.TYPE)) {
+          if (stat5.init) {
+            prev.definitions = prev.definitions.concat(stat5.init.definitions);
           }
-          stat3.init = prev;
-          statements2[j] = stat3;
+          stat5.init = prev;
+          statements2[j] = stat5;
           CHANGED = true;
-        } else if (defs instanceof AST_Var && stat3.init instanceof AST_Var && declarations_only(stat3.init)) {
-          defs.definitions = defs.definitions.concat(stat3.init.definitions);
-          stat3.init = null;
-          statements2[++j] = stat3;
+        } else if (defs instanceof AST_Var && stat5.init instanceof AST_Var && declarations_only(stat5.init)) {
+          defs.definitions = defs.definitions.concat(stat5.init.definitions);
+          stat5.init = null;
+          statements2[++j] = stat5;
           CHANGED = true;
         } else {
-          statements2[++j] = stat3;
+          statements2[++j] = stat5;
         }
-      } else if (stat3 instanceof AST_ForIn) {
-        stat3.object = extract_object_assignments(stat3.object);
-      } else if (stat3 instanceof AST_If) {
-        stat3.condition = extract_object_assignments(stat3.condition);
-      } else if (stat3 instanceof AST_SimpleStatement) {
-        var exprs = join_object_assignments(prev, stat3.body);
+      } else if (stat5 instanceof AST_ForIn) {
+        stat5.object = extract_object_assignments(stat5.object);
+      } else if (stat5 instanceof AST_If) {
+        stat5.condition = extract_object_assignments(stat5.condition);
+      } else if (stat5 instanceof AST_SimpleStatement) {
+        var exprs = join_object_assignments(prev, stat5.body);
         if (exprs) {
           CHANGED = true;
           if (!exprs.length)
             continue;
-          stat3.body = make_sequence(stat3.body, exprs);
+          stat5.body = make_sequence(stat5.body, exprs);
         }
-        statements2[++j] = stat3;
-      } else if (stat3 instanceof AST_Switch) {
-        stat3.expression = extract_object_assignments(stat3.expression);
-      } else if (stat3 instanceof AST_With) {
-        stat3.expression = extract_object_assignments(stat3.expression);
+        statements2[++j] = stat5;
+      } else if (stat5 instanceof AST_Switch) {
+        stat5.expression = extract_object_assignments(stat5.expression);
+      } else if (stat5 instanceof AST_With) {
+        stat5.expression = extract_object_assignments(stat5.expression);
       } else {
-        statements2[++j] = stat3;
+        statements2[++j] = stat5;
       }
     }
     statements2.length = j + 1;
     function extract_object_assignments(value) {
-      statements2[++j] = stat3;
+      statements2[++j] = stat5;
       var exprs2 = join_object_assignments(prev, value);
       if (exprs2) {
         CHANGED = true;
@@ -61801,11 +61807,11 @@ function inline_into_call(self2, compressor) {
   }
   if (dont_inline_lambda_in_loop(compressor, fn) && !has_annotation(self2, _INLINE)) return self2;
   var is_func = fn instanceof AST_Lambda;
-  var stat3 = is_func && fn.body[0];
+  var stat5 = is_func && fn.body[0];
   var is_regular_func = is_func && !fn.is_generator && !fn.async;
   var can_inline = is_regular_func && compressor.option("inline") && !self2.is_callee_pure(compressor);
-  if (can_inline && stat3 instanceof AST_Return) {
-    let returned = stat3.value;
+  if (can_inline && stat5 instanceof AST_Return) {
+    let returned = stat5.value;
     if (!returned || returned.is_constant_expression()) {
       if (returned) {
         returned = returned.clone(true);
@@ -61832,7 +61838,7 @@ function inline_into_call(self2, compressor) {
     let def;
     let returned_value;
     let nearest_scope;
-    if (simple_args && !fn.uses_arguments && !(compressor.parent() instanceof AST_Class) && !(fn.name && fn instanceof AST_Function) && (returned_value = can_flatten_body(stat3)) && (exp === fn || has_annotation(self2, _INLINE) || compressor.option("unused") && (def = exp.definition()).references.length == 1 && !is_recursive_ref(compressor, def) && fn.is_constant_expression(exp.scope)) && !has_annotation(self2, _PURE | _NOINLINE) && !fn.contains_this() && can_inject_symbols() && (nearest_scope = compressor.find_scope()) && !scope_encloses_variables_in_this_scope(nearest_scope, fn) && !function in_default_assign() {
+    if (simple_args && !fn.uses_arguments && !(compressor.parent() instanceof AST_Class) && !(fn.name && fn instanceof AST_Function) && (returned_value = can_flatten_body(stat5)) && (exp === fn || has_annotation(self2, _INLINE) || compressor.option("unused") && (def = exp.definition()).references.length == 1 && !is_recursive_ref(compressor, def) && fn.is_constant_expression(exp.scope)) && !has_annotation(self2, _PURE | _NOINLINE) && !fn.contains_this() && can_inject_symbols() && (nearest_scope = compressor.find_scope()) && !scope_encloses_variables_in_this_scope(nearest_scope, fn) && !function in_default_assign() {
       let i = 0;
       let p;
       while (p = compressor.parent(i++)) {
@@ -61873,41 +61879,41 @@ function inline_into_call(self2, compressor) {
     return best_of(compressor, ev, self2);
   }
   return self2;
-  function return_value(stat4) {
-    if (!stat4) return make_void_0(self2);
-    if (stat4 instanceof AST_Return) {
-      if (!stat4.value) return make_void_0(self2);
-      return stat4.value.clone(true);
+  function return_value(stat6) {
+    if (!stat6) return make_void_0(self2);
+    if (stat6 instanceof AST_Return) {
+      if (!stat6.value) return make_void_0(self2);
+      return stat6.value.clone(true);
     }
-    if (stat4 instanceof AST_SimpleStatement) {
-      return make_node(AST_UnaryPrefix, stat4, {
+    if (stat6 instanceof AST_SimpleStatement) {
+      return make_node(AST_UnaryPrefix, stat6, {
         operator: "void",
-        expression: stat4.body.clone(true)
+        expression: stat6.body.clone(true)
       });
     }
   }
-  function can_flatten_body(stat4) {
+  function can_flatten_body(stat6) {
     var body = fn.body;
     var len = body.length;
     if (compressor.option("inline") < 3) {
-      return len == 1 && return_value(stat4);
+      return len == 1 && return_value(stat6);
     }
-    stat4 = null;
+    stat6 = null;
     for (var i = 0; i < len; i++) {
       var line = body[i];
       if (line instanceof AST_Var) {
-        if (stat4 && !line.definitions.every(
+        if (stat6 && !line.definitions.every(
           (var_def) => !var_def.value
         )) {
           return false;
         }
-      } else if (stat4) {
+      } else if (stat6) {
         return false;
       } else if (!(line instanceof AST_EmptyStatement)) {
-        stat4 = line;
+        stat6 = line;
       }
     }
-    return return_value(stat4);
+    return return_value(stat6);
   }
   function can_inject_args(block_scoped, safe_to_inject) {
     for (var i = 0, len = fn.argnames.length; i < len; i++) {
@@ -61932,11 +61938,11 @@ function inline_into_call(self2, compressor) {
   function can_inject_vars(block_scoped, safe_to_inject) {
     var len = fn.body.length;
     for (var i = 0; i < len; i++) {
-      var stat4 = fn.body[i];
-      if (!(stat4 instanceof AST_Var)) continue;
+      var stat6 = fn.body[i];
+      if (!(stat6 instanceof AST_Var)) continue;
       if (!safe_to_inject) return false;
-      for (var j = stat4.definitions.length; --j >= 0; ) {
-        var name = stat4.definitions[j].name;
+      for (var j = stat6.definitions.length; --j >= 0; ) {
+        var name = stat6.definitions[j].name;
         if (name instanceof AST_Destructuring || block_scoped.has(name.name) || identifier_atom.has(name.name) || scope.conflicting_def(name.name)) {
           return false;
         }
@@ -62013,10 +62019,10 @@ function inline_into_call(self2, compressor) {
   function flatten_vars(decls, expressions) {
     var pos = expressions.length;
     for (var i = 0, lines = fn.body.length; i < lines; i++) {
-      var stat4 = fn.body[i];
-      if (!(stat4 instanceof AST_Var)) continue;
-      for (var j = 0, defs = stat4.definitions.length; j < defs; j++) {
-        var var_def = stat4.definitions[j];
+      var stat6 = fn.body[i];
+      if (!(stat6 instanceof AST_Var)) continue;
+      for (var j = 0, defs = stat6.definitions.length; j < defs; j++) {
+        var var_def = stat6.definitions[j];
         var name = var_def.name;
         append_var(decls, expressions, name, var_def.value);
         if (in_loop && fn.argnames.every(
@@ -65379,16 +65385,16 @@ function parseAbsoluteUrl(input) {
 }
 function parseFileUrl(input) {
   const match = fileRegex.exec(input);
-  const path9 = match[2];
-  return makeUrl("file:", "", match[1] || "", "", isAbsolutePath(path9) ? path9 : "/" + path9, match[3] || "", match[4] || "");
+  const path10 = match[2];
+  return makeUrl("file:", "", match[1] || "", "", isAbsolutePath(path10) ? path10 : "/" + path10, match[3] || "", match[4] || "");
 }
-function makeUrl(scheme, user, host2, port, path9, query, hash) {
+function makeUrl(scheme, user, host2, port, path10, query, hash) {
   return {
     scheme,
     user,
     host: host2,
     port,
-    path: path9,
+    path: path10,
     query,
     hash,
     type: 7
@@ -65418,11 +65424,11 @@ function parseUrl(input) {
   url.type = input ? input.startsWith("?") ? 3 : input.startsWith("#") ? 2 : 4 : 1;
   return url;
 }
-function stripPathFilename(path9) {
-  if (path9.endsWith("/.."))
-    return path9;
-  const index = path9.lastIndexOf("/");
-  return path9.slice(0, index + 1);
+function stripPathFilename(path10) {
+  if (path10.endsWith("/.."))
+    return path10;
+  const index = path10.lastIndexOf("/");
+  return path10.slice(0, index + 1);
 }
 function mergePaths(url, base) {
   normalizePath(base, base.type);
@@ -65460,14 +65466,14 @@ function normalizePath(url, type) {
     pieces[pointer++] = piece;
     positive++;
   }
-  let path9 = "";
+  let path10 = "";
   for (let i = 1; i < pointer; i++) {
-    path9 += "/" + pieces[i];
+    path10 += "/" + pieces[i];
   }
-  if (!path9 || addTrailingSlash && !path9.endsWith("/..")) {
-    path9 += "/";
+  if (!path10 || addTrailingSlash && !path10.endsWith("/..")) {
+    path10 += "/";
   }
-  url.path = path9;
+  url.path = path10;
 }
 function resolve(input, base) {
   if (!input && !base)
@@ -65508,13 +65514,13 @@ function resolve(input, base) {
     case 3:
       return queryHash;
     case 4: {
-      const path9 = url.path.slice(1);
-      if (!path9)
+      const path10 = url.path.slice(1);
+      if (!path10)
         return queryHash || ".";
-      if (isRelative(base || input) && !isRelative(path9)) {
-        return "./" + path9 + queryHash;
+      if (isRelative(base || input) && !isRelative(path10)) {
+        return "./" + path10 + queryHash;
       }
-      return path9 + queryHash;
+      return path10 + queryHash;
     }
     case 5:
       return url.path + queryHash;
@@ -65524,10 +65530,10 @@ function resolve(input, base) {
 }
 
 // node_modules/@jridgewell/trace-mapping/dist/trace-mapping.mjs
-function stripFilename(path9) {
-  if (!path9) return "";
-  const index = path9.lastIndexOf("/");
-  return path9.slice(0, index + 1);
+function stripFilename(path10) {
+  if (!path10) return "";
+  const index = path10.lastIndexOf("/");
+  return path10.slice(0, index + 1);
 }
 function resolver(mapUrl, sourceRoot) {
   const from = stripFilename(mapUrl);
@@ -77886,6 +77892,7 @@ async function pushToAlgolia(cfg, records, replaceAll, log2) {
 }
 
 // src/process/index.ts
+var SEARCH_INDEX_WARN_BYTES = 5 * 1024 * 1024;
 var stateFile = (dir) => import_node_path7.default.join(import_node_path7.default.dirname(dir), import_node_path7.default.basename(dir) + ".process-state.json");
 async function runProcess(job, log2) {
   const dir = job.dir;
@@ -77929,6 +77936,12 @@ async function runProcess(job, log2) {
       if (s.engine === "fuse") {
         created.push(await writeSearchIndex(dir, records, indexPath));
         parts.push(`search index with ${records.length} page(s)`);
+        const bytes = (await (0, import_promises11.stat)(import_node_path7.default.join(dir, indexPath))).size;
+        if (bytes > SEARCH_INDEX_WARN_BYTES) {
+          const mb = (bytes / 1024 / 1024).toFixed(1);
+          log2.warn(`The search index is ${mb} MB, which every visitor downloads before searching. Use Algolia for a site this large.`);
+          parts.push(`WARNING: search index is ${mb} MB, consider Algolia`);
+        }
       } else if (s.algolia) {
         await pushToAlgolia(s.algolia, records, true, log2);
         parts.push(`${records.length} page(s) sent to Algolia`);
@@ -77936,6 +77949,116 @@ async function runProcess(job, log2) {
     }
   }
   return { uploaded: 0, deleted: 0, created, message: parts.length ? `Processed: ${parts.join("; ")}` : "Nothing to process" };
+}
+
+// src/verify-site.ts
+var import_promises12 = require("node:fs/promises");
+var import_node_path8 = __toESM(require("node:path"), 1);
+var LIST_CAP = 200;
+var WP_ONLY = /^\/(wp-json(\/|$)|xmlrpc\.php|wp-login\.php|wp-admin(\/|$)|wp-cron\.php|\?rest_route=|wp-comments-post\.php)/i;
+var ERROR_SIGNATURES = [
+  [/There has been a critical error on this website/i, "WordPress critical error"],
+  [/Error establishing a database connection/i, "Database connection error"],
+  [/<b>(Fatal error|Parse error)<\/b>:|(^|\n)(PHP )?(Fatal|Parse) error:/i, "PHP error"],
+  [/<b>(Warning|Notice|Deprecated)<\/b>:\s+.*\s+in\s+<b>/i, "PHP warning printed in the page"],
+  [/Briefly unavailable for scheduled maintenance/i, "Maintenance mode page"]
+];
+function errorSignature(html) {
+  const head = html.slice(0, 3e5);
+  for (const [re, name] of ERROR_SIGNATURES) if (re.test(head)) return name;
+  return null;
+}
+async function* walk2(dir, base = "") {
+  const handle = await (0, import_promises12.opendir)(import_node_path8.default.join(dir, base));
+  for await (const e of handle) {
+    const rel = base ? `${base}/${e.name}` : e.name;
+    if (e.isDirectory()) yield* walk2(dir, rel);
+    else if (e.isFile()) yield { rel, size: (await (0, import_promises12.stat)(import_node_path8.default.join(dir, rel))).size };
+  }
+}
+function exists(files, p) {
+  const clean2 = p.replace(/^\/+/, "").replace(/\/+$/, "");
+  if (clean2 === "") return files.has("index.html");
+  return files.has(clean2) || files.has(clean2 + "/index.html") || files.has(clean2 + ".html");
+}
+async function verifySite(job, log2) {
+  const max = job.maxFiles ?? 2e5;
+  const hosts = new Set((job.hosts ?? []).map((h) => h.toLowerCase()));
+  const files = /* @__PURE__ */ new Set();
+  const htmlFiles = [];
+  const result = { checked: 0, broken_links: [], empty_files: [], error_pages: [], wp_only: [], no_title: 0, broken_total: 0, truncated: false };
+  for await (const f of walk2(job.dir)) {
+    files.add(f.rel);
+    if (f.size === 0 && result.empty_files.length < LIST_CAP) result.empty_files.push(f.rel);
+    if (/\.html?$/i.test(f.rel)) htmlFiles.push(f.rel);
+  }
+  if (htmlFiles.length > max) {
+    htmlFiles.length = max;
+    result.truncated = true;
+  }
+  const seenBroken = /* @__PURE__ */ new Set();
+  const seenWp = /* @__PURE__ */ new Set();
+  const check = async (rel) => {
+    const html = await (0, import_promises12.readFile)(import_node_path8.default.join(job.dir, rel), "utf8");
+    if (!html.trim()) return;
+    const isErrorPage404 = /(^|\/)404\.html$/.test(rel);
+    const sig = isErrorPage404 ? null : errorSignature(html);
+    if (sig && result.error_pages.length < LIST_CAP) result.error_pages.push({ path: rel, signature: sig });
+    const root = parse(html, { blockTextElements: { script: false, style: false, noscript: false, pre: true } });
+    const title = root.querySelector("title")?.text.trim();
+    const redirect = root.querySelector('meta[http-equiv="refresh" i]');
+    if (!title && !redirect) result.no_title++;
+    const dir = import_node_path8.default.posix.dirname("/" + rel);
+    const pageUrl = "/" + rel.replace(/(^|\/)index\.html$/, "$1");
+    const targets = [];
+    for (const el of root.querySelectorAll("a[href], img[src], script[src], link[href]")) {
+      if (el.tagName === "LINK" && !/\b(stylesheet|icon|preload|modulepreload)\b/i.test(el.getAttribute("rel") ?? "")) continue;
+      const v = el.getAttribute("href") ?? el.getAttribute("src");
+      if (v) targets.push(v);
+    }
+    for (const raw of targets) {
+      const v = raw.trim();
+      if (!v || /^(data:|blob:|mailto:|tel:|javascript:|sms:|#)/i.test(v)) continue;
+      let u;
+      try {
+        u = new URL(v, "https://self.invalid" + (dir === "/" ? "/" : dir + "/"));
+      } catch {
+        continue;
+      }
+      if (u.host !== "self.invalid" && !hosts.has(u.hostname.toLowerCase())) continue;
+      const target2 = decodeURIComponent(u.pathname);
+      if (WP_ONLY.test(target2 + u.search) || /rest_route=/.test(u.search)) {
+        const k = target2 + u.search;
+        if (!seenWp.has(k)) {
+          seenWp.add(k);
+          if (result.wp_only.length < LIST_CAP) result.wp_only.push({ path: pageUrl, url: k });
+        }
+        continue;
+      }
+      if (!exists(files, target2)) {
+        if (seenBroken.has(target2)) continue;
+        seenBroken.add(target2);
+        result.broken_total++;
+        if (result.broken_links.length < LIST_CAP) result.broken_links.push({ from: pageUrl, to: target2, status: 404 });
+      }
+    }
+  };
+  let done = 0;
+  const queue = [...htmlFiles];
+  const worker = async () => {
+    for (let rel = queue.pop(); rel !== void 0; rel = queue.pop()) {
+      try {
+        await check(rel);
+      } catch (e) {
+        log2.warn(`Could not check ${rel}: ${e instanceof Error ? e.message : String(e)}`);
+      }
+      result.checked++;
+      if (++done % 500 === 0) log2.progress(done, htmlFiles.length, "pages checked");
+    }
+  };
+  await Promise.all(Array.from({ length: 8 }, worker));
+  log2.progress(htmlFiles.length, htmlFiles.length, "pages checked");
+  return result;
 }
 
 // src/cli.ts
@@ -77950,9 +78073,9 @@ async function main() {
   const i = args.indexOf("--job");
   const file = i >= 0 ? args[i + 1] : void 0;
   if (!file) throw new Error("Usage: cli.cjs --job <job.json> [--keep-job]");
-  const job = JSON.parse(await (0, import_promises12.readFile)(file, "utf8"));
-  if (!args.includes("--keep-job")) await (0, import_promises12.rm)(file, { force: true });
-  const result = job.action === "verify" ? await verifyJob(job) : job.action === "process" ? await runProcess(job, log) : await runJob(job, log);
+  const job = JSON.parse(await (0, import_promises13.readFile)(file, "utf8"));
+  if (!args.includes("--keep-job")) await (0, import_promises13.rm)(file, { force: true });
+  const result = job.action === "verify_site" ? await verifySite(job, log) : job.action === "verify" ? await verifyJob(job) : job.action === "process" ? await runProcess(job, log) : await runJob(job, log);
   emit({ type: "result", ...result });
 }
 main().catch((e) => {

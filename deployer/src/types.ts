@@ -48,7 +48,7 @@ export interface Provider<C = any> {
 
 export interface Job {
   /** deploy (default) uploads the export; verify only tests credentials; process post-processes files. */
-  action?: 'deploy' | 'verify' | 'process';
+  action?: 'deploy' | 'verify' | 'process' | 'verify_site';
   /** Globs (`*` wildcard, matched against the export-relative path) of files to leave out of a deploy. */
   ignore?: string[];
   /** Required for deploy and verify. */

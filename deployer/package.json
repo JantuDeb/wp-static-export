@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test": "npm run build:cli && vitest run",
     "build:cli": "esbuild src/cli.ts --bundle --platform=node --target=node18 --format=cjs --outfile=dist/cli.cjs --external:cpu-features --external:sharp --external:./crypto/build/Release/sshcrypto.node --define:import.meta.url=__importMetaUrl --banner:js=\"var __importMetaUrl=require('url').pathToFileURL(__filename).href;\"",
-    "build:admin": "esbuild src/admin/settings.ts --bundle --minify --target=es2019 --format=iife --outfile=dist/admin/settings.js",
+    "build:admin": "esbuild src/admin/settings.ts src/admin/report.ts --bundle --minify --target=es2019 --format=iife --outdir=dist/admin",
     "build:web": "esbuild src/web/forms.ts src/web/search.ts --bundle --minify --target=es2019 --format=iife --outdir=dist/web",
     "lighthouse": "tsx tools/lighthouse/cli.ts",
     "lighthouse:demo": "tsx tools/lighthouse/cli.ts --demo --fix --optimize --meta --pages 4 --runs 3"

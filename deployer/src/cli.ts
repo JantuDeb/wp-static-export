@@ -1,6 +1,7 @@
 import { readFile, rm } from 'node:fs/promises';
 import { runJob, verifyJob } from './deploy.js';
 import { runProcess, type ProcessJob } from './process/index.js';
+import { verifySite, type VerifySiteJob } from './verify-site.js';
 import type { Job, Logger } from './types.js';
 
 /** Newline-delimited JSON on stdout so the PHP side can stream progress. */
@@ -20,7 +21,7 @@ async function main() {
   const job = JSON.parse(await readFile(file, 'utf8')) as Job;
   // The job file contains credentials; remove it as soon as it has been read.
   if (!args.includes('--keep-job')) await rm(file, { force: true });
-  const result = job.action === 'verify' ? await verifyJob(job) : job.action === 'process' ? await runProcess(job as ProcessJob, log) : await runJob(job, log);
+  const result = (job.action as string) === 'verify_site' ? await verifySite(job as unknown as VerifySiteJob, log) : job.action === 'verify' ? await verifyJob(job) : job.action === 'process' ? await runProcess(job as ProcessJob, log) : await runJob(job, log);
   emit({ type: 'result', ...result });
 }
 

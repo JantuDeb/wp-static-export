@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { DeployResult, Job, Logger } from '../types.js';
 import { scanDir } from '../util.js';
@@ -15,6 +15,9 @@ export interface ProcessOps {
 export interface ProcessJob extends Job {
   ops: ProcessOps;
 }
+
+/** Beyond this the in-browser search is slower to start than a hosted one is worth. */
+export const SEARCH_INDEX_WARN_BYTES = 5 * 1024 * 1024;
 
 const stateFile = (dir: string) => path.join(path.dirname(dir), path.basename(dir) + '.process-state.json');
 
@@ -70,6 +73,13 @@ export async function runProcess(job: ProcessJob, log: Logger): Promise<DeployRe
       if (s.engine === 'fuse') {
         created.push(await writeSearchIndex(dir, records, indexPath));
         parts.push(`search index with ${records.length} page(s)`);
+        // Visitors download the whole index before their first search, so it has to stay small.
+        const bytes = (await stat(path.join(dir, indexPath))).size;
+        if (bytes > SEARCH_INDEX_WARN_BYTES) {
+          const mb = (bytes / 1024 / 1024).toFixed(1);
+          log.warn(`The search index is ${mb} MB, which every visitor downloads before searching. Use Algolia for a site this large.`);
+          parts.push(`WARNING: search index is ${mb} MB, consider Algolia`);
+        }
       } else if (s.algolia) {
         await pushToAlgolia(s.algolia, records, true, log);
         parts.push(`${records.length} page(s) sent to Algolia`);

@@ -283,3 +283,22 @@ describe('runProcess', () => {
     expect((await stat(path.join(dir, 'wp-content/uploads/photo.jpg'))).mtimeMs).toBe(mtime);
   });
 });
+
+describe('search index size guard', () => {
+  it('warns when the index gets too large for the browser', async () => {
+    const { mkdtemp, mkdir, writeFile } = await import('node:fs/promises');
+    const { tmpdir } = await import('node:os');
+    const pathMod = await import('node:path');
+    const { runProcess } = await import('../src/process/index.js');
+    const dir = await mkdtemp(pathMod.join(tmpdir(), 'big-'));
+    const words = Array.from({ length: 700 }, (_, i) => `word${i}`).join(' ');
+    for (let i = 0; i < 1100; i++) {
+      await mkdir(pathMod.join(dir, `p${i}`), { recursive: true });
+      await writeFile(pathMod.join(dir, `p${i}`, 'index.html'), `<html><head><title>P${i}</title></head><body><main>${words.repeat(30)}</main></body></html>`);
+    }
+    const warnings: string[] = [];
+    const res = await runProcess({ action: 'process', dir, ops: { search: { engine: 'fuse' } } } as never, { info() {}, warn: (m: string) => warnings.push(m), progress() {} } as never);
+    expect(warnings.join(' ')).toMatch(/Algolia/);
+    expect(res.message).toMatch(/consider Algolia/);
+  }, 60_000);
+});

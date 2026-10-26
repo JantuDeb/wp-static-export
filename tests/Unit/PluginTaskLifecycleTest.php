@@ -12,6 +12,7 @@ use WP_Static_Export\Tests\Support\WpTestEnvironment as WpEnv;
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-plugin.php';
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-options.php';
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-util.php';
+require_once dirname( __DIR__, 2 ) . '/src/features/class-ss-report-service.php';
 
 final class PluginTaskLifecycleJob {
 
@@ -119,12 +120,18 @@ final class PluginTaskLifecycleTest extends UnitTestCase {
 
 		self::assertSame(
 			array_merge(
-				array( 'extension_task', 'setup', 'discover_urls', 'fetch_urls', 'generate_404' ),
+				array( 'extension_task', 'setup', 'discover_urls', 'fetch_urls', 'generate_404', 'verify' ),
 				$delivery_tasks,
 				array( 'wrapup' )
 			),
 			$this->plugin->filter_task_list( array( 'extension_task' ), $delivery )
 		);
+	}
+
+	public function test_verification_can_be_switched_off(): void {
+		$this->options->set( 'smart_crawl', true )->set( 'report_enabled', false );
+
+		self::assertNotContains( 'verify', $this->plugin->filter_task_list( array(), 'zip' ) );
 	}
 
 	/** @return array<string,array{string,array<int,string>}> */
@@ -154,7 +161,8 @@ final class PluginTaskLifecycleTest extends UnitTestCase {
 		$tasks = $this->plugin->filter_task_list( array(), 'zip' );
 
 		self::assertNotContains( 'discover_urls', $tasks );
-		self::assertSame( array( 'setup', 'fetch_urls', 'create_zip_archive', 'wrapup' ), $tasks );
+		$verify = array_key_exists( 'generate_type', $flags ) || isset( $flags['wp-static-export-use-build'] ) ? array() : array( 'verify' );
+		self::assertSame( array_merge( array( 'setup', 'fetch_urls' ), $verify, array( 'create_zip_archive', 'wrapup' ) ), $tasks );
 	}
 
 	/** @return array<string,array{array<string,mixed>}> */

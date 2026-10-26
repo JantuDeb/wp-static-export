@@ -81,6 +81,20 @@ compression with WebP `<picture>` sources, and safe fixes for Lighthouse finding
 `font-display: swap`, `rel=noopener`, names for image-only links, a `_headers` file for caching
 (Netlify/Cloudflare Pages) and an opt-in generated meta description.
 
+## Export report (checking nothing was missed)
+
+After every full export the plugin compares **every published post, page and custom post type** with the files it produced and stores one row per item. Open **WP Static Export > Export Report**:
+
+- A verdict at the top ("All 152 published items are in the export" or "3 of 152 are missing or broken").
+- Cards per status (Exported, Missing, Error, Empty file, Redirect, Excluded) that filter the table when clicked, and coverage per content type.
+- A searchable, sortable, paginated table with title, URL path, exported file, HTTP status and size; "Export now" re-exports a single broken item. Works the same on a phone.
+- **Download CSV** streams the (filtered) report, so it works for very large sites.
+- **Verify now** re-checks the posts against the last export without exporting again, with live progress.
+- **Site checks** (needs Node): broken internal links, pages that contain PHP/WordPress error text, empty files and links that need WordPress (`/wp-json`, `xmlrpc.php`) and so will not work on a static host.
+- Setting "Stop before delivery if published items are missing" keeps a broken export from being uploaded.
+
+Large sites: posts are checked in batches of 200 by ID, with a time limit per request, and the report tables are indexed and paged on the server, so memory does not grow with site size. The site check scans 30,000 pages in about 10 seconds.
+
 ## Lighthouse
 
 ```bash

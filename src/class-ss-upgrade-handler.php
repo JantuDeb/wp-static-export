@@ -292,6 +292,7 @@ class Upgrade_Handler {
 				// Sync database.
 				Page::create_or_update_table();
 				Deploy_Manifest_Service::create_or_update_tables();
+				Report_Service::create_or_update_tables();
 
 				// Preserve legacy Hide WP path settings under the current option names.
 				self::migrate_legacy_hide_wp_options();
