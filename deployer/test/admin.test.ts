@@ -72,9 +72,7 @@ describe('settings UI', () => {
     await tick();
 
     expect(root.querySelector('#ssf-netlify_site_id')).toBeNull();
-    const select = root.querySelector('#ssf-delivery_method') as HTMLSelectElement;
-    select.value = 'netlify';
-    select.dispatchEvent(new Event('change'));
+    (root.querySelector('#ssf-delivery_method [data-value="netlify"]') as HTMLElement).click();
     expect(root.querySelector('#ssf-netlify_site_id')).not.toBeNull();
 
     // The saved secret is never rendered as a value.
@@ -104,11 +102,16 @@ describe('settings UI', () => {
     const root = document.createElement('div');
     mount(root, { restUrl: '/rest', nonce: 'n' });
     await tick();
-    (root.querySelectorAll('.nav-tab')[1] as HTMLElement).click();
-    const add = Array.from(root.querySelectorAll('button')).find((b) => b.textContent === 'Add rule')!;
+    (root.querySelectorAll('.nav a')[1] as HTMLElement).click();
+    const add = Array.from(root.querySelectorAll('button')).find((b) => b.textContent === 'Add a form rule')!;
     add.click();
-    const match = root.querySelector('tbody tbody input, table.widefat tbody input') as HTMLInputElement;
-    expect(match.value).toBe('*');
+    // A new rule covers every form and starts on the recommended destination.
+    expect((root.querySelector('#ssf-rule-0-scope') as HTMLSelectElement).value).toBe('all');
+    expect(root.querySelector('.tile.on')?.textContent).toContain('Google Sheet');
+    expect(root.textContent).toContain('Extensions → Apps Script');
+    (root.querySelector('[data-value="formspree"]') as HTMLElement).click();
+    expect(root.querySelector('.tile.on')?.textContent).toContain('Formspree');
+    expect(root.textContent).toContain('formspree.io');
     vi.unstubAllGlobals();
   });
 });

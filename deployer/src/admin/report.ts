@@ -118,7 +118,7 @@ const CSS = `
 .wpse-r .verdict{padding:14px 16px;border-radius:6px;border-left:6px solid;background:#fff;margin-bottom:16px;font-size:15px}
 .wpse-r .verdict.good{border-color:#00a32a}.wpse-r .verdict.warn{border-color:#dba617}.wpse-r .verdict.bad{border-color:#d63638}.wpse-r .verdict.none{border-color:#8c8f94}
 .wpse-r .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
-.wpse-r .card{width:100%;min-width:0;background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:12px;cursor:pointer;text-align:left;font:inherit}
+.wpse-r .card{width:100%;max-width:none;min-width:0;background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:12px;cursor:pointer;text-align:left;font:inherit}
 .wpse-r .card:hover,.wpse-r .card.on{border-color:#2271b1;box-shadow:0 0 0 1px #2271b1}
 .wpse-r .card b{display:block;font-size:24px;line-height:1.2}
 .wpse-r .card span{color:#50575e}
