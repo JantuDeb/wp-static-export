@@ -66,7 +66,7 @@ class Process_Config {
 				'fontDisplay'     => $flag( 'quality_font_display' ),
 				'metaDescription' => $flag( 'quality_meta_description', false ),
 				// _headers is only understood by these two hosts; elsewhere it would be a stray file.
-				'headers'         => $flag( 'quality_headers' ) && in_array( $o->get( 'delivery_method' ), array( 'netlify', 'cloudflare-pages' ), true ),
+				'headers'         => $flag( 'quality_headers' ) && in_array( $o->get( 'delivery_method' ), array( 'netlify', 'cloudflare-pages', 'cloudflare-workers' ), true ),
 			);
 		}
 

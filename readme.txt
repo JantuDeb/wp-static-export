@@ -43,7 +43,7 @@ Your WordPress site stays private and secure. Your static site is what visitors 
 
 = What's Included =
 * One-click static site generation, ZIP export or deploy to a local directory
-* Deploy to GitHub, Netlify, Cloudflare Pages, Amazon S3 (and compatible stores), BunnyCDN or SFTP, uploading only changed files
+* Deploy to GitHub, Netlify, Cloudflare Pages, Cloudflare Workers static assets, Amazon S3 (and compatible stores), BunnyCDN or SFTP, uploading only changed files
 * Single-post export and optional automatic publishing when a post is saved
 * WP-CLI: `wp simply-static run`, `status`, `cancel`, `doctor`
 * Forms: send Contact Form 7, WPForms, Gravity Forms or Fluent Forms submissions to Google Forms, Google Sheets, Netlify Forms, Formspree, a webhook or email
@@ -126,7 +126,7 @@ This plugin works without contacting any service the plugin author runs, and it 
 
 * GitHub (api.github.com): your exported files and your access token are sent to commit them to the repository you choose. [Terms](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service), [Privacy](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement).
 * Netlify (api.netlify.com): your exported files and access token. [Terms](https://www.netlify.com/legal/terms-of-use/), [Privacy](https://www.netlify.com/privacy/).
-* Cloudflare Pages (api.cloudflare.com): your exported files and API token. [Terms](https://www.cloudflare.com/website-terms/), [Privacy](https://www.cloudflare.com/privacypolicy/).
+* Cloudflare Pages or Workers (api.cloudflare.com): your exported files and API token. [Terms](https://www.cloudflare.com/website-terms/), [Privacy](https://www.cloudflare.com/privacypolicy/).
 * Amazon S3 and CloudFront (or the S3-compatible endpoint you enter, for example Cloudflare R2, MinIO or DigitalOcean Spaces): your exported files, signed with your access key. [AWS terms](https://aws.amazon.com/service-terms/), [Privacy](https://aws.amazon.com/privacy/).
 * BunnyCDN (storage.bunnycdn.com, regional storage hosts and api.bunny.net): your exported files, your storage password and optionally your account API key to purge the cache. [Terms](https://bunny.net/tos/), [Privacy](https://bunny.net/privacy/).
 * SFTP: your exported files and credentials go to the server you enter. No third party is involved.

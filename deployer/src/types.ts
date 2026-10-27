@@ -35,7 +35,7 @@ export interface DeployResult {
   created?: string[];
 }
 
-export type ProviderId = 'github' | 'netlify' | 'cloudflare-pages' | 's3' | 'bunny' | 'sftp';
+export type ProviderId = 'github' | 'netlify' | 'cloudflare-pages' | 'cloudflare-workers' | 's3' | 'bunny' | 'sftp';
 
 export interface Provider<C = any> {
   id: ProviderId;

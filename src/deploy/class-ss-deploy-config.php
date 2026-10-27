@@ -18,7 +18,7 @@ class Deploy_Config {
 	 * @return string[]
 	 */
 	public static function methods() {
-		return array( 'github', 'netlify', 'cloudflare-pages', 's3', 'bunny', 'sftp' );
+		return array( 'github', 'netlify', 'cloudflare-pages', 'cloudflare-workers', 's3', 'bunny', 'sftp' );
 	}
 
 	/**
@@ -67,6 +67,7 @@ class Deploy_Config {
 				);
 				break;
 
+			case 'cloudflare-workers':
 			case 'cloudflare-pages':
 				$config = array(
 					'apiToken'  => $get( 'cloudflare_api_token' ),

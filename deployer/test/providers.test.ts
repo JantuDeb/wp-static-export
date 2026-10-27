@@ -107,3 +107,49 @@ describe('s3 provider', () => {
     expect(seen.filter((s) => s.url.endsWith('?delete='))).toHaveLength(1);
   });
 });
+
+describe('cloudflare workers provider', () => {
+  it('opens a session, uploads the buckets it asks for, then publishes the Worker with the completion token', async () => {
+    const calls: string[] = [];
+    let published: any;
+    vi.stubGlobal('fetch', async (url: string, init: RequestInit = {}) => {
+      const u = new URL(url);
+      const p = u.pathname.replace('/client/v4/accounts/acc/workers', '');
+      calls.push(`${init.method ?? 'GET'} ${p}${u.search}`);
+      if (p === '/scripts/site/assets-upload-session') {
+        const manifest = JSON.parse(String(init.body)).manifest;
+        expect(Object.keys(manifest).sort()).toEqual(['/a.css', '/index.html']);
+        expect(manifest['/a.css'].hash).toMatch(/^[0-9a-f]{32}$/);
+        return json({ success: true, result: { jwt: 'upload-jwt', buckets: [[manifest['/index.html'].hash]] } });
+      }
+      if (p === '/assets/upload') {
+        expect(new Headers(init.headers).get('authorization')).toBe('Bearer upload-jwt');
+        expect([...(init.body as FormData).keys()]).toHaveLength(1);
+        return json({ success: true, result: { jwt: 'done-jwt' } }, 201);
+      }
+      if (p === '/scripts/site') {
+        published = JSON.parse(await ((init.body as FormData).get('metadata') as Blob).text());
+        return json({ success: true });
+      }
+      return json({ success: false }, 404);
+    });
+    const dir = await site();
+    const res = await runJob({ provider: 'cloudflare-workers', dir, config: { apiToken: 't', accountId: 'acc', project: 'site' } }, log);
+    expect(res.uploaded).toBe(1);
+    expect(published.assets.jwt).toBe('done-jwt');
+    expect(calls).toEqual(['POST /scripts/site/assets-upload-session', 'POST /assets/upload?base64=true', 'PUT /scripts/site']);
+  });
+
+  it('skips the upload when nothing is needed and uses the session token', async () => {
+    let published: any;
+    vi.stubGlobal('fetch', async (url: string, init: RequestInit = {}) => {
+      const p = new URL(url).pathname;
+      if (p.endsWith('assets-upload-session')) return json({ success: true, result: { jwt: 'complete', buckets: [] } });
+      published = JSON.parse(await ((init.body as FormData).get('metadata') as Blob).text());
+      return json({ success: true });
+    });
+    const res = await runJob({ provider: 'cloudflare-workers', dir: await site(), config: { apiToken: 't', accountId: 'acc', project: 'site' } }, log);
+    expect(res.uploaded).toBe(0);
+    expect(published.assets.jwt).toBe('complete');
+  });
+});

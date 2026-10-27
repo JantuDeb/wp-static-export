@@ -31,6 +31,7 @@ class Features_Schema {
 			'github'           => 'GitHub',
 			'netlify'          => 'Netlify',
 			'cloudflare-pages' => 'Cloudflare Pages',
+			'cloudflare-workers' => 'Cloudflare Workers (static assets)',
 			's3'               => 'Amazon S3 / compatible',
 			'bunny'            => 'BunnyCDN',
 			'sftp'             => 'SFTP',
@@ -59,9 +60,9 @@ class Features_Schema {
 					self::f( 'netlify_draft', __( 'Publish as draft (preview) deploy', 'wp-static-export' ), 'checkbox', array( 'show_if' => array( 'delivery_method' => 'netlify' ) ) ),
 
 					// Cloudflare Pages.
-					self::f( 'cloudflare_api_token', __( 'API token', 'wp-static-export' ), 'password', array( 'secret' => true, 'help' => __( 'Needs "Cloudflare Pages: Edit".', 'wp-static-export' ), 'show_if' => array( 'delivery_method' => 'cloudflare-pages' ) ) ),
-					self::f( 'cloudflare_account_id', __( 'Account ID', 'wp-static-export' ), 'text', array( 'show_if' => array( 'delivery_method' => 'cloudflare-pages' ) ) ),
-					self::f( 'cloudflare_project', __( 'Pages project name', 'wp-static-export' ), 'text', array( 'show_if' => array( 'delivery_method' => 'cloudflare-pages' ) ) ),
+					self::f( 'cloudflare_api_token', __( 'API token', 'wp-static-export' ), 'password', array( 'secret' => true, 'help' => __( 'Pages: needs "Cloudflare Pages: Edit". Workers: needs "Workers Scripts: Edit".', 'wp-static-export' ), 'show_if' => array( 'delivery_method' => array( 'cloudflare-pages', 'cloudflare-workers' ) ) ) ),
+					self::f( 'cloudflare_account_id', __( 'Account ID', 'wp-static-export' ), 'text', array( 'show_if' => array( 'delivery_method' => array( 'cloudflare-pages', 'cloudflare-workers' ) ) ) ),
+					self::f( 'cloudflare_project', __( 'Pages project or Worker name', 'wp-static-export' ), 'text', array( 'show_if' => array( 'delivery_method' => array( 'cloudflare-pages', 'cloudflare-workers' ) ) ) ),
 					self::f( 'cloudflare_branch', __( 'Branch', 'wp-static-export' ), 'text', array( 'help' => __( 'Leave empty for the production branch.', 'wp-static-export' ), 'show_if' => array( 'delivery_method' => 'cloudflare-pages' ) ) ),
 
 					// S3.

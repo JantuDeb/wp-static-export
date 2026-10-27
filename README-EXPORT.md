@@ -29,7 +29,7 @@ Use **Save & test connection** to check credentials without deploying.
 
 ## Deploy targets
 
-GitHub, Netlify, Cloudflare Pages, S3 (and R2, MinIO, Spaces), BunnyCDN, SFTP.
+GitHub, Netlify, Cloudflare Pages, Cloudflare Workers (static assets), S3 (and R2, MinIO, Spaces), BunnyCDN, SFTP.
 Deploys are incremental: file hashes from the last successful deploy are kept in
 `uploads/ss-deploy-state/`, so only changed files are uploaded. Single/update exports never
 delete anything; a full export won't delete more than half of what was deployed before (this

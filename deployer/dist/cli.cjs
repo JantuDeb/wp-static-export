@@ -7774,7 +7774,7 @@ var require_agent = __commonJS({
     var { Socket } = require("net");
     var { Duplex } = require("stream");
     var { resolve: resolve2 } = require("path");
-    var { readFile: readFile14 } = require("fs");
+    var { readFile: readFile15 } = require("fs");
     var { execFile, spawn } = require("child_process");
     var { isParsedKey, parseKey } = require_keyParser();
     var {
@@ -7992,7 +7992,7 @@ var require_agent = __commonJS({
           cb = once(cb);
           let socketPath = this.socketPath;
           let triedCygpath = false;
-          readFile14(socketPath, function readCygsocket(err, data) {
+          readFile15(socketPath, function readCygsocket(err, data) {
             if (err) {
               if (triedCygpath)
                 return cb(new Error("Invalid cygwin unix socket path"));
@@ -8001,7 +8001,7 @@ var require_agent = __commonJS({
                   return cb(new Error("Invalid cygwin unix socket path"));
                 triedCygpath = true;
                 socketPath = stdout.toString().replace(/[\r\n]/g, "");
-                readFile14(socketPath, readCygsocket);
+                readFile15(socketPath, readCygsocket);
               });
               return;
             }
@@ -39254,7 +39254,7 @@ var require_lib3 = __commonJS({
 });
 
 // src/cli.ts
-var import_promises13 = require("node:fs/promises");
+var import_promises14 = require("node:fs/promises");
 
 // src/providers/bunny.ts
 var import_promises2 = require("node:fs/promises");
@@ -39981,8 +39981,70 @@ var cloudflarePages = {
   }
 };
 
-// src/providers/github.ts
+// src/providers/cloudflare-workers.ts
 var import_promises4 = require("node:fs/promises");
+var MAX_FILE_BYTES = 25 * 1024 * 1024;
+var cloudflareWorkers = {
+  id: "cloudflare-workers",
+  validate(c) {
+    required(c, ["apiToken", "accountId", "project"], "cloudflare-workers");
+    return c;
+  },
+  async verify(config) {
+    const api = (config.apiUrl ?? "https://api.cloudflare.com/client/v4").replace(/\/$/, "");
+    const res = await (await http(`${api}/accounts/${config.accountId}/workers/scripts`, { headers: { Authorization: `Bearer ${config.apiToken}` } })).json();
+    const exists2 = (res.result ?? []).some((s) => s.id === config.project);
+    return { message: exists2 ? `Connected; Worker ${config.project} exists and will be updated` : `Connected; Worker ${config.project} will be created on the first deploy` };
+  },
+  async deploy({ all, config, log: log2 }) {
+    const api = (config.apiUrl ?? "https://api.cloudflare.com/client/v4").replace(/\/$/, "");
+    const base = `${api}/accounts/${config.accountId}/workers`;
+    const cf = { Authorization: `Bearer ${config.apiToken}` };
+    const manifest = {};
+    const byHash = /* @__PURE__ */ new Map();
+    for (const f of all) {
+      if (f.size > MAX_FILE_BYTES) throw new DeployError(`${f.path} is larger than Cloudflare's 25 MiB per-file limit`);
+      const hash = cfHash(await (0, import_promises4.readFile)(f.abs), f.path);
+      manifest["/" + f.path] = { hash, size: f.size };
+      byHash.set(hash, f);
+    }
+    const session = await (await http(`${base}/scripts/${encodeURIComponent(config.project)}/assets-upload-session`, {
+      method: "POST",
+      headers: { ...cf, "Content-Type": "application/json" },
+      body: JSON.stringify({ manifest })
+    })).json();
+    let token = session.result?.jwt;
+    if (!token) throw new DeployError("Cloudflare did not return an upload token");
+    const buckets = session.result?.buckets ?? [];
+    const total = buckets.reduce((n, b) => n + b.length, 0);
+    log2.info(`Cloudflare needs ${total} of ${byHash.size} assets`);
+    let done = 0;
+    for (const bucket of buckets) {
+      const form2 = new FormData();
+      for (const hash of bucket) {
+        const f = byHash.get(hash);
+        if (!f) continue;
+        form2.set(hash, new Blob([(await (0, import_promises4.readFile)(f.abs)).toString("base64")], { type: mimeType(f.path) }), hash);
+      }
+      const res = await (await http(`${base}/assets/upload?base64=true`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form2 })).json();
+      if (res.result?.jwt) token = res.result.jwt;
+      done += bucket.length;
+      log2.progress(done, total, "assets");
+    }
+    const metadata = {
+      compatibility_date: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
+      assets: { jwt: token, config: { html_handling: "auto-trailing-slash", not_found_handling: "404-page" } }
+    };
+    const form = new FormData();
+    form.set("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }), "metadata");
+    const dep = await (await http(`${base}/scripts/${encodeURIComponent(config.project)}`, { method: "PUT", headers: cf, body: form })).json();
+    if (dep.success === false) throw new DeployError(`Cloudflare rejected the Worker: ${JSON.stringify(dep.errors)}`);
+    return { uploaded: total, deleted: 0, message: `Cloudflare Workers deployment published (${total} new assets)` };
+  }
+};
+
+// src/providers/github.ts
+var import_promises5 = require("node:fs/promises");
 var github = {
   id: "github",
   validate(c) {
@@ -40034,7 +40096,7 @@ var github = {
     const entries = [];
     let done = 0;
     await pool(changed, Math.min(concurrency, 6), async (f) => {
-      const content = (await (0, import_promises4.readFile)(f.abs)).toString("base64");
+      const content = (await (0, import_promises5.readFile)(f.abs)).toString("base64");
       const res = await (await gh("POST", "/git/blobs", { content, encoding: "base64" })).json();
       entries.push({ path: at(f.path), mode: "100644", type: "blob", sha: res.sha });
       log2.progress(++done, changed.length, "blobs");
@@ -40061,7 +40123,7 @@ var github = {
 };
 
 // src/providers/netlify.ts
-var import_promises5 = require("node:fs/promises");
+var import_promises6 = require("node:fs/promises");
 var sleep2 = (ms) => new Promise((r) => setTimeout(r, ms));
 var netlify = {
   id: "netlify",
@@ -40095,7 +40157,7 @@ var netlify = {
       await http(`${api}/deploys/${created.id}/files/${f.path.split("/").map(encodeURIComponent).join("/")}`, {
         method: "PUT",
         headers: { ...auth, "Content-Type": "application/octet-stream" },
-        body: await (0, import_promises5.readFile)(f.abs)
+        body: await (0, import_promises6.readFile)(f.abs)
       });
       log2.progress(++done, toUpload.length, "files");
     });
@@ -40113,7 +40175,7 @@ var netlify = {
 
 // src/providers/s3.ts
 var import_node_crypto3 = require("node:crypto");
-var import_promises6 = require("node:fs/promises");
+var import_promises7 = require("node:fs/promises");
 
 // src/sigv4.ts
 var import_node_crypto2 = require("node:crypto");
@@ -40181,7 +40243,7 @@ var s3Provider = {
     await pool(changed, concurrency, async (f) => {
       const ext2 = f.path.split(".").pop()?.toLowerCase() ?? "";
       const cache = config.cacheControlByExt?.[ext2] ?? config.cacheControl;
-      await s3(config, "PUT", prefix + f.path, await (0, import_promises6.readFile)(f.abs), {
+      await s3(config, "PUT", prefix + f.path, await (0, import_promises7.readFile)(f.abs), {
         "content-type": mimeType(f.path),
         ...cache ? { "cache-control": cache } : {}
       });
@@ -40225,7 +40287,7 @@ async function invalidate(cfg, paths, _prefix) {
 // src/providers/sftp.ts
 var import_posix = __toESM(require("node:path/posix"), 1);
 var import_ssh2_sftp_client = __toESM(require_src(), 1);
-var import_promises7 = require("node:fs/promises");
+var import_promises8 = require("node:fs/promises");
 var sftp = {
   id: "sftp",
   validate(c) {
@@ -40272,7 +40334,7 @@ var sftp = {
       await pool(changed, Math.min(concurrency, 8), async (f) => {
         const remote = import_posix.default.join(root, f.path);
         const tmp = `${remote}.part`;
-        await client.put(await (0, import_promises7.readFile)(f.abs), tmp);
+        await client.put(await (0, import_promises8.readFile)(f.abs), tmp);
         await client.rename(tmp, remote).catch(async () => {
           await client.delete(remote).catch(() => void 0);
           await client.rename(tmp, remote);
@@ -40292,6 +40354,7 @@ var providers = {
   github,
   netlify,
   "cloudflare-pages": cloudflarePages,
+  "cloudflare-workers": cloudflareWorkers,
   s3: s3Provider,
   bunny,
   sftp
@@ -40346,11 +40409,11 @@ async function verifyJob(job) {
 }
 
 // src/process/index.ts
-var import_promises11 = require("node:fs/promises");
+var import_promises12 = require("node:fs/promises");
 var import_node_path7 = __toESM(require("node:path"), 1);
 
 // src/quality/fixes.ts
-var import_promises8 = require("node:fs/promises");
+var import_promises9 = require("node:fs/promises");
 var import_node_path4 = __toESM(require("node:path"), 1);
 
 // node_modules/node-html-parser/dist/index.mjs
@@ -44937,7 +45000,7 @@ async function applyFixes(dir, files, opts, log2) {
   const titles = /* @__PURE__ */ new Map();
   if (opts.linkNames) {
     for (const f of files.filter((x) => /\.html?$/i.test(x.path))) {
-      const m = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(await (0, import_promises8.readFile)(f.abs, "utf8"));
+      const m = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(await (0, import_promises9.readFile)(f.abs, "utf8"));
       const t = m ? cleanTitle(m[1]) : "";
       if (t) titles.set(f.path, t);
     }
@@ -44951,7 +45014,7 @@ async function applyFixes(dir, files, opts, log2) {
   if (opts.imageDimensions) {
     for (const f of files.filter((x) => /\.(png|jpe?g|gif|webp|svg)$/i.test(x.path))) {
       try {
-        sizes.set(f.path, imageSize(await (0, import_promises8.readFile)(f.abs)));
+        sizes.set(f.path, imageSize(await (0, import_promises9.readFile)(f.abs)));
       } catch {
         sizes.set(f.path, null);
       }
@@ -44960,18 +45023,18 @@ async function applyFixes(dir, files, opts, log2) {
   for (const f of files) {
     try {
       if (/\.html?$/i.test(f.path)) {
-        const src = await (0, import_promises8.readFile)(f.abs, "utf8");
+        const src = await (0, import_promises9.readFile)(f.abs, "utf8");
         const r = fixHtml(src, { pagePath: f.path, sizeOf, titleOf }, opts);
         if (r.html !== src) {
-          await (0, import_promises8.writeFile)(f.abs, r.html);
+          await (0, import_promises9.writeFile)(f.abs, r.html);
           result.files++;
         }
         add(r.counts);
       } else if (opts.fontDisplay && /\.css$/i.test(f.path)) {
-        const src = await (0, import_promises8.readFile)(f.abs, "utf8");
+        const src = await (0, import_promises9.readFile)(f.abs, "utf8");
         const r = fixFontDisplay(src);
         if (r.count) {
-          await (0, import_promises8.writeFile)(f.abs, r.css);
+          await (0, import_promises9.writeFile)(f.abs, r.css);
           result.files++;
           add({ fontDisplay: r.count });
         }
@@ -44982,9 +45045,9 @@ async function applyFixes(dir, files, opts, log2) {
   }
   if (opts.headers) {
     const target2 = import_node_path4.default.join(dir, "_headers");
-    const exists2 = await (0, import_promises8.stat)(target2).then(() => true).catch(() => false);
+    const exists2 = await (0, import_promises9.stat)(target2).then(() => true).catch(() => false);
     if (!exists2) {
-      await (0, import_promises8.writeFile)(target2, headersFile());
+      await (0, import_promises9.writeFile)(target2, headersFile());
       result.created.push("_headers");
     }
   }
@@ -44992,7 +45055,7 @@ async function applyFixes(dir, files, opts, log2) {
 }
 
 // src/process/optimize.ts
-var import_promises9 = require("node:fs/promises");
+var import_promises10 = require("node:fs/promises");
 var import_node_path5 = __toESM(require("node:path"), 1);
 var import_clean_css2 = __toESM(require_clean_css(), 1);
 
@@ -77747,40 +77810,40 @@ async function optimize(dir, files, opts, state, log2) {
     let after = null;
     try {
       if ((e === "html" || e === "htm") && opts.html) {
-        const src = await (0, import_promises9.readFile)(abs, "utf8");
+        const src = await (0, import_promises10.readFile)(abs, "utf8");
         const out = looksMinified(src) ? src : await minifyHtmlString(src);
         if (out.length < src.length) {
-          await (0, import_promises9.writeFile)(abs, out);
+          await (0, import_promises10.writeFile)(abs, out);
           after = Buffer.byteLength(out);
         }
       } else if (e === "css" && opts.css && !isMin) {
-        const src = await (0, import_promises9.readFile)(abs, "utf8");
+        const src = await (0, import_promises10.readFile)(abs, "utf8");
         const out = looksMinified(src) ? src : minifyCssString(src);
         if (out && out.length < src.length) {
-          await (0, import_promises9.writeFile)(abs, out);
+          await (0, import_promises10.writeFile)(abs, out);
           after = Buffer.byteLength(out);
         }
       } else if (e === "js" && opts.js && !isMin) {
-        const src = await (0, import_promises9.readFile)(abs, "utf8");
+        const src = await (0, import_promises10.readFile)(abs, "utf8");
         const out = looksMinified(src) ? src : await minifyJsString(src);
         if (out.length < src.length) {
-          await (0, import_promises9.writeFile)(abs, out);
+          await (0, import_promises10.writeFile)(abs, out);
           after = Buffer.byteLength(out);
         }
       } else if (sharp && ["jpg", "jpeg", "png"].includes(e)) {
-        const input = await (0, import_promises9.readFile)(abs);
+        const input = await (0, import_promises10.readFile)(abs);
         if (await isOptimized(sharp, input)) return;
         const mark2 = { IFD0: { Software: OPTIMIZED_MARKER } };
         const img = sharp(input).withExif(mark2);
         const encoded = await (e === "png" ? img.png({ compressionLevel: 9, effort: 8 }) : img.jpeg({ quality, mozjpeg: true })).toBuffer();
         if (encoded.length < input.length) {
-          await (0, import_promises9.writeFile)(abs, encoded);
+          await (0, import_promises10.writeFile)(abs, encoded);
           after = encoded.length;
         }
         if (opts.webp) {
           const webp = await sharp(input).withExif(mark2).webp({ quality }).toBuffer();
           if (webp.length < (after ?? before)) {
-            await (0, import_promises9.writeFile)(abs + ".webp", webp);
+            await (0, import_promises10.writeFile)(abs + ".webp", webp);
             result.webpCreated.push(f.path + ".webp");
           }
         }
@@ -77828,7 +77891,7 @@ function addPictureSources(html, pagePath, webp) {
 
 // src/process/search-index.ts
 var import_node_crypto4 = require("node:crypto");
-var import_promises10 = require("node:fs/promises");
+var import_promises11 = require("node:fs/promises");
 var import_node_path6 = __toESM(require("node:path"), 1);
 var STRIP = "script,style,nav,header,footer,aside,form,noscript,svg,iframe,template,[hidden],.ss-search-panel,.sidebar,.widget";
 var MAX_TEXT = 5e3;
@@ -77858,15 +77921,15 @@ async function buildSearchRecords(files, exclude, includeArchives = false) {
   for (const f of files) {
     if (!/\.html?$/i.test(f.path) || /(^|\/)404\.html$/.test(f.path) || matchesAny(f.path, exclude) || matchesAny(filePathToUrl(f.path), exclude)) continue;
     if (!includeArchives && isArchiveUrl(filePathToUrl(f.path))) continue;
-    const rec = extractRecord(await (0, import_promises10.readFile)(f.abs, "utf8"), f.path);
+    const rec = extractRecord(await (0, import_promises11.readFile)(f.abs, "utf8"), f.path);
     if (rec) records.push(rec);
   }
   return records.sort((a, b) => a.url.localeCompare(b.url));
 }
 async function writeSearchIndex(dir, records, indexPath = "ss-assets/search-index.json") {
   const target2 = import_node_path6.default.join(dir, indexPath);
-  await (0, import_promises10.mkdir)(import_node_path6.default.dirname(target2), { recursive: true });
-  await (0, import_promises10.writeFile)(target2, JSON.stringify(records));
+  await (0, import_promises11.mkdir)(import_node_path6.default.dirname(target2), { recursive: true });
+  await (0, import_promises11.writeFile)(target2, JSON.stringify(records));
   return indexPath;
 }
 var objectId = (url) => (0, import_node_crypto4.createHash)("sha1").update(url).digest("hex").slice(0, 20);
@@ -77907,7 +77970,7 @@ async function runProcess(job, log2) {
     files = await scanDir(dir);
   }
   if (job.ops.optimize) {
-    const state = await (0, import_promises11.readFile)(stateFile(dir), "utf8").then((s2) => JSON.parse(s2)).catch(() => ({}));
+    const state = await (0, import_promises12.readFile)(stateFile(dir), "utf8").then((s2) => JSON.parse(s2)).catch(() => ({}));
     const o = job.ops.optimize;
     const res = await optimize(dir, files, o, state, log2);
     created.push(...res.webpCreated);
@@ -77915,13 +77978,13 @@ async function runProcess(job, log2) {
     const webp = /* @__PURE__ */ new Set([...res.webpCreated, ...files.filter((f) => /\.(jpe?g|png)\.webp$/i.test(f.path)).map((f) => f.path)]);
     if (o.webp && webp.size) {
       for (const f of files.filter((x) => /\.html?$/i.test(x.path))) {
-        const html = await (0, import_promises11.readFile)(f.abs, "utf8");
+        const html = await (0, import_promises12.readFile)(f.abs, "utf8");
         const next = addPictureSources(html, f.path, webp);
-        if (next !== html) await (0, import_promises11.writeFile)(f.abs, next);
+        if (next !== html) await (0, import_promises12.writeFile)(f.abs, next);
       }
     }
     files = await scanDir(dir);
-    await (0, import_promises11.writeFile)(stateFile(dir), JSON.stringify(Object.fromEntries(files.map((f) => [f.path, f.sha256]))));
+    await (0, import_promises12.writeFile)(stateFile(dir), JSON.stringify(Object.fromEntries(files.map((f) => [f.path, f.sha256]))));
     parts.push(
       `optimized ${res.files} file(s), saved ${(res.bytesSaved / 1024).toFixed(0)} KB${res.webpCreated.length ? `, ${res.webpCreated.length} WebP` : ""}`
     );
@@ -77936,7 +77999,7 @@ async function runProcess(job, log2) {
       if (s.engine === "fuse") {
         created.push(await writeSearchIndex(dir, records, indexPath));
         parts.push(`search index with ${records.length} page(s)`);
-        const bytes = (await (0, import_promises11.stat)(import_node_path7.default.join(dir, indexPath))).size;
+        const bytes = (await (0, import_promises12.stat)(import_node_path7.default.join(dir, indexPath))).size;
         if (bytes > SEARCH_INDEX_WARN_BYTES) {
           const mb = (bytes / 1024 / 1024).toFixed(1);
           log2.warn(`The search index is ${mb} MB, which every visitor downloads before searching. Use Algolia for a site this large.`);
@@ -77952,7 +78015,7 @@ async function runProcess(job, log2) {
 }
 
 // src/verify-site.ts
-var import_promises12 = require("node:fs/promises");
+var import_promises13 = require("node:fs/promises");
 var import_node_path8 = __toESM(require("node:path"), 1);
 var LIST_CAP = 200;
 var WP_ONLY = /^\/(wp-json(\/|$)|xmlrpc\.php|wp-login\.php|wp-admin(\/|$)|wp-cron\.php|\?rest_route=|wp-comments-post\.php)/i;
@@ -77969,11 +78032,11 @@ function errorSignature(html) {
   return null;
 }
 async function* walk2(dir, base = "") {
-  const handle = await (0, import_promises12.opendir)(import_node_path8.default.join(dir, base));
+  const handle = await (0, import_promises13.opendir)(import_node_path8.default.join(dir, base));
   for await (const e of handle) {
     const rel = base ? `${base}/${e.name}` : e.name;
     if (e.isDirectory()) yield* walk2(dir, rel);
-    else if (e.isFile()) yield { rel, size: (await (0, import_promises12.stat)(import_node_path8.default.join(dir, rel))).size };
+    else if (e.isFile()) yield { rel, size: (await (0, import_promises13.stat)(import_node_path8.default.join(dir, rel))).size };
   }
 }
 function exists(files, p) {
@@ -77999,7 +78062,7 @@ async function verifySite(job, log2) {
   const seenBroken = /* @__PURE__ */ new Set();
   const seenWp = /* @__PURE__ */ new Set();
   const check = async (rel) => {
-    const html = await (0, import_promises12.readFile)(import_node_path8.default.join(job.dir, rel), "utf8");
+    const html = await (0, import_promises13.readFile)(import_node_path8.default.join(job.dir, rel), "utf8");
     if (!html.trim()) return;
     const isErrorPage404 = /(^|\/)404\.html$/.test(rel);
     const sig = isErrorPage404 ? null : errorSignature(html);
@@ -78073,8 +78136,8 @@ async function main() {
   const i = args.indexOf("--job");
   const file = i >= 0 ? args[i + 1] : void 0;
   if (!file) throw new Error("Usage: cli.cjs --job <job.json> [--keep-job]");
-  const job = JSON.parse(await (0, import_promises13.readFile)(file, "utf8"));
-  if (!args.includes("--keep-job")) await (0, import_promises13.rm)(file, { force: true });
+  const job = JSON.parse(await (0, import_promises14.readFile)(file, "utf8"));
+  if (!args.includes("--keep-job")) await (0, import_promises14.rm)(file, { force: true });
   const result = job.action === "verify_site" ? await verifySite(job, log) : job.action === "verify" ? await verifyJob(job) : job.action === "process" ? await runProcess(job, log) : await runJob(job, log);
   emit({ type: "result", ...result });
 }
