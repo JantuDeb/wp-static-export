@@ -19,7 +19,10 @@ class Comments_Enhancer {
 	 */
 	public static function process( $html ) {
 		$provider = (string) Options::instance()->get( 'comments_provider' );
-		if ( '' === $provider || false === stripos( $html, 'id="respond"' ) && false === stripos( $html, "id='respond'" ) ) {
+		if ( '' === $provider ) {
+			return self::strip_login_prompts( $html );
+		}
+		if ( false === stripos( $html, 'id="respond"' ) && false === stripos( $html, "id='respond'" ) ) {
 			return $html;
 		}
 
@@ -36,6 +39,33 @@ class Comments_Enhancer {
 
 		// "Reply" links point at ?replytocom=, which does nothing on a static site.
 		return preg_replace( '#<div class="reply">.*?</div>#is', '', $html );
+	}
+
+	/**
+	 * Without a comment provider the WordPress form stays, but "You must be logged in to post a comment"
+	 * and "Log in to Reply" link to wp-login.php, which does not exist on a static host. Remove those prompts,
+	 * and the "Leave a Reply" block when nothing but the prompt was in it.
+	 *
+	 * @param string $html HTML.
+	 * @return string
+	 */
+	public static function strip_login_prompts( $html ) {
+		if ( false === stripos( $html, 'wp-login.php' ) ) {
+			return $html;
+		}
+		$html = preg_replace( '#<p class="must-log-in">.*?</p>#is', '', $html );
+		$html = preg_replace( '#<a\b[^>]*\bclass=["\'][^"\']*comment-reply-login[^"\']*["\'][^>]*>.*?</a>#is', '', $html );
+		$html = preg_replace( '#<div class="reply">\s*</div>#i', '', $html );
+
+		$extent = Html_Enhancer::find_element( $html, '/<div\b[^>]*\bid=["\']respond["\'][^>]*>/i', 'div' );
+		if ( $extent ) {
+			$block = substr( $html, $extent[0], $extent[1] - $extent[0] );
+			if ( false === stripos( $block, '<form' ) ) {
+				$html = substr_replace( $html, '', $extent[0], $extent[1] - $extent[0] );
+			}
+		}
+
+		return $html;
 	}
 
 	/**

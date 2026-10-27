@@ -801,7 +801,8 @@ class Plugin {
 			return Deliver_Existing::task_list( $delivery_method );
 		}
 
-		$generate_404 = $this->options->get( 'generate_404' );
+		// Hosts such as Cloudflare and Netlify serve 404.html for unknown URLs; without it visitors get the host's bare error page.
+		$generate_404 = $this->options->get( 'generate_404' ) || Deploy_Config::is_deploy_method( $delivery_method );
 
 		$task_list[] = 'setup';
 

@@ -192,7 +192,7 @@ class Upgrade_Handler {
 			'use_critical_css'                => false,
 			'critical_css_additional_urls'    => '',
 			'critical_css_custom'             => '',
-			'generate_404'                  => false,
+			'generate_404'                  => true,
             'custom_404_page'              => 0,
 			'add_feeds'                     => false,
 			'add_rest_api'                  => false,

@@ -165,6 +165,26 @@ final class FeaturesTest extends UnitTestCase {
 
 	// ---- comments -------------------------------------------------------------
 
+	public function test_login_prompts_are_removed_when_no_comment_provider_is_set(): void {
+		$this->configure( array( 'comments_provider' => '' ) );
+		$html = '<article>Post</article><div id="respond" class="comment-respond"><h3 id="reply-title">Leave a Reply</h3>'
+			. '<p class="must-log-in">You must be <a href="https://x.test/wp-login.php?redirect_to=%2Fa%2F">logged in</a> to post a comment.</p></div>'
+			. '<ol><li>Hi <div class="reply"><a rel="nofollow" class="comment-reply-login" href="https://x.test/wp-login.php?redirect_to=%2Fa%2F">Log in to Reply</a></div></li></ol>';
+		$out  = Comments_Enhancer::process( $html );
+
+		$this->assertStringNotContainsString( 'wp-login.php', $out );
+		$this->assertStringNotContainsString( 'Leave a Reply', $out );
+		$this->assertStringContainsString( '<article>Post</article>', $out );
+		$this->assertStringContainsString( 'Hi', $out );
+	}
+
+	public function test_a_working_comment_form_is_left_alone_without_a_provider(): void {
+		$this->configure( array( 'comments_provider' => '' ) );
+		$html = '<div id="respond"><h3>Leave a Reply</h3><form id="commentform"></form></div><a href="/wp-login.php">Log in</a>';
+
+		$this->assertStringContainsString( 'Leave a Reply', Comments_Enhancer::process( $html ) );
+	}
+
 	public function test_comment_form_is_replaced_with_giscus_even_with_nested_divs(): void {
 		$this->configure(
 			array(
