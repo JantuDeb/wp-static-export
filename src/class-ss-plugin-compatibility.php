@@ -69,7 +69,7 @@ class Plugin_Compatibility {
 	public function get_plugins() {
 
 		if ( count( $this->plugins ) === 0 ) {
-			$plugins = apply_filters( 'wpse_compatible_plugins', Compatibility_API_Client::get_plugins() );
+			$plugins = apply_filters( 'wpse_compatible_plugins', array() );
 			$this->plugins = array_map(
 				static function ( $plugin ) {
 					return self::normalize_plugin_data( $plugin );
