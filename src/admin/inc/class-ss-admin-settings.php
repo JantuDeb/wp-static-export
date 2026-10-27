@@ -195,7 +195,7 @@ class Admin_Settings {
       		// Command Center: hide the top-level sidebar menu and add a link under Tools → WP Static Export.
         if ( $hide_menu ) {
             add_action( 'admin_head', function () {
-                echo '<style>#toplevel_page_simply-static-generate{display:none!important;}</style>';
+                echo '<style>#toplevel_page_wp-static-export-generate{display:none!important;}</style>';
             } );
 
             // Register a Tools submenu that links directly to the original page.
@@ -230,7 +230,7 @@ class Admin_Settings {
                     <script type="text/javascript">
                         (function(){
                             // Remove active state from the hidden SS top-level menu.
-                            var ssMenu = document.getElementById('toplevel_page_simply-static-generate');
+                            var ssMenu = document.getElementById('toplevel_page_wp-static-export-generate');
                             if (ssMenu) {
                                 ssMenu.className = ssMenu.className
                                     .replace(/wp-has-current-submenu/g, 'wp-not-current-submenu')
@@ -417,12 +417,12 @@ class Admin_Settings {
         // Determine initial screen.
         $initial = '/';
 
-        if ( 'simply-static_page_simply-static-settings' === $screen->base ) {
+        if ( '_page_wp-static-export-settings' === substr( (string) $screen->base, -strlen( '_page_wp-static-export-settings' ) ) ) {
             $initial = '/general';
         }
 
         // Maybe switch to Diagnostics.
-        if ( 'simply-static_page_simply-static-diagnostics' === $screen->base ) {
+        if ( '_page_wp-static-export-diagnostics' === substr( (string) $screen->base, -strlen( '_page_wp-static-export-diagnostics' ) ) ) {
             $initial = '/diagnostics';
         }
 

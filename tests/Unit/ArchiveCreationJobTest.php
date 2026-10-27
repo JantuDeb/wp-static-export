@@ -21,6 +21,8 @@ if ( ! file_exists( $admin_include ) ) {
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-plugin.php';
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-options.php';
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-util.php';
+require_once dirname( __DIR__, 2 ) . '/src/deploy/class-ss-deploy-config.php';
+require_once dirname( __DIR__, 2 ) . '/src/features/class-ss-deliver-existing.php';
 require_once dirname( __DIR__, 2 ) . '/src/class-ss-multisite.php';
 require_once dirname( __DIR__, 2 ) . '/src/background/class-ss-async-request.php';
 require_once dirname( __DIR__, 2 ) . '/src/background/class-ss-background-process.php';

@@ -81,6 +81,10 @@ compression with WebP `<picture>` sources, and safe fixes for Lighthouse finding
 `font-display: swap`, `rel=noopener`, names for image-only links, a `_headers` file for caching
 (Netlify/Cloudflare Pages) and an opt-in generated meta description.
 
+## Deliver an export you already have
+
+An export stays on disk after it finishes. To push it again (after a failed deploy, a fixed token, or to a different target) pick **Deliver existing export (no crawl)** in the Generate page drop-down, use **Deliver** on the Export Report page, or run `wp static-export run --existing [--deploy-to=<target>]`. Nothing is crawled, optimized or verified again; the files on disk go to the configured delivery method. Starting a normal full export replaces the files on disk.
+
 ## Export report (checking nothing was missed)
 
 After every full export the plugin compares **every published post, page and custom post type** with the files it produced and stores one row per item. Open **WP Static Export > Export Report**:

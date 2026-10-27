@@ -99,6 +99,7 @@ class Plugin {
 				// Forms, comments, search, multilingual.
 				Deploy_Runner::init();
 				Single_Export::init();
+				Deliver_Existing::init();
 				Html_Enhancer::init();
 				Multilingual::init();
 				add_action( 'wpse_before_finish_transferring_files_locally', array( '\\WP_Static_Export\\Process_Config', 'transfer_extra_files' ), 10, 2 );
@@ -113,7 +114,7 @@ class Plugin {
 				add_action( 'wpse_after_setup_task', array( self::$instance, 'maybe_clear_directory' ) );
 
 				// Add quick link to the plugin page.
-				add_filter( 'plugin_action_links_simply-static/wp-static-export.php', array(
+				add_filter( 'plugin_action_links_' . plugin_basename( WPSE_PATH . 'wp-static-export.php' ), array(
 					self::$instance,
 					'add_quick_links'
 				) );
@@ -222,6 +223,7 @@ class Plugin {
 		require_once $path . 'src/features/class-ss-comments-enhancer.php';
 		require_once $path . 'src/features/class-ss-search-enhancer.php';
 		require_once $path . 'src/features/class-ss-single-export.php';
+		require_once $path . 'src/features/class-ss-deliver-existing.php';
 		require_once $path . 'src/features/class-ss-features-admin.php';
 		require_once $path . 'src/tasks/class-ss-deploy-task.php';
 		require_once $path . 'src/tasks/class-ss-process-task.php';
@@ -795,6 +797,10 @@ class Plugin {
 			$task_list[] = 'wrapup';
 			return $task_list;
 		}
+		if ( Deliver_Existing::active() ) {
+			return Deliver_Existing::task_list( $delivery_method );
+		}
+
 		$generate_404 = $this->options->get( 'generate_404' );
 
 		$task_list[] = 'setup';

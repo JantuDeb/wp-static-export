@@ -200,6 +200,19 @@ function SidebarSite( props = null ) {
 		setIsRunning(true);
         setIsResumed(false);
         setIsPaused(false);
+        if ('deliver-existing' === selectedExportType) {
+            // Deliver the files of the last export without crawling the site again.
+            apiFetch({
+                path: '/wp-static-export-features/v1/deliver-existing',
+                method: 'POST',
+                data: {}
+            }).catch(error => {
+                alert(error.message);
+                setIsRunning(false);
+                setDisabledButton(false);
+            });
+            return;
+        }
         const languagePrefix = 'language:';
         const isLanguageExport = selectedExportType.indexOf(languagePrefix) === 0;
 
@@ -426,6 +439,7 @@ function SidebarSite( props = null ) {
                 }
                 {buildOptions}
                 {languageSelectOptions}
+                <option value="deliver-existing">{__('Deliver existing export (no crawl)', 'wp-static-export')}</option>
             </SelectControl>
             {canRunExport && !isRollbackRunning &&
                 <GenerateButtons

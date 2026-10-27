@@ -129,6 +129,12 @@ class Features_Admin {
 			)
 		);
 
+		$admin = function () {
+			return current_user_can( $this->capability() );
+		};
+		register_rest_route( self::REST_NS, '/existing-export', array( 'methods' => 'GET', 'callback' => array( $this, 'existing_export' ), 'permission_callback' => $admin ) );
+		register_rest_route( self::REST_NS, '/deliver-existing', array( 'methods' => 'POST', 'callback' => array( $this, 'deliver_existing' ), 'permission_callback' => $admin ) );
+
 		register_rest_route(
 			self::REST_NS,
 			'/verify',
@@ -220,6 +226,29 @@ class Features_Admin {
 		$result = Single_Export::start( $request->get_param( 'post_ids' ) );
 		if ( is_wp_error( $result ) ) {
 			return new \WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => 'ss_single_busy' === $result->get_error_code() ? 409 : 400 ) );
+		}
+
+		return new \WP_REST_Response( array( 'started' => true ), 202 );
+	}
+
+	/**
+	 * @return \WP_REST_Response
+	 */
+	public function existing_export() {
+		$info                    = Deliver_Existing::info();
+		$info['delivery_method'] = (string) Options::instance()->get( 'delivery_method' );
+		$info['busy']            = Plugin::instance()->get_archive_creation_job()->is_running();
+
+		return rest_ensure_response( $info );
+	}
+
+	/**
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function deliver_existing() {
+		$result = Deliver_Existing::start();
+		if ( is_wp_error( $result ) ) {
+			return new \WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => 'ss_deliver_busy' === $result->get_error_code() ? 409 : 400 ) );
 		}
 
 		return new \WP_REST_Response( array( 'started' => true ), 202 );

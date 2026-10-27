@@ -179,6 +179,7 @@ export function mount(root: HTMLElement, boot: Boot): void {
   let list: ItemPage | null = null;
   let verifying: { done: number; total: number } | null = null;
   let message: { kind: 'error' | 'success'; text: string } | null = null;
+  let existing: { exists: boolean; files: number; modified: number; delivery_method: string; busy: boolean } | null = null;
   let searchTimer: ReturnType<typeof setTimeout> | undefined;
   let seq = 0;
 
@@ -203,6 +204,7 @@ export function mount(root: HTMLElement, boot: Boot): void {
       reports = idx.reports;
       typeLabels = idx.post_types;
       running = idx.running;
+      existing = (await api('/existing-export').catch(() => null)) as typeof existing;
       const pick = id ?? reports[0]?.id ?? null;
       current = pick ? ((await api(`/reports/${pick}`)) as ReportRow & { post_types: Record<string, string> }) : null;
       list = null;
@@ -253,6 +255,33 @@ export function mount(root: HTMLElement, boot: Boot): void {
       btn.disabled = false;
     }
     render();
+  }
+
+  async function deliverExisting(btn: HTMLButtonElement): Promise<void> {
+    btn.disabled = true;
+    try {
+      await api('/deliver-existing', { method: 'POST', body: '{}' });
+      message = { kind: 'success', text: 'Delivery started. No new crawl is done. Follow it in the Activity Log on the Generate page.' };
+    } catch (e) {
+      message = { kind: 'error', text: (e as Error).message };
+      btn.disabled = false;
+    }
+    render();
+  }
+
+  function existingPanel(): HTMLElement | null {
+    if (!existing || !existing.exists) return null;
+    const when = existing.modified ? new Date(existing.modified * 1000).toLocaleString() : '';
+    const names: Record<string, string> = { zip: 'a ZIP file', local: 'the local folder', github: 'GitHub', netlify: 'Netlify', 'cloudflare-pages': 'Cloudflare Pages', 'cloudflare-workers': 'Cloudflare Workers', s3: 'S3', bunny: 'BunnyCDN', sftp: 'SFTP' };
+    const btn = h('button', { type: 'button', class: 'button', disabled: existing.busy || running }, `Deliver to ${names[existing.delivery_method] ?? existing.delivery_method}`);
+    btn.addEventListener('click', () => void deliverExisting(btn));
+    return h(
+      'div',
+      { class: 'panel' },
+      h('h3', {}, 'Export on disk'),
+      h('p', { class: 'muted' }, `${existing.files.toLocaleString()} files${when ? `, last written ${when}` : ''}. Deliver them again without crawling the site, for example after a failed deploy or after changing the delivery target in Deploy & Features.`),
+      btn,
+    );
   }
 
   const csvHref = () => {
@@ -456,6 +485,8 @@ export function mount(root: HTMLElement, boot: Boot): void {
     if (current && current.scope === 'partial') {
       out.push(h('p', { class: 'muted' }, 'This report was updated by a single-page export. Run a full export to refresh everything.'));
     }
+    const ex = existingPanel();
+    if (ex) out.push(ex);
     if (t) out.push(cards(t), coverage(t));
     if (current?.deep) out.push(deepPanel(current.deep));
     if (current) out.push(table());

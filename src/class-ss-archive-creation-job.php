@@ -217,7 +217,8 @@ class Archive_Creation_Job extends Background_Process {
 
 				$first_task = $task_list[0];
 
-				if ( 'update' !== $type ) {
+				// Delivering an existing export must keep pointing at the folder that holds it.
+				if ( 'update' !== $type && ! Deliver_Existing::active() ) {
 					$archive_name = join( '-', array( Plugin::SLUG, $blog_id, time() ) );
 					$this->options->set( 'archive_name', $archive_name );
 				}
