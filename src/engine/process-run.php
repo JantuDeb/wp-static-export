@@ -184,9 +184,14 @@ class Process_Run {
 					try {
 						if ( preg_match( '/\.html?$/i', $path ) ) {
 							$src = (string) file_get_contents( $dir . '/' . $path );
+							Fixes::$failures = 0;
 							list( $html, $counts ) = Fixes::fix_html( $src, array( 'pagePath' => $path, 'sizeOf' => $size_of, 'titleOf' => static function ( $f ) use ( $titles ) {
 								return $titles[ $f ] ?? null;
 							} ), $fixes );
+							if ( Fixes::$failures && empty( $d['pcre_warned'] ) ) {
+								$d['pcre_warned'] = true;
+								$log( 'warn', 'Some fixes were skipped on ' . $path . ' (and possibly other pages) because the page is too large for PHP\'s pattern matcher. Raise pcre.backtrack_limit if you need them.' );
+							}
 							if ( $html !== $src ) {
 								file_put_contents( $dir . '/' . $path, $html );
 								++$d['fixed'];
@@ -363,10 +368,11 @@ class Process_Run {
 					}
 					$rec = Search_Index::extract_record( (string) file_get_contents( $dir . '/' . $path ), $path );
 					if ( $rec ) {
-						fwrite( $fh, json_encode( $rec ) . "\n" );
+						// "url<TAB>json": the index writer can sort by url without decoding every record.
+						fwrite( $fh, $rec['url'] . "\t" . json_encode( $rec, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) . "\n" );
 						++$d['records'];
 					}
-					if ( 'fuse' === ( $s['engine'] ?? 'fuse' ) && ftell( $fh ) > self::SEARCH_RECORDS_MAX_BYTES ) {
+					if ( 'fuse' === ( $s['engine'] ?? 'fuse' ) && fstat( $fh )['size'] > self::SEARCH_RECORDS_MAX_BYTES ) {
 						fclose( $fh );
 						$log( 'warn', 'The search content is too large for the built-in search. Use Algolia for a site this large.' );
 						$d['parts'][] = 'WARNING: search index skipped (too large), use Algolia';
@@ -391,21 +397,40 @@ class Process_Run {
 			case 'search_write':
 				$s       = $ops['search'];
 				$index   = $s['indexPath'] ?? 'ss-assets/search-index.json';
-				$records = array();
-				foreach ( file( preg_replace( '/\.json$/', '', $ctx->run['file'] ) . '.records.jsonl', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES ) as $line ) {
-					$records[] = json_decode( $line, true );
+				$source  = preg_replace( '/\.json$/', '', $ctx->run['file'] ) . '.records.jsonl';
+				// Sort by url without holding the records in memory: keep only where each line starts.
+				$lines = array();
+				$in    = fopen( $source, 'rb' );
+				$pos   = 0;
+				while ( false !== ( $line = fgets( $in ) ) ) {
+					$tab = strpos( $line, "\t" );
+					$lines[] = array( substr( $line, 0, $tab ), $pos + $tab + 1, strlen( $line ) - $tab - 2 );
+					$pos    += strlen( $line );
 				}
 				usort(
-					$records,
+					$lines,
 					static function ( $a, $b ) {
-						return strcmp( $a['url'], $b['url'] );
+						return strcmp( $a[0], $b[0] );
 					}
 				);
-				Util::write_file( $dir . '/' . $index, json_encode( $records, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );
+				$target = $dir . '/' . $index;
+				if ( ! is_dir( dirname( $target ) ) ) {
+					mkdir( dirname( $target ), 0755, true );
+				}
+				$out = fopen( $target . '.tmp', 'wb' );
+				fwrite( $out, '[' );
+				foreach ( $lines as $i => $l ) {
+					fseek( $in, $l[1] );
+					fwrite( $out, ( $i ? ',' : '' ) . fread( $in, $l[2] ) );
+				}
+				fwrite( $out, ']' );
+				fclose( $out );
+				fclose( $in );
+				rename( $target . '.tmp', $target );
 				$d['created'][] = $index;
-				$d['parts'][]   = 'search index with ' . count( $records ) . ' page(s)';
+				$d['parts'][]   = 'search index with ' . count( $lines ) . ' page(s)';
 				// Visitors download the whole index before their first search, so it has to stay small.
-				$bytes = (int) filesize( $dir . '/' . $index );
+				$bytes = (int) filesize( $target );
 				if ( $bytes > self::SEARCH_INDEX_WARN_BYTES ) {
 					$mb = number_format( $bytes / 1048576, 1 );
 					$log( 'warn', 'The search index is ' . $mb . ' MB, which every visitor downloads before searching. Use Algolia for a site this large.' );
@@ -425,7 +450,7 @@ class Process_Run {
 				fseek( $fh, (int) $d['alg_offset'] );
 				$batch = array();
 				while ( count( $batch ) < 500 && false !== ( $line = fgets( $fh ) ) ) {
-					$batch[] = json_decode( $line, true );
+					$batch[] = json_decode( substr( $line, strpos( $line, "\t" ) + 1 ), true );
 				}
 				$d['alg_offset'] = ftell( $fh );
 				$eof             = feof( $fh ) || false === fgets( $fh );

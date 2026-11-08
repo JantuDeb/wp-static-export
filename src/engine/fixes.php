@@ -73,9 +73,22 @@ class Fixes {
 	 */
 	protected static function replace( $pattern, $cb, $subject ) {
 		$out = preg_replace_callback( $pattern, $cb, $subject );
+		if ( null === $out ) {
+			++self::$failures;
 
-		return null === $out ? $subject : $out;
+			return $subject;
+		}
+
+		return $out;
 	}
+
+	/**
+	 * How many replacements PCRE gave up on (very large pages) since the counter was last reset. The page keeps
+	 * working, but that fix was skipped, and the caller should say so.
+	 *
+	 * @var int
+	 */
+	public static $failures = 0;
 
 	/**
 	 * Hide regions whose contents must never be edited.

@@ -16,6 +16,27 @@ which is the default in current PHP). Nothing else: no Node.js, no `exec()`, no 
 Large sites are handled in time-boxed steps (about 8 seconds each) by the background queue, so PHP's
 `max_execution_time` and slow hosts are not a problem. Deploys are incremental and resume where they stopped.
 
+## Performance
+
+`php scripts/bench.php [pages] [step-seconds] [images] [page-kb]` builds a synthetic export and times every engine stage
+with peak memory. Measured on a small cloud VM, 20,000 pages of 20 KB (400 MB), 8-second steps, HTTP faked so only the
+engine's own cost shows:
+
+| Stage | Time | Peak memory |
+|---|---|---|
+| Deploy, first run (hash, plan, 20,051 uploads) | 4.6 s | 26 MB |
+| Deploy, nothing changed | 2.2 s | 29 MB |
+| Lighthouse fixes | 8.6 s | 14 MB |
+| Minify HTML and CSS | 18.9 s | 34 MB |
+| Search index | 10.6 s | 14 MB (skipped above 30 MB of text: use Algolia) |
+| Images and WebP (50 images) | 8.5 s | 16 MB |
+| Site check | 4.1 s | 9 MB |
+
+Real exports are dominated by crawling the site, not by these stages (the 7,150-page learny site took 4 minutes 21 seconds
+end to end). Memory does not grow with the number of files: state is kept on disk and each step loads only what it needs.
+The budgets are enforced by `WPSE_PERF=1 vendor/bin/phpunit tests/Performance`, which also checks that time per page does
+not grow as the site gets bigger.
+
 ## Build
 
 ```bash
