@@ -54,6 +54,8 @@ The version consistency check can also be run locally:
 To reproduce and inspect the production package locally:
 
 ```bash
+composer install && composer prefix-vendor
+npm ci --prefix deployer && npm run build --prefix deployer
 npm ci --prefix src/admin
 npm run build --prefix src/admin
 npm ci --prefix assets/install-plugins
@@ -65,5 +67,6 @@ unzip -l build/release/wp-static-export.zip
 The `.distignore` file is the source of truth for production exclusions. The
 ZIP contains the PHP runtime, translations, views, static assets, and the two
 React `build` directories. It excludes Git/CI metadata, tests, React source and
-configuration, package manifests, Composer development files, `vendor`,
+configuration, package manifests, Composer development files, `vendor` (the two runtime
+libraries ship prefixed in `vendor-prefixed`),
 `node_modules`, coverage output, and source maps.

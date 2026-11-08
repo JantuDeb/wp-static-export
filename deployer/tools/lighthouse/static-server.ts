@@ -2,7 +2,25 @@ import { createServer, type Server } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
-import { mimeType } from '../../src/util.js';
+
+const MIME: Record<string, string> = {
+  html: 'text/html; charset=utf-8',
+  css: 'text/css; charset=utf-8',
+  js: 'text/javascript; charset=utf-8',
+  json: 'application/json',
+  xml: 'application/xml',
+  txt: 'text/plain; charset=utf-8',
+  svg: 'image/svg+xml',
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  ico: 'image/x-icon',
+  woff: 'font/woff',
+  woff2: 'font/woff2',
+};
+const mimeType = (file: string) => MIME[path.extname(file).slice(1).toLowerCase()] ?? 'application/octet-stream';
 
 /** Parse a Netlify/Cloudflare-style `_headers` file into [pattern, headers] rules. */
 export function parseHeaders(text: string): { re: RegExp; headers: Record<string, string> }[] {

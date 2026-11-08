@@ -1,24 +1,34 @@
 # Static export for WordPress
 
 A fork of the GPL-2.0+ WP Static Export plugin with deployment targets, forms, search,
-optimization, comments, multilingual support and Lighthouse tooling. PHP does the export;
-TypeScript (in `deployer/`) does everything that talks to other services or runs in the browser.
+optimization, comments, multilingual support and Lighthouse tooling. It is PHP only on the server: the
+deploy and optimization engine lives in `src/engine`, and TypeScript (in `deployer/`) builds only what runs
+in the browser (the admin screens and the form and search scripts).
 
 > Rename the plugin before you distribute it. "WP Static Export" is its authors' trademark.
+
+## Requirements
+
+PHP 7.4+ with the DOM extension. Image optimization needs the GD extension (WebP needs GD built with WebP,
+which is the default in current PHP). Nothing else: no Node.js, no `exec()`, no command line access. Run
+`wp static-export doctor` to see what a server supports.
+
+Large sites are handled in time-boxed steps (about 8 seconds each) by the background queue, so PHP's
+`max_execution_time` and slow hosts are not a problem. Deploys are incremental and resume where they stopped.
 
 ## Build
 
 ```bash
+composer install && composer prefix-vendor   # copies the minifier and SFTP libraries to vendor-prefixed/ under this plugin's own namespace
 cd deployer
 npm install
-npm run build      # dist/cli.cjs (server), dist/admin/settings.js, dist/web/{forms,search}.js
-npm test           # builds, then runs unit tests and tests of the built bundle
+npm run build      # dist/admin/{settings,report}.js, dist/web/{forms,search}.js
+npm test
+cd .. && ./scripts/build-release.sh           # the installable ZIP in build/release/
 ```
 
-`deployer/dist/` is committed so the plugin works when installed from a zip.
-Requirements on the web server: PHP `exec()` enabled and Node.js 18+ (only for deploy
-targets, optimization, search indexing and Lighthouse fixes). Forms, comments and
-multilingual need no Node. For image compression also run `npm install sharp` in `deployer/`.
+`deployer/dist/` and `vendor-prefixed/` are committed so the plugin works when installed straight from the
+repository. The engine's tests run with `vendor/bin/phpunit tests/Unit/Engine`.
 
 ## Where to configure
 
@@ -39,7 +49,7 @@ guards against a broken crawl wiping the live site).
 wp static-export run --deploy-to=netlify      # export and deploy
 wp static-export run --type=update            # only changed pages
 wp static-export run --force-full             # ignore saved hashes
-wp static-export doctor                       # checks Node and the bundle
+wp static-export doctor                       # checks what this server can do
 ```
 
 ## Forms
@@ -94,7 +104,7 @@ After every full export the plugin compares **every published post, page and cus
 - A searchable, sortable, paginated table with title, URL path, exported file, HTTP status and size; "Export now" re-exports a single broken item. Works the same on a phone.
 - **Download CSV** streams the (filtered) report, so it works for very large sites.
 - **Verify now** re-checks the posts against the last export without exporting again, with live progress.
-- **Site checks** (needs Node): broken internal links, pages that contain PHP/WordPress error text, empty files and links that need WordPress (`/wp-json`, `xmlrpc.php`) and so will not work on a static host.
+- **Site checks**: broken internal links, pages that contain PHP/WordPress error text, empty files and links that need WordPress (`/wp-json`, `xmlrpc.php`) and so will not work on a static host.
 - Setting "Stop before delivery if published items are missing" keeps a broken export from being uploaded.
 
 Large sites: posts are checked in batches of 200 by ID, with a time limit per request, and the report tables are indexed and paged on the server, so memory does not grow with site size. The site check scans 30,000 pages in about 10 seconds.
@@ -103,7 +113,7 @@ Large sites: posts are checked in batches of 200 by ID, with a time limit per re
 
 ```bash
 cd deployer
-npm run lighthouse:demo                                  # sample site, before/after
+npm run lighthouse:demo                                  # sample site, before/after (needs the php CLI for the fixes)
 npm run lighthouse -- --dir /path/to/export              # audit
 npm run lighthouse -- --dir /path/to/export --fix --optimize --runs 3 --out report.md
 npm run lighthouse -- --dir /path/to/export --min performance=90,seo=95   # CI gate

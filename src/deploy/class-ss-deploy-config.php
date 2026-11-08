@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Deploy_Config {
 
 	/**
-	 * Delivery methods handled by the Node deployer. Keys match the provider ids in deployer/src/types.ts.
+	 * Delivery methods handled by the deploy engine. Keys match the provider ids in src/engine/providers.php.
 	 *
 	 * @return string[]
 	 */

@@ -312,25 +312,25 @@ final class FeaturesTest extends UnitTestCase {
 		$this->assertFalse( Process_Config::needed() );
 
 		$this->configure( array( 'optimize_css' => true, 'optimize_exclude' => "/a/*\n\n  b.css " ) );
-		$ops = Process_Config::node_ops();
+		$ops = Process_Config::ops();
 		$this->assertSame( array( '/a/*', 'b.css' ), $ops['optimize']['exclude'] );
 		$this->assertFalse( $ops['optimize']['webp'] );
 		$this->assertTrue( Process_Config::needed() );
 
 		$this->configure( array( 'forms_enabled' => true, 'forms_rules' => array( array( 'match' => '*' ) ) ) );
 		$this->assertSame( array( 'ss-assets/forms.js' => 'deployer/dist/web/forms.js' ), Process_Config::assets() );
-		$this->assertSame( array(), Process_Config::node_ops(), 'forms need no Node' );
+		$this->assertSame( array(), Process_Config::ops(), 'forms need no processing' );
 
 		$this->configure( array( 'static_search_enabled' => true, 'static_search_engine' => 'algolia', 'static_search_algolia_admin_key' => 'k' ) );
-		$this->assertSame( 'k', Process_Config::node_ops()['search']['algolia']['adminKey'] );
+		$this->assertSame( 'k', Process_Config::ops()['search']['algolia']['adminKey'] );
 	}
 
 	public function test_quality_fixes_default_on_once_enabled_with_description_guess_opt_in(): void {
 		$this->configure( array() );
-		$this->assertArrayNotHasKey( 'fixes', Process_Config::node_ops() );
+		$this->assertArrayNotHasKey( 'fixes', Process_Config::ops() );
 
 		$this->configure( array( 'quality_enabled' => true, 'delivery_method' => 'netlify' ) );
-		$fixes = Process_Config::node_ops()['fixes'];
+		$fixes = Process_Config::ops()['fixes'];
 		$this->assertTrue( $fixes['lazyImages'] );
 		$this->assertTrue( $fixes['imageDimensions'] );
 		$this->assertTrue( $fixes['linkNames'] );
@@ -339,7 +339,7 @@ final class FeaturesTest extends UnitTestCase {
 		$this->assertTrue( Process_Config::needed() );
 
 		$this->configure( array( 'quality_enabled' => true, 'delivery_method' => 's3', 'quality_lazy_images' => false, 'quality_lang' => 'fr-FR', 'quality_meta_description' => true ) );
-		$fixes = Process_Config::node_ops()['fixes'];
+		$fixes = Process_Config::ops()['fixes'];
 		$this->assertFalse( $fixes['lazyImages'] );
 		$this->assertFalse( $fixes['headers'], '_headers is only for Netlify / Cloudflare Pages' );
 		$this->assertSame( 'fr-FR', $fixes['lang'] );
@@ -376,18 +376,20 @@ final class FeaturesTest extends UnitTestCase {
 		$this->assertSame( 10, $fields['single_auto_export_delay']['default'] );
 	}
 
-	public function test_stale_node_run_state_is_cleared_so_a_crashed_export_cannot_poison_the_next(): void {
+	public function test_stale_engine_run_state_is_cleared_so_a_crashed_export_cannot_poison_the_next(): void {
 		$this->requireSource( 'src/deploy/class-ss-deploy-runner.php' );
-		$log = tempnam( sys_get_temp_dir(), 'ssl' );
-		$this->configure( array( 'deploy_run' => array( 'pid' => 0, 'log_file' => $log, 'job_file' => '' ), 'process_run' => array( 'pid' => 0, 'log_file' => '', 'job_file' => '' ), 'keep' => 'me' ) );
+		require_once dirname( __DIR__, 2 ) . '/src/engine/autoload.php';
+		$stale = tempnam( sys_get_temp_dir(), 'ssl' );
+		$this->configure( array( 'deploy_run' => array( 'id' => 'x', 'file' => $stale ), 'process_run' => array( 'id' => 'y', 'file' => '' ), 'verify_run' => array( 'id' => 'z', 'file' => '' ), 'keep' => 'me' ) );
 
 		\WP_Static_Export\Deploy_Runner::reset_runs();
 
 		$o = Options::reinstance();
 		$this->assertEmpty( $o->get( 'deploy_run' ) );
 		$this->assertEmpty( $o->get( 'process_run' ) );
+		$this->assertEmpty( $o->get( 'verify_run' ) );
 		$this->assertSame( 'me', $o->get( 'keep' ) );
-		$this->assertFileDoesNotExist( $log, 'the stale log file is removed' );
+		$this->assertFileDoesNotExist( $stale, 'the stale run file is removed' );
 	}
 
 	public function test_scope_is_partial_for_single_update_and_404_exports(): void {

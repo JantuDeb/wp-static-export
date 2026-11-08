@@ -4,11 +4,11 @@ namespace WP_Static_Export;
 
 /**
  * Pushes the finished export to the configured remote (GitHub, Netlify, Cloudflare Pages,
- * S3, BunnyCDN, SFTP) using the bundled TypeScript deployer.
+ * S3, BunnyCDN, SFTP) with the plugin's PHP deploy engine (resumable, so large sites do not hit PHP time limits).
  */
 class Deploy_Task extends Task {
 
-	use runsNodeJob;
+	use runsEngineJob;
 
 	/**
 	 * Task name.
@@ -23,10 +23,11 @@ class Deploy_Task extends Task {
 	public function perform() {
 		$method = $this->options->get( 'delivery_method' );
 
-		$step = $this->advance_node_job(
+		$step = $this->advance_engine_job(
 			'deploy_run',
-			function () use ( $method ) {
-				return $this->build_job( $method );
+			'deploy',
+			function ( $starting ) use ( $method ) {
+				return $this->build_job( $method, $starting );
 			},
 			function ( $event ) {
 				// One database write per file would be thousands of writes: keep to ~1 per second and the final one.
@@ -71,10 +72,11 @@ class Deploy_Task extends Task {
 	}
 
 	/**
-	 * @param string $method Delivery method.
+	 * @param string $method   Delivery method.
+	 * @param bool   $starting Whether this is the first step.
 	 * @return array|\WP_Error
 	 */
-	protected function build_job( $method ) {
+	protected function build_job( $method, $starting = true ) {
 		if ( ! Deploy_Config::is_deploy_method( $method ) ) {
 			return new \WP_Error( 'ss_deploy_method', sprintf( /* translators: %s: method */ __( 'Unknown deploy target "%s".', 'wp-static-export' ), $method ) );
 		}
@@ -96,7 +98,9 @@ class Deploy_Task extends Task {
 			'config'      => $config,
 		);
 
-		$this->save_status_message( sprintf( /* translators: %s: target */ __( 'Deploying to %s', 'wp-static-export' ), $method ) );
+		if ( $starting ) {
+			$this->save_status_message( sprintf( /* translators: %s: target */ __( 'Deploying to %s', 'wp-static-export' ), $method ) );
+		}
 
 		return apply_filters( 'wpse_deploy_job', $job, $method );
 	}

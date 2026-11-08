@@ -2,9 +2,15 @@
   "name": "jantudeb/wp-static-export",
   "description": "Convert your WordPress site into a static one with deployment, forms, search and optimization. Fork of Simply Static.",
   "type": "wordpress-plugin",
-  "require": {},
+  "require": {
+    "matthiasmullie/minify": "^1.3",
+    "phpseclib/phpseclib": "^3.0"
+  },
   "require-dev": {
-    "phpunit/phpunit": "^9.6"
+    "phpunit/phpunit": "^9.6",
+    "brianhenryie/strauss": "^0.31.1",
+    "squizlabs/php_codesniffer": "^3.13",
+    "phpcompatibility/php-compatibility": "^9.3"
   },
   "license": "GPL-3.0-or-later",
   "authors": [
@@ -14,8 +20,8 @@
     }
   ],
   "support": {
-      "issues": "https://github.com/JantuDeb/wp-static-export/issues",
-      "source": "https://github.com/JantuDeb/wp-static-export/"
+    "issues": "https://github.com/JantuDeb/wp-static-export/issues",
+    "source": "https://github.com/JantuDeb/wp-static-export/"
   },
   "config": {
     "platform": {
@@ -28,6 +34,23 @@
       "@php -r \"is_dir('build/logs') || mkdir('build/logs', 0777, true);\"",
       "phpdbg -qrr vendor/bin/phpunit --configuration phpunit.xml.dist --coverage-text --coverage-clover build/logs/clover.xml"
     ],
-    "coverage:check": "@php tests/check-coverage.php build/logs/clover.xml"
+    "coverage:check": "@php tests/check-coverage.php build/logs/clover.xml",
+    "prefix-vendor": "@php -r \"passthru('bash scripts/prefix-vendor.sh', $c); exit($c);\""
+  },
+  "extra": {
+    "strauss": {
+      "target_directory": "vendor-prefixed",
+      "namespace_prefix": "WP_Static_Export\\Vendor\\",
+      "classmap_prefix": "WPSE_Vendor_",
+      "constant_prefix": "WPSE_",
+      "packages": [
+        "matthiasmullie/minify",
+        "phpseclib/phpseclib"
+      ],
+      "delete_vendor_packages": false,
+      "delete_vendor_files": false,
+      "update_call_sites": false,
+      "include_modified_date": false
+    }
   }
 }

@@ -143,19 +143,24 @@ class CLI_Command {
 	}
 
 	/**
-	 * Check that the deployer can run on this server.
+	 * Check what this server can do for deploy, optimization and search.
 	 *
 	 * @param array $args       Positional args.
 	 * @param array $assoc_args Flags.
 	 */
 	public function doctor( $args, $assoc_args ) {
-		$node = Deploy_Runner::find_node();
-		if ( is_wp_error( $node ) ) {
-			\WP_CLI::error( $node->get_error_message(), false );
-		} else {
-			\WP_CLI::success( 'Node.js found: ' . $node );
+		$cap = Deploy_Runner::capabilities();
+		foreach ( array(
+			'gd'     => 'PHP GD (image optimization)',
+			'webp'   => 'WebP support in GD',
+			'dom'    => 'PHP DOM (search index, Lighthouse fixes)',
+			'minify' => 'CSS/JS minifier library',
+			'sftp'   => 'SFTP library',
+		) as $key => $label ) {
+			$cap[ $key ] ? \WP_CLI::success( $label ) : \WP_CLI::warning( $label . ': not available' );
 		}
-		$cli = Deploy_Runner::cli_path();
-		is_readable( $cli ) ? \WP_CLI::success( 'Deployer bundle present.' ) : \WP_CLI::error( 'Deployer bundle missing: ' . $cli, false );
+		foreach ( Deploy_Runner::warnings() as $warning ) {
+			\WP_CLI::warning( $warning );
+		}
 	}
 }

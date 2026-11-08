@@ -54,7 +54,7 @@ Your WordPress site stays private and secure. Your static site is what visitors 
 * Replace URLs (absolute, relative, or offline use)
 * Works with any WordPress theme and popular page builders (Elementor, Bricks, Gutenberg), with Yoast, Rank Math and AIOSEO
 
-Deployment targets, optimization and the Lighthouse tool need Node.js 18 or newer on the server and PHP's exec() function. See the project README for setup.
+Everything runs in PHP: no Node.js and no command line access are needed. Image optimization needs PHP's GD extension.
 
 = Documentation =
 Setup guides for every feature, including how to connect Google Forms and Google Sheets, are in the README of the project repository: https://github.com/JantuDeb/wp-static-export
@@ -148,9 +148,9 @@ This plugin works without contacting any service the plugin author runs, and it 
 * TikTok media: only if the QuadLayers TikTok plugin is active, its images are downloaded so they can be included in the export.
 
 = Server requirements and code =
-Deployment targets, optimization, search indexing and the automatic fixes run a bundled Node.js program with PHP's exec() function, so they need Node.js 18 or newer on the server. ZIP export, local export, forms, comments and multilingual export work without it. The command is fixed, arguments are escaped, and credentials are passed in a temporary file that is deleted when read.
+Deploying, optimization, search indexing and the automatic fixes run in PHP inside WordPress, in short steps in the background queue, so long exports do not hit PHP time limits. Image optimization needs the GD extension; everything else works on any PHP 7.4+ host. Two third-party PHP libraries are bundled under this plugin's own namespace in `vendor-prefixed`: matthiasmullie/minify (CSS and JavaScript minification, MIT) and phpseclib (SFTP, MIT).
 
-The compiled files in this plugin are built from source that is available in the public repository https://github.com/JantuDeb/wp-static-export: the Node.js program and the browser scripts (forms and search) from `deployer/src`, and the settings screen from `src/admin/src`. Build instructions are in the repository README.
+The compiled JavaScript in this plugin is built from source that is available in the public repository https://github.com/JantuDeb/wp-static-export: the form and search scripts and the Deploy & Features and Export Report screens from `deployer/src`, and the settings screen from `src/admin/src`. Build instructions are in the repository README.
 
 == Installation ==
 = Automatic Installation (Recommended) =

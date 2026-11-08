@@ -208,8 +208,9 @@ class Plugin {
 		require_once $path . 'src/tasks/class-ss-wrapup-task.php';
 		require_once $path . 'src/tasks/class-ss-cancel-task.php';
 		require_once $path . 'src/tasks/class-ss-generate-404-task.php';
-		require_once $path . 'src/tasks/traits/trait-ss-runs-node-job.php';
+		require_once $path . 'src/tasks/traits/trait-ss-runs-engine-job.php';
 		require_once $path . 'src/tasks/class-ss-verify-task.php';
+		require_once $path . 'src/engine/autoload.php';
 		require_once $path . 'src/deploy/class-ss-deploy-config.php';
 		require_once $path . 'src/deploy/class-ss-deploy-runner.php';
 		require_once $path . 'src/features/class-ss-features-schema.php';

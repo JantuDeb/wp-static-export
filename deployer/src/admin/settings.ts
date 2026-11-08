@@ -11,7 +11,7 @@ interface State {
   values: Values;
   secrets: Record<string, boolean>;
   locked: Record<string, boolean>;
-  env: { node: string | null; node_error: string | null; bundle: boolean; multilingual: Record<string, unknown> | null };
+  env: { warnings: string[]; multilingual: Record<string, unknown> | null };
 }
 
 type El = HTMLElement;
@@ -352,8 +352,8 @@ export function mount(root: El, boot: Boot): void {
     const section = state.schema[active] as Section;
     const page = h('div', { class: 'wpse-s' });
 
-    if (state.env.node_error || !state.env.bundle) {
-      page.append(h('div', { class: 'banner' }, h('b', {}, 'Node.js is needed for deploy targets, optimization and site checks. '), state.env.node_error ?? 'The deployer bundle is missing: run "npm run build" in the deployer folder.'));
+    for (const warning of state.env.warnings ?? []) {
+      page.append(h('div', { class: 'banner' }, warning));
     }
     if (notice) page.append(h('div', { class: `banner ${notice.kind === 'success' ? 'ok' : 'err'}`, role: 'status' }, notice.text));
 

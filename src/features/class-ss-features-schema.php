@@ -43,7 +43,6 @@ class Features_Schema {
 				'label'  => __( 'Deployment', 'wp-static-export' ),
 				'fields' => array(
 					self::f( 'delivery_method', __( 'Deliver the export to', 'wp-static-export' ), 'select', array( 'options' => $methods ) ),
-					self::f( 'node_path', __( 'Node.js path', 'wp-static-export' ), 'text', array( 'help' => __( 'Only needed if "node" is not on the PATH (Node 18+).', 'wp-static-export' ), 'show_if' => array( 'delivery_method' => Deploy_Config::methods() ) ) ),
 
 					// GitHub.
 					self::f( 'github_personal_access_token', __( 'Personal access token', 'wp-static-export' ), 'password', array( 'secret' => true, 'help' => __( 'Fine-grained token with Contents: read & write on the repository.', 'wp-static-export' ), 'show_if' => array( 'delivery_method' => 'github' ) ) ),
@@ -168,7 +167,7 @@ class Features_Schema {
 			array(
 				'id'          => 'optimize',
 				'label'       => __( 'Optimization', 'wp-static-export' ),
-				'description' => __( 'Runs on the exported files with Node.js before delivery. Originals on your WordPress site are never touched.', 'wp-static-export' ),
+				'description' => __( 'Runs on the exported files before delivery. Originals on your WordPress site are never touched.', 'wp-static-export' ),
 				'fields'      => array(
 					self::f( 'optimize_html', __( 'Minify HTML', 'wp-static-export' ), 'checkbox' ),
 					self::f( 'optimize_css', __( 'Minify CSS', 'wp-static-export' ), 'checkbox' ),
@@ -182,7 +181,7 @@ class Features_Schema {
 			array(
 				'id'          => 'quality',
 				'label'       => __( 'Quality (Lighthouse)', 'wp-static-export' ),
-				'description' => __( 'Safe automatic fixes for common Lighthouse findings, applied to the exported HTML/CSS (needs Node.js). Run "npm run lighthouse" in the deployer folder to measure the effect.', 'wp-static-export' ),
+				'description' => __( 'Safe automatic fixes for common Lighthouse findings, applied to the exported HTML/CSS. Measure the effect with Lighthouse on the exported site.', 'wp-static-export' ),
 				'fields'      => array(
 					self::f( 'quality_enabled', __( 'Apply automatic fixes', 'wp-static-export' ), 'checkbox' ),
 					self::f( 'quality_viewport', __( 'Add a viewport meta tag when missing', 'wp-static-export' ), 'checkbox', array( 'default' => true, 'show_if' => array( 'quality_enabled' => true ) ) ),

@@ -8,7 +8,7 @@ namespace WP_Static_Export;
  */
 class Verify_Task extends Task {
 
-	use runsNodeJob;
+	use runsEngineJob;
 
 	const PHASE_OPTION = 'wpse_verify_phase';
 
@@ -103,22 +103,23 @@ class Verify_Task extends Task {
 	}
 
 	/**
-	 * Scan the exported files for broken links, error pages and similar with the bundled Node tool.
-	 * Never fails the export: without Node the report simply has no site checks.
+	 * Scan the exported files for broken links, error pages and similar. Never fails the export: if the scan
+	 * cannot run, the report simply has no site checks.
 	 *
 	 * @param int $report_id Report to attach the result to.
 	 * @return array|bool|null False while running, otherwise done (result or null).
 	 */
 	protected function check_site( $report_id ) {
-		$step = $this->advance_node_job(
+		$step = $this->advance_engine_job(
 			'verify_run',
+			'site',
 			function () {
 				$hosts = array_filter( array( wp_parse_url( home_url(), PHP_URL_HOST ), (string) $this->options->get( 'destination_host' ) ) );
 
 				return array(
-					'action' => 'verify_site',
 					'dir'    => untrailingslashit( $this->options->get_archive_dir() ),
 					'hosts'  => array_values( $hosts ),
+					'runDir' => Deploy_Runner::state_dir(),
 				);
 			},
 			function ( $event ) {
@@ -141,7 +142,6 @@ class Verify_Task extends Task {
 			return false;
 		}
 
-		unset( $step['result']['type'] );
 		global $wpdb;
 		$wpdb->update( Report::table_name(), array( 'deep' => wp_json_encode( $step['result'] ) ), array( 'id' => $report_id ) );
 

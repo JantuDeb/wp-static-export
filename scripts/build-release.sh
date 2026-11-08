@@ -89,6 +89,35 @@ test -s "$package_dir/readme.txt"
 test -s "$package_dir/src/admin/build/index.js"
 test -s "$package_dir/assets/install-plugins/build/index.js"
 
+# The deploy and optimization engine is PHP; it needs its two libraries (prefixed under this plugin's
+# namespace by `composer prefix-vendor`) and the browser scripts built from deployer/src.
+for required in \
+	"vendor-prefixed/autoload.php" \
+	"vendor-prefixed/matthiasmullie/minify/src/CSS.php" \
+	"vendor-prefixed/phpseclib/phpseclib/phpseclib/Net/SFTP.php" \
+	"deployer/dist/admin/settings.js" \
+	"deployer/dist/admin/report.js" \
+	"deployer/dist/web/forms.js" \
+	"deployer/dist/web/search.js" \
+	"src/engine/autoload.php"; do
+	if [[ ! -s "$package_dir/$required" ]]; then
+		echo "Release package is missing $required. Run: composer install && composer prefix-vendor, and npm run build in deployer." >&2
+		exit 1
+	fi
+done
+
+# Nothing may load the unprefixed libraries: they could clash with another plugin shipping the same ones.
+if grep -rqE '^namespace (MatthiasMullie|phpseclib3)' "$package_dir/vendor-prefixed" 2>/dev/null; then
+	echo "vendor-prefixed contains an unprefixed library namespace." >&2
+	exit 1
+fi
+
+# Node is no longer needed on the server: make sure no Node bundle or runtime dependency ships.
+if [[ -e "$package_dir/deployer/dist/cli.cjs" ]] || find "$package_dir/deployer" -type d -name node_modules -print -quit | grep -q .; then
+	echo "Release package contains a Node runtime bundle." >&2
+	exit 1
+fi
+
 (
 	cd "$output_root"
 	zip -qr "$plugin_slug.zip" "$plugin_slug"

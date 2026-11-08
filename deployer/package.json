@@ -1,37 +1,24 @@
 {
   "name": "static-deployer",
   "version": "0.1.0",
-  "description": "Deployment providers for the static WordPress exporter (GitHub, Netlify, Cloudflare Pages, S3, BunnyCDN, SFTP).",
+  "description": "Browser-side and build tooling for WP Static Export: the admin screens, form and search scripts, and the Lighthouse audit tool. The deploy and optimization engine is PHP (src/engine).",
   "private": true,
   "license": "GPL-2.0-or-later",
   "type": "module",
-  "engines": {
-    "node": ">=18.17"
-  },
   "scripts": {
-    "build": "npm run build:cli && npm run build:admin && npm run build:web",
+    "build": "npm run build:admin && npm run build:web",
     "typecheck": "tsc --noEmit",
-    "test": "npm run build:cli && vitest run",
-    "build:cli": "esbuild src/cli.ts --bundle --platform=node --target=node18 --format=cjs --outfile=dist/cli.cjs --external:cpu-features --external:sharp --external:./crypto/build/Release/sshcrypto.node --define:import.meta.url=__importMetaUrl --banner:js=\"var __importMetaUrl=require('url').pathToFileURL(__filename).href;\"",
+    "test": "vitest run",
     "build:admin": "esbuild src/admin/settings.ts src/admin/report.ts --bundle --minify --target=es2019 --format=iife --outdir=dist/admin",
     "build:web": "esbuild src/web/forms.ts src/web/search.ts --bundle --minify --target=es2019 --format=iife --outdir=dist/web",
     "lighthouse": "tsx tools/lighthouse/cli.ts",
     "lighthouse:demo": "tsx tools/lighthouse/cli.ts --demo --fix --optimize --meta --pages 4 --runs 3"
   },
   "dependencies": {
-    "@noble/hashes": "^1.5.0",
-    "clean-css": "^5.3.3",
-    "fuse.js": "^7.5.0",
-    "html-minifier-terser": "^7.2.0",
-    "node-html-parser": "^9.0.5",
-    "ssh2-sftp-client": "^11.0.0",
-    "terser": "^5.51.2"
+    "fuse.js": "^7.5.0"
   },
   "devDependencies": {
-    "@types/clean-css": "^4.2.11",
-    "@types/html-minifier-terser": "^7.0.2",
     "@types/node": "^20.14.0",
-    "@types/ssh2-sftp-client": "^9.0.4",
     "chrome-launcher": "^1.2.2",
     "esbuild": "^0.24.0",
     "jsdom": "^25.0.0",

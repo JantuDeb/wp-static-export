@@ -4,11 +4,11 @@ namespace WP_Static_Export;
 
 /**
  * Post-processes the exported files before delivery: copies the browser scripts for forms and
- * search, then (with Node) minifies, compresses images and builds/pushes the search index.
+ * search, then minifies, compresses images, applies Lighthouse fixes and builds/pushes the search index.
  */
 class Process_Task extends Task {
 
-	use runsNodeJob;
+	use runsEngineJob;
 
 	/**
 	 * Task name.
@@ -23,7 +23,7 @@ class Process_Task extends Task {
 	public function perform() {
 		$archive_dir = rtrim( $this->options->get_archive_dir(), '/\\' );
 
-		// Plain file copies need no Node and are idempotent, so do them on every call before the job starts.
+		// Plain file copies are idempotent, so do them on every call before the job starts.
 		if ( empty( $this->options->get( 'process_run' ) ) ) {
 			$copied = Process_Config::copy_assets( $archive_dir );
 			if ( is_wp_error( $copied ) ) {
@@ -32,23 +32,34 @@ class Process_Task extends Task {
 			$this->options->set( 'process_extra_files', $copied )->save();
 		}
 
-		$ops = Process_Config::node_ops( $this->options );
+		$ops = Process_Config::ops( $this->options );
 		if ( ! $ops ) {
 			return true;
 		}
 
-		$step = $this->advance_node_job(
+		$step = $this->advance_engine_job(
 			'process_run',
-			function () use ( $archive_dir, $ops ) {
-				$this->save_status_message( __( 'Optimizing files and building search index', 'wp-static-export' ) );
+			'process',
+			function ( $starting ) use ( $archive_dir, $ops ) {
+				if ( $starting ) {
+					$this->save_status_message( __( 'Optimizing files and building search index', 'wp-static-export' ) );
+				}
 
 				return array(
-					'action' => 'process',
 					'dir'    => $archive_dir,
 					'scope'  => Process_Config::scope(),
 					'ops'    => $ops,
-					'config' => new \stdClass(),
+					'runDir' => Deploy_Runner::state_dir(),
 				);
+			},
+			function ( $event ) {
+				static $last = 0;
+				if ( microtime( true ) - $last < 1 ) {
+					return;
+				}
+				$last = microtime( true );
+				/* translators: 1: done, 2: total, 3: what */
+				$this->save_status_message( sprintf( __( 'Processed %1$d of %2$d %3$s', 'wp-static-export' ), (int) $event['done'], (int) $event['total'], (string) $event['label'] ) );
 			}
 		);
 

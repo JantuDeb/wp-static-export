@@ -2,9 +2,7 @@ import { cp, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
-import { runProcess } from '../../src/process/index.js';
-import { filePathToUrl } from '../../src/process/search-index.js';
-import type { Logger } from '../../src/types.js';
+import { execFileSync } from 'node:child_process';
 import { auditUrls, CATEGORIES, type PageResult } from './audit.js';
 import { makeFixture } from './fixture.js';
 import { average, findingsTable, markdown, summary } from './report.js';
@@ -28,7 +26,20 @@ const { values: args } = parseArgs({
   },
 });
 
-const log: Logger = { info: () => {}, warn: (m) => console.warn('  warn:', m), progress: () => {} };
+/** Export file path -> the URL path a browser requests. */
+function filePathToUrl(p: string): string {
+  if (p === 'index.html') return '/';
+  return p.endsWith('/index.html') ? '/' + p.slice(0, -'index.html'.length) : '/' + p;
+}
+
+/** Runs the plugin's PHP processing engine (scripts/process.php) on a folder. Needs the php CLI. */
+function runProcess(dir: string, ops: Record<string, unknown>): { message: string; created: string[]; warnings: string[] } {
+  const script = path.resolve(import.meta.dirname, '../../../scripts/process.php');
+  const out = execFileSync('php', [script, dir, JSON.stringify(ops), 'full'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const res = JSON.parse(out.trim().split('\n').pop() as string) as { message: string; created: string[]; warnings: string[] };
+  for (const w of res.warnings) console.warn('  warn:', w);
+  return res;
+}
 
 async function listHtml(dir: string, sub = ''): Promise<string[]> {
   const out: string[] = [];
@@ -95,34 +106,25 @@ async function main() {
       // Work on a copy so the original export is untouched unless --write is given.
       const work = args.write ? dir : path.join(tmp, 'fixed');
       if (!args.write) await cp(dir, work, { recursive: true });
-      const res = await runProcess(
-        {
-          action: 'process',
-          dir: work,
-          scope: 'full',
-          config: {},
-          ops: {
-            ...(args.fix
-              ? {
-                  fixes: {
-                    viewport: true,
-                    lang: 'en',
-                    noopener: true,
-                    imageAlt: true,
-                    linkNames: true,
-                    imageDimensions: true,
-                    lazyImages: true,
-                    fontDisplay: true,
-                    headers: true,
-                    metaDescription: args.meta,
-                  },
-                }
-              : {}),
-            ...(args.optimize ? { optimize: { html: true, css: true, js: true, images: true, webp: true, quality: 80 } } : {}),
-          },
-        },
-        log,
-      );
+      const res = runProcess(work, {
+        ...(args.fix
+          ? {
+              fixes: {
+                viewport: true,
+                lang: 'en',
+                noopener: true,
+                imageAlt: true,
+                linkNames: true,
+                imageDimensions: true,
+                lazyImages: true,
+                fontDisplay: true,
+                headers: true,
+                metaDescription: args.meta,
+              },
+            }
+          : {}),
+        ...(args.optimize ? { optimize: { html: true, css: true, js: true, images: true, webp: true, quality: 80 } } : {}),
+      });
       console.log(`\nApplied: ${res.message}`);
       const after = await audit(work, paths, 'AFTER');
       runs.push({ label: 'After', results: after });

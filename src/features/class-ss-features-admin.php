@@ -265,18 +265,17 @@ class Features_Admin {
 			return new \WP_Error( 'ss_verify_not_applicable', __( 'The selected delivery method needs no credentials.', 'wp-static-export' ), array( 'status' => 400 ) );
 		}
 
-		$result = Deploy_Runner::run_sync(
-			array(
-				'action'   => 'verify',
-				'provider' => $method,
-				'dir'      => '',
-				'config'   => Deploy_Config::build( $method ),
-			),
-			30
-		);
-		if ( is_wp_error( $result ) ) {
-			return new \WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => 502 ) );
+		try {
+			$message = \WP_Static_Export\Engine\Deploy_Run::verify(
+				array(
+					'provider' => $method,
+					'config'   => Deploy_Config::build( $method ),
+				)
+			);
+		} catch ( \Throwable $e ) {
+			return new \WP_Error( 'ss_verify_failed', $e->getMessage(), array( 'status' => 502 ) );
 		}
+		$result = array( 'message' => $message );
 
 		return rest_ensure_response( $result );
 	}
@@ -287,12 +286,8 @@ class Features_Admin {
 	 * @return array
 	 */
 	protected function environment() {
-		$node = Deploy_Runner::find_node();
-
 		return array(
-			'node'         => is_wp_error( $node ) ? null : $node,
-			'node_error'   => is_wp_error( $node ) ? $node->get_error_message() : null,
-			'bundle'       => is_readable( Deploy_Runner::cli_path() ),
+			'warnings'     => Deploy_Runner::warnings(),
 			'multilingual' => Multilingual::detect(),
 		);
 	}

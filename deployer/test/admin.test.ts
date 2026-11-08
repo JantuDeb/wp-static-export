@@ -51,6 +51,16 @@ describe('logic', () => {
 });
 
 describe('settings UI', () => {
+  it('shows server warnings as banners', async () => {
+    const state = { schema, values: { delivery_method: 'zip' }, secrets: {}, locked: {}, env: { warnings: ['Image optimization is turned on, but this server has no GD.'], multilingual: null } };
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify(state), { status: 200 }));
+    const root = document.createElement('div');
+    mount(root, { restUrl: '/rest', nonce: 'n' });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(root.querySelector('.banner')?.textContent).toContain('no GD');
+    vi.unstubAllGlobals();
+  });
+
   const tick = () => new Promise((r) => setTimeout(r, 0));
 
   it('shows target fields for the selected method, hides the saved secret and posts only edits', async () => {
@@ -60,7 +70,7 @@ describe('settings UI', () => {
       values: { delivery_method: 'zip', netlify_site_id: '', github_repository: '', forms_enabled: false, forms_rules: [] },
       secrets: { netlify_token: true },
       locked: {},
-      env: { node: 'node', node_error: null, bundle: true, multilingual: null },
+      env: { warnings: [], multilingual: null },
     };
     vi.stubGlobal('fetch', async (url: string, init?: RequestInit) => {
       calls.push({ url, init });
@@ -96,7 +106,7 @@ describe('settings UI', () => {
       values: { delivery_method: 'zip', forms_enabled: true, forms_rules: [] },
       secrets: {},
       locked: {},
-      env: { node: 'node', node_error: null, bundle: true, multilingual: null },
+      env: { warnings: [], multilingual: null },
     };
     vi.stubGlobal('fetch', async () => new Response(JSON.stringify(state), { status: 200 }));
     const root = document.createElement('div');

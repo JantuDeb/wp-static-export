@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Decides which post-processing the current export needs and builds the Node job for it.
+ * Decides which post-processing the current export needs and builds the job for the engine.
  */
 class Process_Config {
 
@@ -35,12 +35,12 @@ class Process_Config {
 	}
 
 	/**
-	 * Operations that need Node (everything else is plain PHP file copying).
+	 * Post-processing operations for the engine (the browser scripts are plain file copies).
 	 *
 	 * @param Options|null $o Options.
 	 * @return array{fixes?:array,optimize?:array,search?:array}
 	 */
-	public static function node_ops( $o = null ) {
+	public static function ops( $o = null ) {
 		$o   = $o ?: Options::instance();
 		$ops = array();
 
@@ -127,7 +127,7 @@ class Process_Config {
 	 * @return bool
 	 */
 	public static function needed() {
-		return (bool) ( self::assets() || self::node_ops() );
+		return (bool) ( self::assets() || self::ops() );
 	}
 
 	/**
